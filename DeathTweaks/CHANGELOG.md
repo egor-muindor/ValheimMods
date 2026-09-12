@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 - 2026-09-12
+
+- `KeepQuickSlotItems` now also works with Extra Slots (shudnal.ExtraSlots), not only EquipmentAndQuickSlots.
+- A warning is logged at startup and on death when `KeepQuickSlotItems` is on but no supported quick slot mod is loaded; previously quick slot items were silently dropped.
+- The debug log marks quick slot and hotbar items per item.
+
 ## 1.0.0 - 2026-09-12
 
 First release, built against the Valheim 1.0.12 assemblies.

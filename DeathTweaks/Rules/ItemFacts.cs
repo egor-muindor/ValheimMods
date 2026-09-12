@@ -40,7 +40,7 @@ namespace DeathTweaks.Rules
         /// <summary>True when the item sits in the first inventory row.</summary>
         public bool Hotbar { get; }
 
-        /// <summary>True when the item sits in an EquipmentAndQuickSlots quick slot.</summary>
+        /// <summary>True when the item sits in a quick slot of a supported quick slot mod.</summary>
         public bool QuickSlot { get; }
 
         public bool Teleportable { get; }

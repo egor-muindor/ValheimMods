@@ -50,11 +50,17 @@ namespace DeathTweaks
             WorldDeathModifiers world = ReadWorldModifiers();
             Inventory inventory = player.GetInventory();
             List<ItemDrop.ItemData> items = inventory.GetAllItems();
-            HashSet<ItemDrop.ItemData>? quickSlotItems = Plugin.Settings.KeepQuickSlotItems.Value
-                ? EquipmentAndQuickSlotsCompat.GetQuickSlotItems()
-                : null;
+            HashSet<ItemDrop.ItemData>? quickSlotItems = null;
+            if (Plugin.Settings.KeepQuickSlotItems.Value)
+            {
+                quickSlotItems = QuickSlotMods.GetQuickSlotItems();
+                if (quickSlotItems == null)
+                {
+                    Plugin.Log.LogWarning($"KeepQuickSlotItems is on but no supported quick slot mod is available ({QuickSlotMods.SupportedMods}); quick slot items are treated as regular items");
+                }
+            }
 
-            Plugin.Debug($"Death of {player.GetPlayerName()}: {items.Count} items, rules: {rules.Describe()}, world modifiers: {world}");
+            Plugin.Debug($"Death of {player.GetPlayerName()}: {items.Count} items, rules: {rules.Describe()}, world modifiers: {world}, quick slot items: {(quickSlotItems == null ? "n/a" : quickSlotItems.Count.ToString())}");
 
             var keep = new List<ItemDrop.ItemData>();
             var drop = new List<ItemDrop.ItemData>();
@@ -64,7 +70,7 @@ namespace DeathTweaks
             {
                 ItemFacts facts = Describe(item, quickSlotItems);
                 ItemFate fate = rules.Resolve(facts, world);
-                Plugin.Debug($"  {facts.DisplayName} ({facts.TypeName}{(facts.Equipped ? ", equipped" : "")}) -> {fate}");
+                Plugin.Debug($"  {facts.DisplayName} ({facts.TypeName}{(facts.Equipped ? ", equipped" : "")}{(facts.QuickSlot ? ", quick slot" : "")}{(facts.Hotbar ? ", hotbar" : "")}) -> {fate}");
 
                 switch (fate)
                 {

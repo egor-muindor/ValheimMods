@@ -14,7 +14,8 @@ namespace DeathTweaks
     /// change other parts of the pipeline are picked up automatically.
     /// </summary>
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-    [BepInDependency(EquipmentAndQuickSlotsCompat.PluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(QuickSlotMods.EquipmentAndQuickSlotsGuid, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(QuickSlotMods.ExtraSlotsGuid, BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         private Harmony? _harmony;
@@ -35,6 +36,24 @@ namespace DeathTweaks
             _harmony.PatchAll(typeof(Plugin).Assembly);
 
             Log.LogInfo($"{MyPluginInfo.PLUGIN_NAME} {MyPluginInfo.PLUGIN_VERSION} loaded");
+            ReportQuickSlotSupport();
+        }
+
+        /// <summary>
+        /// Both supported quick slot mods are soft dependencies, so they are loaded (or absent)
+        /// by the time this runs.
+        /// </summary>
+        private static void ReportQuickSlotSupport()
+        {
+            QuickSlotMods.Provider? provider = QuickSlotMods.Active;
+            if (provider != null)
+            {
+                Log.LogInfo($"Quick slot support: {provider.Name} {provider.LoadedVersion}");
+            }
+            else if (Settings.KeepQuickSlotItems.Value)
+            {
+                Log.LogWarning($"KeepQuickSlotItems is on but no supported quick slot mod is loaded ({QuickSlotMods.SupportedMods}); quick slot items are treated as regular items");
+            }
         }
 
         private void OnDestroy()
