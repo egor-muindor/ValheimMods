@@ -51,6 +51,13 @@ namespace OreFinder
             Message = config.Bind("Highlight", "Message", true,
                 "Show a message in the top-left corner with the ore name and distance when a vein is found.");
 
+            WishboneNeeded = config.Bind("Hidden", "WishboneNeeded", WishboneRule.InInventory,
+                "Hidden ores are the ones the game marks for the Wishbone: silver veins and the scrap piles with a beacon. " +
+                "InInventory: found only while the Wishbone is anywhere in your inventory. Equipped: only while it is equipped, " +
+                "like the game's own finder. NotNeeded: always found. Hidden veins skipped for lack of the Wishbone are found later once you carry it.");
+            WishboneItem = config.Bind("Hidden", "WishboneItem", "Wishbone",
+                "Item that counts as the Wishbone, by prefab name or $item_ name. Change it for a modded finder item.");
+
             CustomNames = config.Bind("Names", "CustomNames", false,
                 "Show your own names from the Names setting instead of the game's names (Copper deposit, Silver vein, ...) " +
                 "in the screen marker, the message and the map pin.");
@@ -90,6 +97,10 @@ namespace OreFinder
 
         public ConfigEntry<bool> Message { get; }
 
+        public ConfigEntry<WishboneRule> WishboneNeeded { get; }
+
+        public ConfigEntry<string> WishboneItem { get; }
+
         public ConfigEntry<bool> CustomNames { get; }
 
         public ConfigEntry<string> Names { get; }
@@ -118,7 +129,9 @@ namespace OreFinder
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"scan every {ScanInterval.Value.ToString("0.##", culture)} s, ores: {ores}, " +
                    $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, " +
-                   $"names {(CustomNames.Value ? OreNames.Parse(Names.Value).Describe() : "from the game")}, toggle key {ToggleKey.Value}";
+                   $"names {(CustomNames.Value ? OreNames.Parse(Names.Value).Describe() : "from the game")}, " +
+                   $"hidden ores {(WishboneNeeded.Value == WishboneRule.NotNeeded ? "always" : $"need {WishboneItem.Value} {(WishboneNeeded.Value == WishboneRule.Equipped ? "equipped" : "in the inventory")}")}, " +
+                   $"toggle key {ToggleKey.Value}";
         }
     }
 }

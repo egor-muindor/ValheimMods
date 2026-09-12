@@ -5,11 +5,12 @@ namespace OreFinder.Detection
     /// <summary>What the finder shows for one kind of ore object.</summary>
     public sealed class OreKind
     {
-        public OreKind(string oreItem, string displayName, Color color)
+        public OreKind(string oreItem, string displayName, Color color, bool hidden)
         {
             OreItem = oreItem;
             DisplayName = displayName;
             Color = color;
+            Hidden = hidden;
         }
 
         /// <summary>The drop that made the object count as ore, e.g. <c>CopperOre</c>.</summary>
@@ -20,6 +21,12 @@ namespace OreFinder.Detection
 
         /// <summary>Colour of the marker, beam and light.</summary>
         public Color Color { get; }
+
+        /// <summary>
+        /// The game marks it for the Wishbone (a <c>Beacon</c> component): silver veins and the
+        /// scrap piles with a beacon. Found only under the <c>WishboneNeeded</c> rule.
+        /// </summary>
+        public bool Hidden { get; }
 
         /// <summary>Picks a colour by the ore name; unknown ores are gold.</summary>
         public static Color ColorFor(string oreItem)

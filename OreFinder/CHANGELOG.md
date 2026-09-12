@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - 2026-09-12
+
+- New: hidden ores need the Wishbone. Veins the game marks for the Wishbone (silver veins, scrap piles with a beacon) are only found while the Wishbone is in your inventory; `WishboneNeeded` can require it equipped instead, or drop the requirement. Veins skipped for lack of the Wishbone are found later once you carry it.
+
 ## 1.0.2 - 2026-09-12
 
 - New: your own names for the ores. `CustomNames` (off by default) switches the screen marker, the message and the map pin to the names from `Names`, which comes pre-filled with one-letter names: `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O`.

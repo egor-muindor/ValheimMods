@@ -32,6 +32,8 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   pins and re-found veins do not pile up.
 - **Your own names**: call the ores what you like, for example one letter each
   so the map stays readable. Off by default.
+- **Hidden ores need the Wishbone**: silver veins and the scrap piles the
+  Wishbone reacts to are only found while you carry it, like in the game.
 - **Toggle key**: F9 by default, configurable, with modifiers if you like. The
   state is saved to the config file.
 
@@ -73,6 +75,13 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | `Light` | `true` | Light up the vein and the ground around it with a coloured, pulsing light. |
 | `Glow` | `true` | Tint the vein's own material with an emissive glow. Only works for materials whose shader has an emission colour. |
 | `Message` | `true` | Show a top-left message with the ore name and distance when a vein is found. |
+
+### Hidden
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `WishboneNeeded` | `InInventory` | Hidden ores are the ones the game marks for the Wishbone: silver veins and the scrap piles with a beacon. `InInventory`: found only while the Wishbone is anywhere in your inventory. `Equipped`: only while it is equipped, like the game's own finder. `NotNeeded`: always found. Hidden veins skipped for lack of the Wishbone are found later once you carry it. |
+| `WishboneItem` | `Wishbone` | Item that counts as the Wishbone, by prefab name or `$item_` name. Change it for a modded finder item. |
 
 ### Names
 
@@ -127,6 +136,10 @@ that turns into the mineable `MineRock5` on the first hit, so the finder also
 looks at what a destructible spawns when destroyed. Veins are remembered by
 their network id and position: a partly mined deposit is still the same vein,
 and so is the rock that replaces an intact deposit after the first hit.
+
+Hidden ores are recognised the way the game does it: the object (or what it
+turns into) carries a `Beacon` component, which is what the Wishbone's finder
+effect listens for. The Wishbone check looks at the inventory once per scan.
 
 The highlight does not touch the vein's game object: the light and beam are
 separate objects, and the glow is a material property block that is cleared

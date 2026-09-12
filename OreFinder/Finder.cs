@@ -29,6 +29,9 @@ namespace OreFinder
         /// <summary>Two objects closer than this are the same vein.</summary>
         private const float SameVeinDistance = 0.5f;
 
+        /// <summary>Hidden veins already reported in the log as waiting for the Wishbone.</summary>
+        private readonly HashSet<ZDOID> _waitingForWishbone = new HashSet<ZDOID>();
+
         private readonly List<ZNetView> _nearby = new List<ZNetView>();
 
         private OreCatalog? _catalog;
@@ -66,6 +69,7 @@ namespace OreFinder
             int count = _seenPositions.Count;
             _seen.Clear();
             _seenPositions.Clear();
+            _waitingForWishbone.Clear();
             RemoveHighlights();
             _nextScan = 0f;
             return count;
@@ -181,6 +185,7 @@ namespace OreFinder
             OreCatalog catalog = CatalogFor(settings);
             _nearby.Clear();
             OreScanner.CollectNearby(player.transform.position, settings.Radius.Value, _nearby);
+            bool? hasWishbone = null;
 
             foreach (ZNetView view in _nearby)
             {
@@ -194,6 +199,21 @@ namespace OreFinder
                 if (kind == null)
                 {
                     continue;
+                }
+
+                if (kind.Hidden && settings.WishboneNeeded.Value != WishboneRule.NotNeeded)
+                {
+                    hasWishbone ??= HasWishbone(player, settings);
+                    if (!hasWishbone.Value)
+                    {
+                        // Not seen: it is found later, once the Wishbone is carried.
+                        if (_waitingForWishbone.Add(id))
+                        {
+                            Plugin.Debug($"{kind.DisplayName} ({Utils.GetPrefabName(view.gameObject)}) is hidden and waits for the {settings.WishboneItem.Value}");
+                        }
+
+                        continue;
+                    }
                 }
 
                 _seen.Add(id);
@@ -268,8 +288,43 @@ namespace OreFinder
             RemoveHighlights();
             _seen.Clear();
             _seenPositions.Clear();
+            _waitingForWishbone.Clear();
             _catalog = null;
             _inWorld = false;
+        }
+
+        /// <summary>The Wishbone (or the configured item) is in the inventory, or equipped when the rule says so.</summary>
+        private static bool HasWishbone(Player player, ModConfig settings)
+        {
+            Inventory inventory = player.GetInventory();
+            if (inventory == null)
+            {
+                return false;
+            }
+
+            string wanted = OreFilter.Normalize(settings.WishboneItem.Value ?? string.Empty);
+            if (wanted.Length == 0)
+            {
+                return false;
+            }
+
+            bool mustBeEquipped = settings.WishboneNeeded.Value == WishboneRule.Equipped;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (mustBeEquipped && !item.m_equipped)
+                {
+                    continue;
+                }
+
+                string prefab = item.m_dropPrefab != null ? item.m_dropPrefab.name : string.Empty;
+                string shared = item.m_shared != null ? item.m_shared.m_name : string.Empty;
+                if (OreFilter.Normalize(prefab) == wanted || OreFilter.Normalize(shared) == wanted)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool IsSeenVein(Vector3 origin)

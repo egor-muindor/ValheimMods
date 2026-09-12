@@ -18,6 +18,8 @@ namespace OreFinder.Detection
 
         private readonly List<KeyValuePair<string, string>> _drops = new List<KeyValuePair<string, string>>();
 
+        private bool _hidden;
+
         public OreCatalog(OreFilter filter, OreNames? names = null)
         {
             Filter = filter;
@@ -47,6 +49,7 @@ namespace OreFinder.Detection
         {
             _drops.Clear();
             _dropNames.Clear();
+            _hidden = false;
             string objectName = Collect(go, 0);
 
             if (_dropNames.Count == 0)
@@ -63,7 +66,7 @@ namespace OreFinder.Detection
             string displayName = Names != null && Names.TryGet(oreItem, prefabName, out string customName)
                 ? customName
                 : DisplayNameFor(objectName, oreItem);
-            return new OreKind(oreItem, displayName, OreKind.ColorFor(oreItem));
+            return new OreKind(oreItem, displayName, OreKind.ColorFor(oreItem), _hidden);
         }
 
         /// <summary>
@@ -102,6 +105,11 @@ namespace OreFinder.Detection
             if (name.Length == 0 && hover != null)
             {
                 name = hover.m_text;
+            }
+
+            if (go.GetComponent<Beacon>() != null)
+            {
+                _hidden = true;
             }
 
             Destructible destructible = go.GetComponent<Destructible>();
