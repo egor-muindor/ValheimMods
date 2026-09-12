@@ -40,6 +40,25 @@ gitignored `Environment.props` at the repository root:
 </Project>
 ```
 
+## Publishing to Thunderstore
+
+The package is listed as [Muindor/DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks).
+`DeathTweaks/thunderstore.toml` holds the listing metadata (categories, community,
+dependencies); the zip comes from the Release build. To publish a new version:
+
+1. Bump `<Version>` in `DeathTweaks.csproj`, `version_number` in
+   `DeathTweaks/Package/manifest.json` and `versionNumber` in
+   `DeathTweaks/thunderstore.toml` (the build fails if they differ), add a
+   `CHANGELOG.md` entry, commit and tag `DeathTweaks-v<version>`.
+2. Run `scripts/publish-thunderstore.sh` (add `--dry-run` to only build and
+   print what would be uploaded). It needs [tcli](https://github.com/thunderstore-io/thunderstore-cli)
+   (`dotnet tool install -g tcli`) and a token in `TCLI_AUTH_TOKEN`, or a
+   1Password reference in a gitignored `.publish.env`:
+
+   ```sh
+   THUNDERSTORE_TOKEN_OP_REF="op://<vault>/<item>/password"
+   ```
+
 ## How updates are handled
 
 The game assembly is publicized at build time and every patched member is

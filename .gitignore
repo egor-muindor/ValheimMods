@@ -17,9 +17,10 @@ TestResults/
 *.swp
 .DS_Store
 
-# Local overrides (paths to the game installation, deploy targets)
+# Local overrides (paths to the game installation, deploy targets, publishing secrets)
 *.local.props
 Environment.props
+.publish.env
 
 # Working notes, research and implementation plans are kept out of the repository
 docs/superpowers/

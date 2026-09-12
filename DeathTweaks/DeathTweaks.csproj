@@ -66,6 +66,7 @@
   <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <Error Condition="!Exists('$(PackageSourceDir)icon.png')" Text="Package/icon.png (256x256) is required for the release package." />
     <Error Condition="!$([System.IO.File]::ReadAllText('$(PackageSourceDir)manifest.json').Contains('&quot;version_number&quot;: &quot;$(Version)&quot;'))" Text="Package/manifest.json version_number does not match the project Version ($(Version))." />
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/thunderstore.toml').Contains('versionNumber = &quot;$(Version)&quot;'))" Text="thunderstore.toml versionNumber does not match the project Version ($(Version))." />
 
     <RemoveDir Directories="$(PackageStagingDir)" />
     <Copy SourceFiles="$(PackageSourceDir)manifest.json;$(PackageSourceDir)icon.png;$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/CHANGELOG.md;$(RepoRoot)LICENSE" DestinationFolder="$(PackageStagingDir)" />

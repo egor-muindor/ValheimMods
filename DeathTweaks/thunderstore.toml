@@ -1,0 +1,29 @@
+# Thunderstore publishing configuration for `tcli publish`.
+# The package zip itself is produced by `dotnet build -c Release` (see DeathTweaks.csproj);
+# tcli only uploads it. Run scripts/publish-thunderstore.sh from the repository root.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "Muindor"
+name = "DeathTweaks"
+versionNumber = "1.0.1"
+description = "Keep, drop or destroy items on death by type or name, keep food, tune or disable skill loss, respawn at the start or at fixed coordinates. Client-side. Written for Valheim 1.0, works with EquipmentAndQuickSlots 3.x."
+websiteUrl = "https://github.com/egor-muindor/ValheimMods"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2350"
+
+[build]
+icon = "./Package/icon.png"
+readme = "./README.md"
+outdir = "../dist/tcli"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "valheim" ]
+
+[publish.categories]
+valheim = [ "mods", "tweaks", "client-side", "ai-generated", "deep-north-update" ]
