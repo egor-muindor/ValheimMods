@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 - 2026-09-12
+
+- Fix: the screen could stay black forever after a portal teleport, with "Local player destroyed" in the log and no error. The mod reported the new position to the server before the player's network object had been moved there, and the game then unloaded the player as an object outside the loaded area. The player's network object is now moved first.
+
 ## 1.0.0 - 2026-09-12
 
 First release, built against the Valheim 1.0.12 assemblies.

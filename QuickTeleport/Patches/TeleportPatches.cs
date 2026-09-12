@@ -159,6 +159,13 @@ namespace QuickTeleport.Patches
         /// delay; this mod does not, so report the new position right after the move. The
         /// reference position is set here because vanilla updates it in <c>Player.LateUpdate</c>,
         /// after <c>ZNet.Update</c> would already have sent the old one.
+        ///
+        /// The player's ZDO is moved to the target first. <c>ZNetScene.RemoveObjects</c> destroys
+        /// every instance whose ZDO lies outside the area around the reference position, and
+        /// vanilla only moves the player's ZDO in <c>LateUpdate</c> (<c>ZSyncTransform.OwnerSync</c>).
+        /// This runs in <c>FixedUpdate</c>: with the reference position already at the target and
+        /// the ZDO still at the origin, the next <c>ZNetScene.Update</c> destroyed the local player
+        /// ("Local player destroyed" in the log) and the screen stayed black for good.
         /// </summary>
         private static void AnnouncePosition(Player player)
         {
@@ -166,14 +173,17 @@ namespace QuickTeleport.Patches
             try
             {
                 ZNet net = ZNet.instance;
-                if (net == null)
+                ZDO? zdo = player.m_nview != null ? player.m_nview.GetZDO() : null;
+                if (net == null || zdo == null)
                 {
                     return;
                 }
 
-                net.SetReferencePosition(player.transform.position);
+                Vector3 position = player.transform.position;
+                zdo.SetPosition(position);
+                net.SetReferencePosition(position);
                 net.m_periodicSendTimer = 2f;
-                Plugin.Debug($"Reported the new position {player.transform.position} to the server");
+                Plugin.Debug($"Reported the new position {position} to the server");
             }
             catch (Exception exception)
             {
