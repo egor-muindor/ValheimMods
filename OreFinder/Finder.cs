@@ -285,15 +285,17 @@ namespace OreFinder
             return false;
         }
 
-        /// <summary>The catalog for the current <c>Ores</c> setting; rebuilt when the setting changes.</summary>
+        /// <summary>The catalog for the current <c>Ores</c> and <c>Names</c> settings; rebuilt when they change.</summary>
         private OreCatalog CatalogFor(ModConfig settings)
         {
-            string source = settings.Ores.Value ?? string.Empty;
+            string ores = settings.Ores.Value ?? string.Empty;
+            string names = settings.CustomNames.Value ? settings.Names.Value ?? string.Empty : string.Empty;
+            string source = ores + "\n" + settings.CustomNames.Value + "\n" + names;
             if (_catalog == null || _catalogSource != source)
             {
-                _catalog = new OreCatalog(OreFilter.Parse(source));
+                _catalog = new OreCatalog(OreFilter.Parse(ores), settings.CustomNames.Value ? OreNames.Parse(names) : null);
                 _catalogSource = source;
-                Plugin.Debug($"Looking for: {_catalog.Filter.Describe()}");
+                Plugin.Debug($"Looking for: {_catalog.Filter.Describe()}; names: {(_catalog.Names != null ? _catalog.Names.Describe() : "from the game")}");
             }
 
             return _catalog;

@@ -51,6 +51,14 @@ namespace OreFinder
             Message = config.Bind("Highlight", "Message", true,
                 "Show a message in the top-left corner with the ore name and distance when a vein is found.");
 
+            CustomNames = config.Bind("Names", "CustomNames", false,
+                "Show your own names from the Names setting instead of the game's names (Copper deposit, Silver vein, ...) " +
+                "in the screen marker, the message and the map pin.");
+            Names = config.Bind("Names", "Names", "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O",
+                "Your names for the ores, as item=name pairs separated by commas: the item is the ore item (CopperOre, TinOre, SilverOre, " +
+                "IronScrap, FlametalOre, FlametalOreNew, ...) or the object prefab (rock4_copper, silvervein, ...), the name is anything you like. " +
+                "Ores without a pair keep the game's name. Only used when CustomNames is on.");
+
             MapPin = config.Bind("Map", "MapPin", true,
                 "Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself.");
             MapPinSpacing = config.Bind("Map", "MapPinSpacing", 10f,
@@ -82,6 +90,10 @@ namespace OreFinder
 
         public ConfigEntry<bool> Message { get; }
 
+        public ConfigEntry<bool> CustomNames { get; }
+
+        public ConfigEntry<string> Names { get; }
+
         public ConfigEntry<bool> MapPin { get; }
 
         public ConfigEntry<float> MapPinSpacing { get; }
@@ -105,7 +117,8 @@ namespace OreFinder
             string ores = OreFilter.Parse(Ores.Value).Describe();
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"scan every {ScanInterval.Value.ToString("0.##", culture)} s, ores: {ores}, " +
-                   $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, toggle key {ToggleKey.Value}";
+                   $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, " +
+                   $"names {(CustomNames.Value ? OreNames.Parse(Names.Value).Describe() : "from the game")}, toggle key {ToggleKey.Value}";
         }
     }
 }

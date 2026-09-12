@@ -30,6 +30,8 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **Map pin**: a dot pin named after the ore, saved with your map, for every
   found vein. Nothing is added when another pin is already nearby, so your own
   pins and re-found veins do not pile up.
+- **Your own names**: call the ores what you like, for example one letter each
+  so the map stays readable. Off by default.
 - **Toggle key**: F9 by default, configurable, with modifiers if you like. The
   state is saved to the config file.
 
@@ -71,6 +73,13 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | `Light` | `true` | Light up the vein and the ground around it with a coloured, pulsing light. |
 | `Glow` | `true` | Tint the vein's own material with an emissive glow. Only works for materials whose shader has an emission colour. |
 | `Message` | `true` | Show a top-left message with the ore name and distance when a vein is found. |
+
+### Names
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `CustomNames` | `false` | Show your own names from `Names` instead of the game's names (Copper deposit, Silver vein, ...) in the screen marker, the message and the map pin. |
+| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O` | Your names as `item=name` pairs separated by commas. The item is the ore item or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Ores without a pair keep the game's name. |
 
 ### Map
 

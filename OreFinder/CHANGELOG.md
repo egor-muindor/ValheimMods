@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 - 2026-09-12
+
+- New: your own names for the ores. `CustomNames` (off by default) switches the screen marker, the message and the map pin to the names from `Names`, which comes pre-filled with one-letter names: `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O`.
+
 ## 1.0.1 - 2026-09-12
 
 - Fixed: intact copper and silver deposits were only found after the first hit. An untouched deposit is a plain destructible that turns into the mineable rock when hit; the finder now looks through that as well. The rock that appears after the first hit is recognised as the same vein and not highlighted again.

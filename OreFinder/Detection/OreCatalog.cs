@@ -18,12 +18,16 @@ namespace OreFinder.Detection
 
         private readonly List<KeyValuePair<string, string>> _drops = new List<KeyValuePair<string, string>>();
 
-        public OreCatalog(OreFilter filter)
+        public OreCatalog(OreFilter filter, OreNames? names = null)
         {
             Filter = filter;
+            Names = names;
         }
 
         public OreFilter Filter { get; }
+
+        /// <summary>The player's own ore names, or null to use the game's names.</summary>
+        public OreNames? Names { get; }
 
         /// <summary>The ore kind of a loaded object, or null when it is not ore. Cached per prefab.</summary>
         public OreKind? Classify(ZNetView view)
@@ -56,7 +60,10 @@ namespace OreFinder.Detection
                 return null;
             }
 
-            return new OreKind(oreItem, DisplayNameFor(objectName, oreItem), OreKind.ColorFor(oreItem));
+            string displayName = Names != null && Names.TryGet(oreItem, prefabName, out string customName)
+                ? customName
+                : DisplayNameFor(objectName, oreItem);
+            return new OreKind(oreItem, displayName, OreKind.ColorFor(oreItem));
         }
 
         /// <summary>
