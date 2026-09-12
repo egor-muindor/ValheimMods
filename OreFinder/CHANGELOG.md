@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - 2026-09-12
+
+- Defaults checked against the game's ID list: `Pickables` now lists the pickable objects by their exact prefab names (`Pickable_DragonEgg`, `Pickable_Mushroom_JotunPuffs`, `Pickable_Mushroom_Magecap`, `Pickable_Fiddlehead`, `Pickable_VoltureEgg`); item names still work too. The short names for Magecap and Fiddlehead are keyed the same way.
+- Deep North: the new ore item `GoldOre` (Petrified Tissue, smelts into Bloodgold) is found by the ore rule; its short name is `B`. `Frostwood` (Timberwood) is a valid entry for `Trees`.
+
 ## 1.1.0 - 2026-09-12
 
 - New targets besides ores, each with the same arrow, light, beam and map pin: dungeon entrances (any door with an Enter prompt: burial chambers, sunken crypts, troll caves, frost caves, infested mines, ...), ancient roots, and pickables from the `Pickables` list (dragon eggs, Jotun puffs, Magecap, Fiddlehead, Volture eggs by default). Trees can be listed by their wood in `Trees` (empty by default). Non-ore targets use their own `TargetRadius` (40 m).

@@ -5,7 +5,7 @@
     <AssemblyName>OreFinder</AssemblyName>
     <RootNamespace>OreFinder</RootNamespace>
     <Product>Ore Finder</Product>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Finds ore veins, dungeon entrances, ancient roots and rare pickables around the player: a screen arrow with name and distance, a light beam and a map pin, once per find. Hotkey toggle, configurable radius and lists.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -1,6 +1,6 @@
 {
   "name": "OreFinder",
-  "version_number": "1.1.0",
+  "version_number": "1.1.1",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
   "description": "Points you to ore veins, dungeon entrances, ancient roots and rare pickables: screen arrow with name and distance, light beam, map pin, once per find. Hotkey toggle. Client-side, Valheim 1.0.",
   "dependencies": [

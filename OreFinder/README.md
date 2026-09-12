@@ -88,8 +88,8 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 |-----|---------|-------------|
 | `Dungeons` | `true` | Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, and whatever a game update adds). |
 | `Roots` | `true` | Find ancient roots, the sap extractor spots in the Mistlands. |
-| `Pickables` | `DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg` | Pickable items to find, by item name, comma-separated (`Thistle`, `CloudBerries`, ... work too). Already picked ones are skipped until they regrow. Empty = none. |
-| `Trees` | empty | Trees to find, by the wood they drop (`YggdrasilWood`, `Blackwood`, `ElderBark`, `FineWood`, ...), comma-separated. Empty = none. |
+| `Pickables` | `Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, Pickable_VoltureEgg` | Pickables to find, by the object's prefab name or by the item it gives (`DragonEgg`, `Thistle`, `Cloudberry`), comma-separated. Other useful ones: `Pickable_Thistle`, `CloudberryBush`, `Pickable_BogIronOre`, `Pickable_MountainCaveCrystal`. Already picked ones are skipped until they regrow. Empty = none. |
+| `Trees` | empty | Trees to find, by the wood they drop (`YggdrasilWood`, `Blackwood`, `Frostwood`, `ElderBark`, `FineWood`, ...), comma-separated. Empty = none. |
 | `TargetRadius` | `40` | Search radius in metres for everything except ores, 1 to 200. `Radius` is for ores. |
 
 ### Hidden
@@ -104,7 +104,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | Key | Default | Description |
 |-----|---------|-------------|
 | `CustomNames` | `false` | Show your own names from `Names` instead of the game's names (Copper deposit, Silver vein, ...) in the screen marker, the message and the map pin. |
-| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O, MushroomMagecap=Mc, Fiddlehead=Fh, $item_ancientroot=YR` | Your names as `key=name` pairs separated by commas. The key is the ore item, the pickable item (`DragonEgg`), the wood of a tree (`YggdrasilWood`), a dungeon's location key (`$location_forestcrypt`) or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Targets without a pair get the initials of their name: Burial Chambers = `BC`, Sunken Crypt = `SC`, Dragon egg = `DE`, Magecap = `Ma`. |
+| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, GoldOre=B, Obsidian=O, Pickable_Mushroom_Magecap=Mc, Pickable_Fiddlehead=Fh, $item_ancientroot=YR` | Your names as `key=name` pairs separated by commas. The key is the ore item (`CopperOre`, `GoldOre`), the pickable's prefab or item (`Pickable_DragonEgg`, `DragonEgg`), the wood of a tree (`YggdrasilWood`), a dungeon's location key (`$location_forestcrypt`) or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Targets without a pair get the initials of their name: Burial Chambers = `BC`, Sunken Crypt = `SC`, Dragon egg = `DE`, Magecap = `Ma`. |
 
 ### Map
 
@@ -120,8 +120,9 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 
 With an empty `Ores` list, a mineable object is ore when one of the items it
 drops has the word *Ore* or *Scrap* in its name: `CopperOre`, `TinOre`,
-`SilverOre`, `IronScrap`, `FlametalOre`, `FlametalOreNew`. Anything a game
-update adds with such a name is picked up automatically. `LeatherScraps` and
+`SilverOre`, `IronScrap`, `FlametalOre`, `FlametalOreNew`, and the Deep North's
+`GoldOre` (Petrified Tissue). Anything a game update adds with such a name is
+picked up automatically. `LeatherScraps` and
 `ShieldCore` do not qualify, and neither do `Stone`, `Obsidian`, `BlackMarble`
 or `Softtissue`.
 

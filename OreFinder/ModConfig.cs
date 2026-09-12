@@ -40,11 +40,12 @@ namespace OreFinder
                 "Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, ...).");
             Roots = config.Bind("Targets", "Roots", true,
                 "Find ancient roots (the sap extractor spots in the Mistlands).");
-            Pickables = config.Bind("Targets", "Pickables", "DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg",
-                "Pickable items to find, by item name (DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg, Thistle, CloudBerries, ...), " +
+            Pickables = config.Bind("Targets", "Pickables", "Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, Pickable_VoltureEgg",
+                "Pickables to find, by the object's prefab name (Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, " +
+                "Pickable_VoltureEgg, Pickable_Thistle, CloudberryBush, Pickable_BogIronOre, ...) or by the item it gives (DragonEgg, Thistle, Cloudberry, ...), " +
                 "comma-separated. Already picked ones are skipped until they regrow. Empty = none.");
             Trees = config.Bind("Targets", "Trees", "",
-                "Trees to find, by the wood they drop (YggdrasilWood, Blackwood, ElderBark, FineWood, ...), comma-separated. Empty = none.");
+                "Trees to find, by the wood they drop (YggdrasilWood, Blackwood, Frostwood, ElderBark, FineWood, ...), comma-separated. Empty = none.");
             TargetRadius = config.Bind("Targets", "TargetRadius", 40f,
                 new ConfigDescription("Search radius in metres for everything except ores (Radius is for ores).",
                     new AcceptableValueRange<float>(1f, 200f)));
@@ -76,8 +77,8 @@ namespace OreFinder
                 "Show your own names from the Names setting instead of the game's names (Copper deposit, Silver vein, ...) " +
                 "in the screen marker, the message and the map pin.");
             Names = config.Bind("Names", "Names",
-                "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O, MushroomMagecap=Mc, Fiddlehead=Fh, $item_ancientroot=YR",
-                "Your names as key=name pairs separated by commas. The key is the ore item (CopperOre, ...), the pickable item (DragonEgg), " +
+                "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, GoldOre=B, Obsidian=O, Pickable_Mushroom_Magecap=Mc, Pickable_Fiddlehead=Fh, $item_ancientroot=YR",
+                "Your names as key=name pairs separated by commas. The key is the ore item (CopperOre, GoldOre, ...), the pickable's prefab or item (Pickable_DragonEgg, DragonEgg), " +
                 "the wood of a tree (YggdrasilWood), a dungeon's location key ($location_forestcrypt) or the object prefab (rock4_copper, silvervein). " +
                 "Targets without a pair get the initials of their name (Burial Chambers = BC, Dragon egg = DE, Magecap = Ma). Only used when CustomNames is on.");
 
