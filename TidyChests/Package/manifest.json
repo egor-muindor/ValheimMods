@@ -1,6 +1,6 @@
 {
   "name": "TidyChests",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
   "description": "Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. Client-side.",
   "dependencies": [

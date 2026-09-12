@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 - 2026-09-12
+
+- The find key also works in the crafting panel: point at an ingredient of the selected recipe, at the recipe's icon or at an entry of the recipe list and press it to highlight the chests that hold that item.
+
 ## 1.0.0 - 2026-09-12
 
 First release, built against the Valheim 1.0.12 assemblies.

@@ -38,7 +38,7 @@ namespace TidyChests
                 [NoChests] = "No usable chest within {0} m",
                 [Found] = "{0}: found in {1} chests",
                 [NotFound] = "{0}: not in any chest within {1} m",
-                [Hover] = "Point at an item and press {0} to find it in nearby chests",
+                [Hover] = "Point at an item in the inventory or the crafting panel and press {0} to find it in nearby chests",
             },
             ["Russian"] = new Dictionary<string, string>
             {
@@ -48,7 +48,7 @@ namespace TidyChests
                 [NoChests] = "В радиусе {0} м нет подходящих сундуков",
                 [Found] = "{0}: есть в сундуках ({1})",
                 [NotFound] = "{0}: нет ни в одном сундуке в радиусе {1} м",
-                [Hover] = "Наведите курсор на предмет и нажмите {0}, чтобы найти его в сундуках",
+                [Hover] = "Наведите курсор на предмет в инвентаре или в крафте и нажмите {0}, чтобы найти его в сундуках",
             },
         };
 

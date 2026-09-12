@@ -8,7 +8,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "TidyChests"
-versionNumber = "1.0.0"
+versionNumber = "1.0.1"
 description = "Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. Client-side."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false

@@ -39,7 +39,7 @@ namespace TidyChests
                 "Show a message with the result after stashing.");
 
             FindKey = config.Bind("Find", "FindKey", new KeyboardShortcut(KeyCode.T),
-                "With the inventory open, point at an item and press this key: the inventory closes and every chest in range that holds the item is highlighted. Modifiers are allowed, e.g. \"T + LeftControl\".");
+                "With the inventory open, point at an item (in the inventory, or an ingredient or recipe in the crafting panel) and press this key: the inventory closes and every chest in range that holds the item is highlighted. Modifiers are allowed, e.g. \"T + LeftControl\".");
             HighlightDuration = config.Bind("Find", "HighlightDuration", 8f,
                 new ConfigDescription("Seconds the found chests stay highlighted.",
                     new AcceptableValueRange<float>(1f, 60f)));

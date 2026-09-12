@@ -30,7 +30,9 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   an emissive tint and a screen marker with the count and the distance, for
   8 seconds by default. The inventory closes so you can look around; if no chest
   holds the item, a message says so and the inventory stays open. Works for
-  items in an open chest too.
+  items in an open chest and in the crafting panel too: point at an ingredient
+  of the selected recipe, at the recipe's icon or at an entry of the recipe list
+  to see which chests hold that item.
 - **Localized**: the button label and the messages follow the game language
   (English and Russian included, English elsewhere).
 - **Multiplayer**: with [MultiUserChest](https://thunderstore.io/c/valheim/p/MSchmoecker/MultiUserChest/)
@@ -72,7 +74,7 @@ The config file `BepInEx/config/muindor.TidyChests.cfg` is created on first laun
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `FindKey` | `T` | With the inventory open, point at an item and press this key. Modifiers are allowed, e.g. `T + LeftControl`. |
+| `FindKey` | `T` | With the inventory open, point at an item (in the inventory, or an ingredient or recipe in the crafting panel) and press this key. Modifiers are allowed, e.g. `T + LeftControl`. |
 | `HighlightDuration` | `8` | Seconds the found chests stay highlighted, 1 to 60. |
 | `ScreenMarker` | `true` | Draw an arrow with the item count and the distance over each found chest, at the screen edge when it is out of view. |
 | `Light` | `true` | Light up each found chest with a pulsing light. |
@@ -111,8 +113,10 @@ same rules run in the unit tests.
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
 | Console command | `Terminal.InitTerminal` postfix |
 
-The find key is read in a plain `Update`; the hovered item is found the way the
-game finds it for the tooltip. If a patch throws, it logs the error and lets
+The find key is read in a plain `Update`; the hovered inventory item is found
+the way the game finds it for the tooltip, and the crafting panel's ingredient
+icons, recipe icon and recipe list entries are tested against the pointer the
+same way. If a patch throws, it logs the error and lets
 vanilla run.
 
 ## Compatibility

@@ -5,13 +5,15 @@ using BepInEx.Configuration;
 using TidyChests.Containers;
 using TidyChests.Hud;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TidyChests.Find
 {
     /// <summary>
-    /// The find key: with the inventory open, the item under the cursor (or the gamepad
-    /// selection) is looked up in every container in range; the inventory closes and the
-    /// containers that hold it are highlighted. Lives on the plugin's game object, so it
+    /// The find key: with the inventory open, the item under the cursor (in the inventory
+    /// grids, or an ingredient or recipe in the crafting panel, or the gamepad selection) is
+    /// looked up in every container in range; the inventory closes and the containers that
+    /// hold it are highlighted. Lives on the plugin's game object, so it
     /// survives world changes; the highlights are dropped when the player is gone.
     /// </summary>
     public sealed class ChestFinder : MonoBehaviour
@@ -174,21 +176,16 @@ namespace TidyChests.Find
                 return;
             }
 
-            ItemDrop.ItemData? item = HoveredItem(gui.m_playerGrid) ?? HoveredItem(gui.m_containerGrid);
-            if (item == null && ZInput.IsExclusiveGamepadActive())
-            {
-                item = gui.m_playerGrid.GetGamepadSelectedItem() ?? gui.m_containerGrid.GetGamepadSelectedItem();
-            }
-
-            if (item == null)
+            string? sharedName = HoveredInventoryItem(gui)?.m_shared.m_name ?? HoveredCraftingItem(gui);
+            if (sharedName == null)
             {
                 player.Message(MessageHud.MessageType.TopLeft, Translations.Get(Translations.Hover, Plugin.Settings.FindKey.Value));
                 return;
             }
 
-            string displayName = Localization.instance.Localize(item.m_shared.m_name);
-            Plugin.Debug($"Find {item.m_shared.m_name} within {Plugin.Settings.Radius.Value.ToString("0.#", CultureInfo.InvariantCulture)} m");
-            int found = Find(item.m_shared.m_name, displayName);
+            string displayName = Localization.instance.Localize(sharedName);
+            Plugin.Debug($"Find {sharedName} within {Plugin.Settings.Radius.Value.ToString("0.#", CultureInfo.InvariantCulture)} m");
+            int found = Find(sharedName, displayName);
             if (found == 0)
             {
                 string radius = Plugin.Settings.Radius.Value.ToString("0.#", CultureInfo.InvariantCulture);
@@ -202,6 +199,94 @@ namespace TidyChests.Find
             }
 
             player.Message(MessageHud.MessageType.Center, Translations.Get(Translations.Found, displayName, found));
+        }
+
+        /// <summary>The item under the pointer (or the gamepad selection) in the player's or the open container's grid.</summary>
+        private static ItemDrop.ItemData? HoveredInventoryItem(InventoryGui gui)
+        {
+            ItemDrop.ItemData? item = HoveredItem(gui.m_playerGrid) ?? HoveredItem(gui.m_containerGrid);
+            if (item == null && ZInput.IsExclusiveGamepadActive())
+            {
+                item = gui.m_playerGrid.GetGamepadSelectedItem() ?? gui.m_containerGrid.GetGamepadSelectedItem();
+            }
+
+            return item;
+        }
+
+        /// <summary>
+        /// The item under the pointer in the crafting panel: an ingredient of the selected
+        /// recipe, the selected recipe's own icon, or an entry of the recipe list. Returns the
+        /// item's shared name, or null when the pointer is over none of them.
+        /// </summary>
+        private static string? HoveredCraftingItem(InventoryGui gui)
+        {
+            Vector3 pointer = ZInput.pointerPosition;
+
+            // Ingredients: matched by icon, because the shown subset rotates when more ingredients exist than slots.
+            foreach (GameObject element in gui.m_recipeRequirementList)
+            {
+                if (element == null)
+                {
+                    continue;
+                }
+
+                Transform icon = element.transform.Find("res_icon");
+                if (icon == null || !icon.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                if (!Contains(element.transform as RectTransform, pointer) && !Contains(icon as RectTransform, pointer))
+                {
+                    continue;
+                }
+
+                Sprite? sprite = icon.GetComponent<Image>()?.sprite;
+                foreach (Piece.Requirement requirement in gui.m_reqList)
+                {
+                    ItemDrop resource = requirement.m_resItem;
+                    if (resource != null && sprite != null && resource.m_itemData.GetIcon() == sprite)
+                    {
+                        return resource.m_itemData.m_shared.m_name;
+                    }
+                }
+            }
+
+            // The selected recipe's icon.
+            Recipe selected = gui.m_selectedRecipe.Recipe;
+            if (selected != null && selected.m_item != null && gui.m_recipeIcon != null && gui.m_recipeIcon.enabled
+                && Contains(gui.m_recipeIcon.rectTransform, pointer))
+            {
+                return selected.m_item.m_itemData.m_shared.m_name;
+            }
+
+            // The recipe list: only entries inside the scroll viewport are really under the pointer.
+            RectTransform? viewport = gui.m_recipeListRoot != null ? gui.m_recipeListRoot.parent as RectTransform : null;
+            if (viewport != null && Contains(viewport, pointer))
+            {
+                foreach (InventoryGui.RecipeDataPair pair in gui.m_availableRecipes)
+                {
+                    GameObject element = pair.InterfaceElement;
+                    if (element != null && pair.Recipe != null && pair.Recipe.m_item != null && Contains(element.transform as RectTransform, pointer))
+                    {
+                        return pair.Recipe.m_item.m_itemData.m_shared.m_name;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>True when the pointer is inside a visible rectangle, the way the inventory grid tests its cells.</summary>
+        private static bool Contains(RectTransform? rect, Vector3 pointer)
+        {
+            if (rect == null || !rect.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            Vector2 point = rect.InverseTransformPoint(pointer);
+            return rect.rect.Contains(point);
         }
 
         /// <summary>The item under the pointer in <paramref name="grid"/>, the way the tooltip finds it.</summary>

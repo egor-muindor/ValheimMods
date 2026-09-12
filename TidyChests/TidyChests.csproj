@@ -5,7 +5,7 @@
     <AssemblyName>TidyChests</AssemblyName>
     <RootNamespace>TidyChests</RootNamespace>
     <Product>Tidy Chests</Product>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Terraria-style quick stack for Valheim: a Stash button moves your materials into the nearby chests that already hold them, and a hotkey highlights the chests that contain the item under the cursor.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
