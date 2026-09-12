@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>DeathTweaks</AssemblyName>
+    <RootNamespace>DeathTweaks</RootNamespace>
+    <Product>Death Tweaks</Product>
+    <Version>1.0.0</Version>
+    <Authors>Egor Fadeev</Authors>
+    <Description>Configurable death behaviour for Valheim: keep, drop or destroy items, keep food, tune skill loss, choose the respawn point.</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- BepInEx.PluginInfoProps generates PluginInfo.PLUGIN_GUID/NAME/VERSION from these -->
+    <BepInExPluginGuid>muindor.DeathTweaks</BepInExPluginGuid>
+    <BepInExPluginName>$(Product)</BepInExPluginName>
+    <BepInExPluginVersion>$(Version)</BepInExPluginVersion>
+    <!-- MSB3277: the game assemblies reference Unity modules by differing versions; harmless for a plugin -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <!-- Only DeathTweaks.dll belongs in the output: BepInEx, Harmony and the game provide everything else at runtime -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Game assemblies. Publicize="true" exposes private members at compile time so
+    every patched member is referenced with nameof() and a game update that
+    renames or removes one fails the build instead of failing silently at runtime.
+  -->
+  <ItemGroup>
+    <Reference Include="assembly_valheim" HintPath="$(ValheimManagedDir)assembly_valheim.dll" Publicize="true" Private="false" />
+    <Reference Include="assembly_utils" HintPath="$(ValheimManagedDir)assembly_utils.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(ValheimManagedDir)UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ValheimManagedDir)UnityEngine.CoreModule.dll" Private="false" />
+    <!-- The game assemblies are built against .NET Standard 2.1; compile against the facade the game ships -->
+    <Reference Include="netstandard" HintPath="$(ValheimManagedDir)netstandard.dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CheckGameAssemblies" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ValheimManagedDir)assembly_valheim.dll')"
+           Text="Valheim assemblies not found in '$(ValheimManagedDir)'. Copy valheim_Data/Managed to lib/Managed or set VALHEIM_MANAGED_DIR." />
+  </Target>
+
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(ValheimPluginsDir)' != ''">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ValheimPluginsDir)$(AssemblyName)/" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) to $(ValheimPluginsDir)$(AssemblyName)/" />
+  </Target>
+
+</Project>

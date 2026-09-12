@@ -1,0 +1,25 @@
+# Game assemblies (copied from the local Valheim installation, never committed)
+lib/
+
+# Build output
+bin/
+obj/
+dist/
+TestResults/
+*.binlog
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+.DS_Store
+
+# Local overrides (paths to the game installation, deploy targets)
+*.local.props
+Environment.props
+
+# Working notes, research and implementation plans are kept out of the repository
+docs/superpowers/

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>DeathTweaks.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    The rule engine has no game or Unity dependency, so its sources are compiled
+    straight into this project. That keeps the tests runnable on any machine
+    without the game assemblies or a .NET Framework runtime.
+  -->
+  <ItemGroup>
+    <Compile Include="../DeathTweaks/Rules/**/*.cs" LinkBase="Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

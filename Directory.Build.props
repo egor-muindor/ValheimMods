@@ -1,0 +1,31 @@
+<Project>
+  <!--
+    Shared settings for every project in this repository.
+
+    Game assemblies are not committed. Copy the contents of
+    <Valheim>/valheim_Data/Managed into lib/Managed (the default location below),
+    or point VALHEIM_MANAGED_DIR at an existing Managed folder.
+
+    Set VALHEIM_PLUGINS_DIR to your BepInEx/plugins folder to have the built
+    plugin copied there after each build.
+  -->
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+
+    <ValheimManagedDir Condition="'$(ValheimManagedDir)' == ''">$(VALHEIM_MANAGED_DIR)</ValheimManagedDir>
+    <ValheimManagedDir Condition="'$(ValheimManagedDir)' == ''">$(RepoRoot)lib/Managed/</ValheimManagedDir>
+    <ValheimManagedDir Condition="!HasTrailingSlash('$(ValheimManagedDir)')">$(ValheimManagedDir)/</ValheimManagedDir>
+
+    <ValheimPluginsDir Condition="'$(ValheimPluginsDir)' == ''">$(VALHEIM_PLUGINS_DIR)</ValheimPluginsDir>
+    <ValheimPluginsDir Condition="'$(ValheimPluginsDir)' != '' AND !HasTrailingSlash('$(ValheimPluginsDir)')">$(ValheimPluginsDir)/</ValheimPluginsDir>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <Deterministic>true</Deterministic>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <!-- Machine-specific overrides (gitignored) -->
+  <Import Project="$(RepoRoot)Environment.props" Condition="Exists('$(RepoRoot)Environment.props')" />
+</Project>
