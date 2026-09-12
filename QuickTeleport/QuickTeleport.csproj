@@ -5,7 +5,7 @@
     <AssemblyName>QuickTeleport</AssemblyName>
     <RootNamespace>QuickTeleport</RootNamespace>
     <Product>Quick Teleport</Product>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Faster portal and dungeon teleports for Valheim: end the teleport as soon as the screen is black and the destination is loaded, or run the vanilla timing N times faster.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

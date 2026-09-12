@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - 2026-09-12
+
+- Dungeon entrances (crypts, caves) no longer wait for `SettleTime`: the interior is loaded together with the entrance, so nothing is left to arrive from the server. With the default fade they now take a fraction of a second.
+
 ## 1.0.2 - 2026-09-12
 
 - The default `FadeDuration` is 0.1 s instead of 1 s. Config files created by an older version keep their value; lower it by hand.

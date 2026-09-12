@@ -37,8 +37,8 @@ namespace QuickTeleport
                 "false: like the old QuickTeleport 'Skip Loading Objects'; you may end up under a building floor. Ignored when WaitForAreaLoad is false.");
             SettleTime = config.Bind("Loading", "SettleTime", 0.5f,
                 new ConfigDescription(
-                    "Auto mode with WaitForObjects only. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. " +
-                    "Never waits past the vanilla minimum measured from the start of the teleport (8 s for portals, 2 s for dungeons). 0 disables.",
+                    "Portals in Auto mode with WaitForObjects only. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. " +
+                    "Never waits past the vanilla 8 s measured from the start of the teleport. 0 disables. Dungeon entrances never wait: their interior is loaded together with the entrance.",
                     new AcceptableValueRange<float>(0f, 5f)));
         }
 

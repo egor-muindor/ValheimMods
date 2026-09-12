@@ -156,8 +156,10 @@ namespace QuickTeleport.Teleport
         /// <summary>
         /// Readiness gate. <paramref name="areaReady"/> is the vanilla answer (or the terrain-only
         /// answer); <paramref name="objectCount"/> the number of known objects in the destination
-        /// zones. In Auto mode with the full check the teleport also waits until that count has
-        /// been stable for <see cref="SettleTime"/>, capped at <see cref="VanillaMinimum"/>.
+        /// zones. In Auto mode with the full check a portal teleport also waits until that count
+        /// has been stable for <see cref="SettleTime"/>, capped at <see cref="VanillaMinimum"/>.
+        /// Dungeon teleports never wait: the interior lies in the same zone as the entrance, so
+        /// its objects are already loaded and nothing is left to arrive from the server.
         /// </summary>
         public bool ApplySettle(bool areaReady, int objectCount)
         {
@@ -174,7 +176,7 @@ namespace QuickTeleport.Teleport
             ObjectCount = objectCount;
 
             bool settled;
-            if (Mode != TeleportMode.Auto || AreaCheck != AreaCheck.Full)
+            if (Mode != TeleportMode.Auto || AreaCheck != AreaCheck.Full || !Distant)
             {
                 settled = true;
             }
@@ -232,7 +234,7 @@ namespace QuickTeleport.Teleport
                     {
                         text.Append(" (").Append(ObjectCount.Value).Append(" objects)");
                     }
-                    if (Mode == TeleportMode.Auto)
+                    if (Mode == TeleportMode.Auto && Distant)
                     {
                         text.Append(", settled at ").Append(Seconds(SettledAt));
                     }

@@ -29,7 +29,8 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   speed; see [Making it faster](#making-it-faster).
 - The two unsafe options of the old QuickTeleport, off by default: do not wait
   for objects, or do not wait for the area at all.
-- Dungeon entrances (crypts, caves) benefit too: they skip the 2 s wait.
+- Dungeon entrances (crypts, caves) benefit too: they skip the 2 s wait and
+  the settle wait, so with the default fade they take a fraction of a second.
 
 ## Installation
 
@@ -64,7 +65,7 @@ The config file `BepInEx/config/muindor.QuickTeleport.cfg` is created on first l
 |-----|---------|-------------|
 | `WaitForAreaLoad` | `true` | Wait until the destination is loaded (vanilla). `false`: end the teleport right after the fade, like the old QuickTeleport "Skip Loading Area". You may float or fall until the world appears. |
 | `WaitForObjects` | `true` | Also wait for the objects of the destination (buildings, trees) to spawn, not only for the terrain (vanilla). `false`: like the old QuickTeleport "Skip Loading Objects". You may end up under a building floor. Ignored when `WaitForAreaLoad` is `false`. |
-| `SettleTime` | `0.5` | Auto mode with `WaitForObjects` only, 0 to 5. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. Never waits past the vanilla minimum measured from the start of the teleport (8 s for portals, 2 s for dungeons), so a dungeon settles for at most 2 s minus the fade. `0` disables. |
+| `SettleTime` | `0.5` | Portals in Auto mode with `WaitForObjects` only, 0 to 5. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. Never waits past the vanilla 8 s measured from the start of the teleport. `0` disables. Dungeon entrances never wait: their interior is loaded together with the entrance. |
 
 ### Why the settle wait
 
@@ -76,6 +77,8 @@ watches the number of objects in the destination zones and ends the teleport
 once it has stopped changing for `SettleTime`. On a local game this adds half
 a second; on a busy server it waits for the buildings to arrive, up to the
 vanilla 8 seconds. Raise `SettleTime` if you arrive before your base does.
+Dungeon entrances skip this wait: the interior of a crypt or cave lies in the
+same zone as its entrance, so it is already loaded when you interact.
 
 ## Making it faster
 

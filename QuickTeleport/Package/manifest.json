@@ -1,6 +1,6 @@
 {
   "name": "QuickTeleport",
-  "version_number": "1.0.2",
+  "version_number": "1.0.3",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
   "description": "Faster portals and dungeon teleports: end the teleport as soon as the screen is black and the destination is loaded, or run vanilla timing N times faster. Client-side, Valheim 1.0.",
   "dependencies": [

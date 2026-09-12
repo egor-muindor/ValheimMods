@@ -319,14 +319,22 @@ namespace QuickTeleport.Tests
             Assert.False(portal.ApplySettle(true, 101));
             AdvanceTo(portal, 8.0f);
             Assert.True(portal.ApplySettle(true, 102));
+        }
 
+        [Fact]
+        public void Settle_DungeonsNeverWait()
+        {
+            // The interior of a dungeon lies in the same zone as its entrance, so its objects
+            // are already loaded and there is nothing to wait for from the server.
             var dungeon = Policy(distant: false, configure: s => s.SettleTime = 5f);
             AdvanceTo(dungeon, 1.0f);
-            dungeon.ApplySettle(true, 100);
-            AdvanceTo(dungeon, 1.875f);
-            Assert.False(dungeon.ApplySettle(true, 101));
-            AdvanceTo(dungeon, 2.0f);
-            Assert.True(dungeon.ApplySettle(true, 102));
+
+            Assert.False(dungeon.ApplySettle(false, 0));
+            Assert.True(dungeon.ApplySettle(true, 100));
+            Assert.Equal(1.0f, dungeon.SettledAt);
+            AdvanceTo(dungeon, 1.125f);
+            Assert.True(dungeon.ApplySettle(true, 101));
+            Assert.DoesNotContain("settled", dungeon.Describe());
         }
 
         [Fact]

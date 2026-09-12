@@ -8,7 +8,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "QuickTeleport"
-versionNumber = "1.0.2"
+versionNumber = "1.0.3"
 description = "Faster portals and dungeon teleports: end the teleport as soon as the screen is black and the destination is loaded, or run vanilla timing N times faster. Client-side, Valheim 1.0."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
