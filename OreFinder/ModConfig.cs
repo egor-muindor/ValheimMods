@@ -50,6 +50,12 @@ namespace OreFinder
                 "Tint the vein's own material with an emissive glow. Only works for materials whose shader has an emission colour.");
             Message = config.Bind("Highlight", "Message", true,
                 "Show a message in the top-left corner with the ore name and distance when a vein is found.");
+
+            MapPin = config.Bind("Map", "MapPin", true,
+                "Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself.");
+            MapPinSpacing = config.Bind("Map", "MapPinSpacing", 10f,
+                new ConfigDescription("Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres. 0 = always add.",
+                    new AcceptableValueRange<float>(0f, 100f)));
         }
 
         public ConfigEntry<bool> Enabled { get; }
@@ -76,6 +82,10 @@ namespace OreFinder
 
         public ConfigEntry<bool> Message { get; }
 
+        public ConfigEntry<bool> MapPin { get; }
+
+        public ConfigEntry<float> MapPinSpacing { get; }
+
         /// <summary>Re-reads the config file from disk.</summary>
         public void Reload()
         {
@@ -95,7 +105,7 @@ namespace OreFinder
             string ores = OreFilter.Parse(Ores.Value).Describe();
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"scan every {ScanInterval.Value.ToString("0.##", culture)} s, ores: {ores}, " +
-                   $"highlight {Duration.Value.ToString("0.#", culture)} s, toggle key {ToggleKey.Value}";
+                   $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, toggle key {ToggleKey.Value}";
         }
     }
 }

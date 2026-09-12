@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 - 2026-09-12
+
+- Fixed: intact copper and silver deposits were only found after the first hit. An untouched deposit is a plain destructible that turns into the mineable rock when hit; the finder now looks through that as well. The rock that appears after the first hit is recognised as the same vein and not highlighted again.
+- New: a map pin (dot with the ore name, saved with your map) for every found vein, `MapPin` in the config. No pin is added when any other pin is within `MapPinSpacing` metres (10 by default).
+
 ## 1.0.0 - 2026-09-12
 
 First release, built against the Valheim 1.0.12 assemblies.

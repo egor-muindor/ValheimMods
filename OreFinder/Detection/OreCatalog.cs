@@ -6,7 +6,9 @@ namespace OreFinder.Detection
     /// <summary>
     /// Classifies loaded objects as ore or not, once per prefab. An object qualifies through
     /// its drop table: <c>MineRock5</c> (copper, silver, flametal), <c>MineRock</c> (tin,
-    /// obsidian) and <c>Destructible</c> + <c>DropOnDestroyed</c> (scrap piles) are inspected.
+    /// obsidian) and <c>DropOnDestroyed</c> (scrap piles) are inspected. An intact deposit is
+    /// a plain <c>Destructible</c> that spawns the fractured <c>MineRock5</c> on its first
+    /// destroy, so the spawned prefab is inspected as well.
     /// </summary>
     public sealed class OreCatalog
     {
@@ -41,35 +43,7 @@ namespace OreFinder.Detection
         {
             _drops.Clear();
             _dropNames.Clear();
-            string objectName = string.Empty;
-
-            MineRock5 rock5 = go.GetComponent<MineRock5>();
-            if (rock5 != null)
-            {
-                AddDrops(rock5.m_dropItems);
-                objectName = rock5.m_name;
-            }
-
-            MineRock rock = go.GetComponent<MineRock>();
-            if (rock != null)
-            {
-                AddDrops(rock.m_dropItems);
-                if (objectName.Length == 0)
-                {
-                    objectName = rock.m_name;
-                }
-            }
-
-            DropOnDestroyed dropOnDestroyed = go.GetComponent<DropOnDestroyed>();
-            if (dropOnDestroyed != null && go.GetComponent<Destructible>() != null)
-            {
-                AddDrops(dropOnDestroyed.m_dropWhenDestroyed);
-                HoverText hover = go.GetComponent<HoverText>();
-                if (objectName.Length == 0 && hover != null)
-                {
-                    objectName = hover.m_text;
-                }
-            }
+            string objectName = Collect(go, 0);
 
             if (_dropNames.Count == 0)
             {
@@ -83,6 +57,57 @@ namespace OreFinder.Detection
             }
 
             return new OreKind(oreItem, DisplayNameFor(objectName, oreItem), OreKind.ColorFor(oreItem));
+        }
+
+        /// <summary>
+        /// Gathers the drops of the object and, through <c>Destructible.m_spawnWhenDestroyed</c>,
+        /// of what it turns into when destroyed. Returns the object's hover name, or the name of
+        /// what it turns into, or an empty string.
+        /// </summary>
+        private string Collect(GameObject go, int depth)
+        {
+            string name = string.Empty;
+
+            MineRock5 rock5 = go.GetComponent<MineRock5>();
+            if (rock5 != null)
+            {
+                AddDrops(rock5.m_dropItems);
+                name = rock5.m_name;
+            }
+
+            MineRock rock = go.GetComponent<MineRock>();
+            if (rock != null)
+            {
+                AddDrops(rock.m_dropItems);
+                if (name.Length == 0)
+                {
+                    name = rock.m_name;
+                }
+            }
+
+            DropOnDestroyed dropOnDestroyed = go.GetComponent<DropOnDestroyed>();
+            if (dropOnDestroyed != null)
+            {
+                AddDrops(dropOnDestroyed.m_dropWhenDestroyed);
+            }
+
+            HoverText hover = go.GetComponent<HoverText>();
+            if (name.Length == 0 && hover != null)
+            {
+                name = hover.m_text;
+            }
+
+            Destructible destructible = go.GetComponent<Destructible>();
+            if (destructible != null && destructible.m_spawnWhenDestroyed != null && depth < 2)
+            {
+                string spawnedName = Collect(destructible.m_spawnWhenDestroyed, depth + 1);
+                if (name.Length == 0)
+                {
+                    name = spawnedName;
+                }
+            }
+
+            return name;
         }
 
         private void AddDrops(DropTable? table)

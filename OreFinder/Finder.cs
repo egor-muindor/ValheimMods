@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using OreFinder.Detection;
 using OreFinder.Highlight;
 using OreFinder.Hud;
+using OreFinder.Map;
 using UnityEngine;
 
 namespace OreFinder
@@ -18,6 +19,15 @@ namespace OreFinder
         private readonly List<VeinHighlight> _highlights = new List<VeinHighlight>();
 
         private readonly HashSet<ZDOID> _seen = new HashSet<ZDOID>();
+
+        /// <summary>
+        /// Where the seen veins stand. The first hit on an intact deposit replaces it with a new
+        /// object (new id) at the same position; that one must not count as a new vein.
+        /// </summary>
+        private readonly List<Vector3> _seenPositions = new List<Vector3>();
+
+        /// <summary>Two objects closer than this are the same vein.</summary>
+        private const float SameVeinDistance = 0.5f;
 
         private readonly List<ZNetView> _nearby = new List<ZNetView>();
 
@@ -35,7 +45,7 @@ namespace OreFinder
         public int HighlightCount => _highlights.Count;
 
         /// <summary>Veins highlighted since entering the world.</summary>
-        public int SeenCount => _seen.Count;
+        public int SeenCount => _seenPositions.Count;
 
         /// <summary>Turns the finder on or off, saves the setting and tells the player.</summary>
         public void SetEnabled(bool enabled)
@@ -53,8 +63,9 @@ namespace OreFinder
         /// <summary>Forgets the veins already shown, so they are highlighted again. Returns how many were forgotten.</summary>
         public int Reset()
         {
-            int count = _seen.Count;
+            int count = _seenPositions.Count;
             _seen.Clear();
+            _seenPositions.Clear();
             RemoveHighlights();
             _nextScan = 0f;
             return count;
@@ -186,6 +197,14 @@ namespace OreFinder
                 }
 
                 _seen.Add(id);
+                Vector3 origin = view.transform.position;
+                if (IsSeenVein(origin))
+                {
+                    Plugin.Debug($"{kind.DisplayName} at {origin} is a vein already shown (new object after a hit), skipped");
+                    continue;
+                }
+
+                _seenPositions.Add(origin);
                 try
                 {
                     Highlight(view, kind, player, settings);
@@ -206,6 +225,11 @@ namespace OreFinder
             if (settings.Message.Value)
             {
                 ShowMessage(MessageHud.MessageType.TopLeft, $"{kind.DisplayName}: {distance:0} m");
+            }
+
+            if (settings.MapPin.Value && !MapPins.TryAdd(highlight.Position, kind.DisplayName, settings.MapPinSpacing.Value))
+            {
+                Plugin.Debug($"No map pin for {kind.DisplayName}: another pin is within {settings.MapPinSpacing.Value:0.#} m");
             }
 
             Plugin.Debug($"Found {kind.DisplayName} ({Utils.GetPrefabName(view.gameObject)}, ore item {kind.OreItem}) " +
@@ -243,8 +267,22 @@ namespace OreFinder
         {
             RemoveHighlights();
             _seen.Clear();
+            _seenPositions.Clear();
             _catalog = null;
             _inWorld = false;
+        }
+
+        private bool IsSeenVein(Vector3 origin)
+        {
+            foreach (Vector3 seen in _seenPositions)
+            {
+                if ((seen - origin).sqrMagnitude < SameVeinDistance * SameVeinDistance)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>The catalog for the current <c>Ores</c> setting; rebuilt when the setting changes.</summary>

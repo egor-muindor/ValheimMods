@@ -5,7 +5,7 @@
     <AssemblyName>OreFinder</AssemblyName>
     <RootNamespace>OreFinder</RootNamespace>
     <Product>Ore Finder</Product>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Finds ore veins around the player: a screen arrow with the ore name and distance plus a light beam on the vein, once per vein. Hotkey toggle, configurable radius and ore list.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -39,6 +39,8 @@
     <Reference Include="assembly_utils" HintPath="$(ValheimManagedDir)assembly_utils.dll" Private="false" />
     <!-- Localization -->
     <Reference Include="assembly_guiutils" HintPath="$(ValheimManagedDir)assembly_guiutils.dll" Private="false" />
+    <!-- PlatformUserID, an optional parameter of Minimap.AddPin -->
+    <Reference Include="Splatform" HintPath="$(ValheimManagedDir)Splatform.dll" Private="false" />
     <Reference Include="UnityEngine" HintPath="$(ValheimManagedDir)UnityEngine.dll" Private="false" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(ValheimManagedDir)UnityEngine.CoreModule.dll" Private="false" />
     <!-- The screen markers are drawn with IMGUI (GUI, GUIStyle, Event) -->

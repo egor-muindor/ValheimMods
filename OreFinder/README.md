@@ -27,6 +27,9 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **Once per vein**: a vein is highlighted the first time it enters the radius
   and not again, until you leave the world or run `orefinder reset`.
 - **Ore list**: look for every ore, or only the ones you name.
+- **Map pin**: a dot pin named after the ore, saved with your map, for every
+  found vein. Nothing is added when another pin is already nearby, so your own
+  pins and re-found veins do not pile up.
 - **Toggle key**: F9 by default, configurable, with modifiers if you like. The
   state is saved to the config file.
 
@@ -69,6 +72,13 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | `Glow` | `true` | Tint the vein's own material with an emissive glow. Only works for materials whose shader has an emission colour. |
 | `Message` | `true` | Show a top-left message with the ore name and distance when a vein is found. |
 
+### Map
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `MapPin` | `true` | Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself. |
+| `MapPinSpacing` | `10` | Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres, 0 to 100. `0` = always add. Moving or momentary pins (players, shouts, pings, events) do not count. |
+
 ### What counts as ore
 
 With an empty `Ores` list, a mineable object is ore when one of the items it
@@ -102,13 +112,17 @@ orefinder reload   # re-read the config file
 Once per `ScanInterval` the mod walks the objects the game has loaded around
 the player (`ZNetScene`'s instance table) and keeps the ones within `Radius`.
 Each object's prefab is classified once, through its drop table: `MineRock5`
-(copper, silver, flametal), `MineRock` (tin, obsidian) and
-`Destructible` + `DropOnDestroyed` (scrap piles). Veins are remembered by their
-network id, so a partly mined deposit is still the same vein.
+(copper, silver, flametal), `MineRock` (tin, obsidian) and `DropOnDestroyed`
+(scrap piles). An untouched copper or silver deposit is a plain `Destructible`
+that turns into the mineable `MineRock5` on the first hit, so the finder also
+looks at what a destructible spawns when destroyed. Veins are remembered by
+their network id and position: a partly mined deposit is still the same vein,
+and so is the rock that replaces an intact deposit after the first hit.
 
 The highlight does not touch the vein's game object: the light and beam are
 separate objects, and the glow is a material property block that is cleared
-when the highlight ends. The screen markers are drawn with IMGUI, so no canvas
+when the highlight ends. Map pins go through `Minimap.AddPin` like your own
+pins and are saved with the map. The screen markers are drawn with IMGUI, so no canvas
 or font asset is needed. The only Harmony patch is `Terminal.InitTerminal`, for
 the console command.
 
