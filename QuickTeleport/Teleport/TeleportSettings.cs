@@ -13,7 +13,10 @@ namespace QuickTeleport.Teleport
 
         public float SpeedMultiplier { get; set; } = 4f;
 
-        public float FadeDuration { get; set; } = 1f;
+        /// <summary>Default fade in seconds; vanilla fades for 1 s.</summary>
+        public const float DefaultFadeDuration = 0.1f;
+
+        public float FadeDuration { get; set; } = DefaultFadeDuration;
 
         public bool WaitForAreaLoad { get; set; } = true;
 

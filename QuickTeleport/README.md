@@ -18,13 +18,15 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 
 - **Auto mode** (default): no fixed waits. The screen fades to black, you are
   moved, the mod waits for the destination to load and for the server to stop
-  sending new objects, and the screen fades back. A loaded base takes about
-  two and a half seconds instead of ten.
+  sending new objects, and the screen fades back. On a dedicated server a
+  base arrives in about three to five seconds instead of ten.
 - **Multiplier mode**: everything vanilla does, N times faster (the fade, the
   2 s move delay, the 8 s portal minimum, the 15 s floor timeout). `1` is
   vanilla timing plus the early position report described below.
-- Configurable fade duration. The player is never moved before the screen is
-  fully black, so lowering it makes teleports almost instant.
+- Configurable fade duration, 0.1 s by default (vanilla 1 s). The player is
+  never moved before the screen is fully black.
+- Every setting is local to your game, so each player can trade safety for
+  speed; see [Making it faster](#making-it-faster).
 - The two unsafe options of the old QuickTeleport, off by default: do not wait
   for objects, or do not wait for the area at all.
 - Dungeon entrances (crypts, caves) benefit too: they skip the 2 s wait.
@@ -54,7 +56,7 @@ The config file `BepInEx/config/muindor.QuickTeleport.cfg` is created on first l
 |-----|---------|-------------|
 | `Mode` | `Auto` | `Auto`: no fixed waits, the teleport ends as soon as the screen is black and the destination is loaded. `Multiplier`: the vanilla timing divided by `SpeedMultiplier`. |
 | `SpeedMultiplier` | `4` | Multiplier mode only, 1 to 100. `1` = vanilla, `4` = four times faster. |
-| `FadeDuration` | `1` | Seconds for the screen to fade to black and back (vanilla 1), 0.05 to 5. In Multiplier mode it is divided by `SpeedMultiplier` too. |
+| `FadeDuration` | `0.1` | Seconds for the screen to fade to black and back (vanilla 1), 0.05 to 5. In Multiplier mode it is divided by `SpeedMultiplier` too. Config files created by 1.0.1 or older keep their `1`; lower it by hand. |
 
 ### Loading
 
@@ -62,7 +64,7 @@ The config file `BepInEx/config/muindor.QuickTeleport.cfg` is created on first l
 |-----|---------|-------------|
 | `WaitForAreaLoad` | `true` | Wait until the destination is loaded (vanilla). `false`: end the teleport right after the fade, like the old QuickTeleport "Skip Loading Area". You may float or fall until the world appears. |
 | `WaitForObjects` | `true` | Also wait for the objects of the destination (buildings, trees) to spawn, not only for the terrain (vanilla). `false`: like the old QuickTeleport "Skip Loading Objects". You may end up under a building floor. Ignored when `WaitForAreaLoad` is `false`. |
-| `SettleTime` | `0.5` | Auto mode with `WaitForObjects` only, 0 to 5. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. Never waits past the vanilla minimum measured from the start of the teleport (8 s for portals, 2 s for dungeons), so with the default 1 s fade a dungeon settles for at most 1 s. `0` disables. |
+| `SettleTime` | `0.5` | Auto mode with `WaitForObjects` only, 0 to 5. After the destination is loaded, wait this many seconds without new objects arriving from the server before ending the teleport. Never waits past the vanilla minimum measured from the start of the teleport (8 s for portals, 2 s for dungeons), so a dungeon settles for at most 2 s minus the fade. `0` disables. |
 
 ### Why the settle wait
 
@@ -74,6 +76,26 @@ watches the number of objects in the destination zones and ends the teleport
 once it has stopped changing for `SettleTime`. On a local game this adds half
 a second; on a busy server it waits for the buildings to arrive, up to the
 vanilla 8 seconds. Raise `SettleTime` if you arrive before your base does.
+
+## Making it faster
+
+The defaults keep vanilla's safety: you arrive once the terrain and the
+buildings around the destination exist. Most of the remaining wait is the game
+itself: after the move it builds the terrain of the destination area zone by
+zone, then creates the objects the server has sent. The mod cannot make that
+part faster, but every setting is client-side, so you can shorten what is
+waited for. From safest to fastest:
+
+- `SettleTime = 0`: do not wait for the server to stop sending objects.
+  Buildings may keep appearing for a moment after you arrive.
+- `FadeDuration = 0.05`: the shortest fade the game handles.
+- `WaitForObjects = false`: wait for the terrain only. You may arrive under a
+  building floor if the base is not there yet.
+- `WaitForAreaLoad = false`: do not wait at all. You may float or fall until
+  the world appears.
+
+Edit `BepInEx/config/muindor.QuickTeleport.cfg` and run `quickteleport reload`
+in the console (F5) to apply without restarting.
 
 ## Console command
 

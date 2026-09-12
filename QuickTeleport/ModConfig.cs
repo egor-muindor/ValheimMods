@@ -23,9 +23,9 @@ namespace QuickTeleport
             SpeedMultiplier = config.Bind("Teleport", "SpeedMultiplier", 4f,
                 new ConfigDescription("Multiplier mode only. 1 = vanilla timing, 4 = four times faster.",
                     new AcceptableValueRange<float>(1f, 100f)));
-            FadeDuration = config.Bind("Teleport", "FadeDuration", 1f,
+            FadeDuration = config.Bind("Teleport", "FadeDuration", TeleportSettings.DefaultFadeDuration,
                 new ConfigDescription(
-                    "Seconds for the screen to fade to black before the teleport and back afterwards (vanilla: 1). " +
+                    "Seconds for the screen to fade to black before the teleport and back afterwards (vanilla: 1, default: 0.1). " +
                     "The player is never moved before the screen is black, so this is the shortest possible teleport. In Multiplier mode it is divided by SpeedMultiplier too.",
                     new AcceptableValueRange<float>(TeleportSettings.MinFadeDuration, 5f)));
 

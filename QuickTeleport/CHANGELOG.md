@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 - 2026-09-12
+
+- The default `FadeDuration` is 0.1 s instead of 1 s. Config files created by an older version keep their value; lower it by hand.
+- README: a "Making it faster" section on the settings each player can change locally, and realistic timings for a dedicated server.
+
 ## 1.0.1 - 2026-09-12
 
 - Fix: the screen could stay black forever after a portal teleport, with "Local player destroyed" in the log and no error. The mod reported the new position to the server before the player's network object had been moved there, and the game then unloaded the player as an object outside the loaded area. The player's network object is now moved first.

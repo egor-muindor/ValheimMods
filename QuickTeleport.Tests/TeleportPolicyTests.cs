@@ -6,9 +6,13 @@ namespace QuickTeleport.Tests
 {
     public class TeleportPolicyTests
     {
+        /// <summary>
+        /// Timeline tests run with the vanilla 1 s fade so that the numbers below read like
+        /// vanilla's; the shipped default is covered by <see cref="DefaultFadeIsATenthOfASecond"/>.
+        /// </summary>
         private static TeleportPolicy Policy(bool distant = true, Action<TeleportSettings>? configure = null)
         {
-            var settings = new TeleportSettings();
+            var settings = new TeleportSettings { FadeDuration = 1f };
             configure?.Invoke(settings);
             return new TeleportPolicy(settings, distant);
         }
@@ -124,6 +128,15 @@ namespace QuickTeleport.Tests
 
             Assert.True(policy.ScreenBlack);
             Assert.True(policy.VirtualTimer > TeleportPolicy.VanillaDistantDelay);
+        }
+
+        [Fact]
+        public void DefaultFadeIsATenthOfASecond()
+        {
+            var policy = new TeleportPolicy(new TeleportSettings(), distant: true);
+
+            Assert.Equal(0.1f, TeleportSettings.DefaultFadeDuration);
+            Assert.Equal(0.1f, policy.FadeDuration);
         }
 
         [Fact]
