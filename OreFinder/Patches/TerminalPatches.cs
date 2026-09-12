@@ -1,4 +1,6 @@
+using BepInEx.Configuration;
 using HarmonyLib;
+using OreFinder.Detection;
 
 namespace OreFinder.Patches
 {
@@ -8,11 +10,15 @@ namespace OreFinder.Patches
     {
         private const string Command = "orefinder";
 
+        private static readonly string Usage =
+            $"{Command} [status|on|off|reset|reload|{string.Join("|", TargetGroups.SwitchWords)} [on|off]]";
+
         private static void Postfix()
         {
             new Terminal.ConsoleCommand(
                 Command,
-                $"{Command} [status|on|off|reset|reload] - control {MyPluginInfo.PLUGIN_NAME}: show the settings, turn it on or off, forget the veins already shown, or reload the config",
+                $"{Usage} - control {MyPluginInfo.PLUGIN_NAME}: show the settings, turn it on or off, forget the veins already shown, " +
+                "reload the config, or turn one group of targets on or off (no on/off = flip it)",
                 Execute);
         }
 
@@ -21,6 +27,12 @@ namespace OreFinder.Patches
             Terminal terminal = args.Context;
             string action = args.Args.Length > 1 ? args.Args[1].ToLowerInvariant() : "status";
             Finder? finder = Plugin.Finder;
+
+            if (TargetGroups.TryParse(action, out TargetGroup group))
+            {
+                SwitchGroup(terminal, finder, group, args.Args.Length > 2 ? args.Args[2].ToLowerInvariant() : null);
+                return;
+            }
 
             switch (action)
             {
@@ -50,9 +62,48 @@ namespace OreFinder.Patches
                     break;
 
                 default:
-                    terminal.AddString($"Usage: {Command} [status|on|off|reset|reload]");
+                    terminal.AddString($"Usage: {Usage}");
                     break;
             }
+        }
+
+        private static void SwitchGroup(Terminal terminal, Finder? finder, TargetGroup group, string? state)
+        {
+            ConfigEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
+            if (entry == null)
+            {
+                terminal.AddString($"Usage: {Usage}");
+                return;
+            }
+
+            bool enabled;
+            switch (state)
+            {
+                case null:
+                case "":
+                    enabled = !entry.Value;
+                    break;
+                case "on":
+                    enabled = true;
+                    break;
+                case "off":
+                    enabled = false;
+                    break;
+                default:
+                    terminal.AddString($"Usage: {Usage}");
+                    return;
+            }
+
+            if (finder != null)
+            {
+                finder.SetGroupEnabled(group, enabled);
+            }
+            else
+            {
+                entry.Value = enabled;
+            }
+
+            terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {TargetGroups.Label(group)} {(enabled ? "on" : "off")}");
         }
     }
 }

@@ -34,6 +34,14 @@ namespace OreFinder
 
         private readonly List<ZNetView> _nearby = new List<ZNetView>();
 
+        private readonly List<Teleport> _entrances = new List<Teleport>();
+
+        /// <summary>
+        /// How much further than <c>TargetRadius</c> a location proxy is looked at: the proxy
+        /// stands at the centre of its location, the door can be this far from the centre.
+        /// </summary>
+        private const float LocationExtent = 50f;
+
         private TargetCatalog? _catalog;
 
         private string? _catalogSource;
@@ -61,6 +69,26 @@ namespace OreFinder
 
             ShowMessage(MessageHud.MessageType.Center, enabled ? $"{MyPluginInfo.PLUGIN_NAME}: on" : $"{MyPluginInfo.PLUGIN_NAME}: off");
             Plugin.Log.LogInfo(enabled ? "Enabled" : "Disabled");
+        }
+
+        /// <summary>Turns one group of targets on or off, saves the setting and tells the player. Ignored for the list groups.</summary>
+        public void SetGroupEnabled(TargetGroup group, bool enabled)
+        {
+            ConfigEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
+            if (entry == null)
+            {
+                return;
+            }
+
+            entry.Value = enabled;
+            if (!enabled)
+            {
+                RemoveHighlights(group);
+            }
+
+            string label = TargetGroups.Label(group);
+            ShowMessage(MessageHud.MessageType.Center, $"{MyPluginInfo.PLUGIN_NAME}: {label} {(enabled ? "on" : "off")}");
+            Plugin.Log.LogInfo($"{label} {(enabled ? "enabled" : "disabled")}");
         }
 
         /// <summary>Forgets the veins already shown, so they are highlighted again. Returns how many were forgotten.</summary>
@@ -112,6 +140,21 @@ namespace OreFinder
                 if (IsPressed(settings.ToggleKey.Value))
                 {
                     SetEnabled(!settings.Enabled.Value);
+                }
+
+                if (IsPressed(settings.OresToggleKey.Value))
+                {
+                    SetGroupEnabled(TargetGroup.Ore, !settings.FindOres.Value);
+                }
+
+                if (IsPressed(settings.DungeonsToggleKey.Value))
+                {
+                    SetGroupEnabled(TargetGroup.Dungeon, !settings.Dungeons.Value);
+                }
+
+                if (IsPressed(settings.SpawnersToggleKey.Value))
+                {
+                    SetGroupEnabled(TargetGroup.Spawner, !settings.Spawners.Value);
                 }
 
                 if (!settings.Enabled.Value)
@@ -185,7 +228,8 @@ namespace OreFinder
             TargetCatalog catalog = CatalogFor(settings);
             _nearby.Clear();
             Vector3 playerPosition = player.transform.position;
-            OreScanner.CollectNearby(playerPosition, Mathf.Max(settings.Radius.Value, settings.TargetRadius.Value), _nearby);
+            float radius = Mathf.Max(settings.Radius.Value, settings.TargetRadius.Value);
+            OreScanner.CollectNearby(playerPosition, radius, LocationProxyPrefab, settings.TargetRadius.Value + LocationExtent, _nearby);
             bool? hasWishbone = null;
 
             foreach (ZNetView view in _nearby)
@@ -196,14 +240,21 @@ namespace OreFinder
                     continue;
                 }
 
+                LocationProxy proxy = view.GetComponent<LocationProxy>();
+                if (proxy != null)
+                {
+                    ScanLocation(view, proxy, catalog, player, playerPosition, settings);
+                    continue;
+                }
+
                 TargetKind? kind = catalog.Classify(view);
                 if (kind == null)
                 {
                     continue;
                 }
 
-                float radius = kind.Group == TargetGroup.Ore ? settings.Radius.Value : settings.TargetRadius.Value;
-                if ((view.transform.position - playerPosition).sqrMagnitude > radius * radius)
+                float groupRadius = kind.Group == TargetGroup.Ore ? settings.Radius.Value : settings.TargetRadius.Value;
+                if ((view.transform.position - playerPosition).sqrMagnitude > groupRadius * groupRadius)
                 {
                     continue;
                 }
@@ -244,7 +295,7 @@ namespace OreFinder
                 _seenPositions.Add(origin);
                 try
                 {
-                    Highlight(view, kind, player, settings);
+                    Highlight(view, view.gameObject, kind, player, settings);
                 }
                 catch (Exception exception)
                 {
@@ -253,9 +304,65 @@ namespace OreFinder
             }
         }
 
-        private void Highlight(ZNetView view, TargetKind kind, Player player, ModConfig settings)
+        /// <summary>
+        /// The doors of a location, found through its proxy (see <see cref="LocationEntrances"/>).
+        /// The proxy counts as seen once every door has been handled; a door still out of range
+        /// keeps it in the running, and one already shown is told apart by its position.
+        /// </summary>
+        private void ScanLocation(ZNetView view, LocationProxy proxy, TargetCatalog catalog, Player player, Vector3 playerPosition, ModConfig settings)
         {
-            var highlight = new VeinHighlight(view, kind, settings.ToHighlightOptions());
+            if (!catalog.Targets.Dungeons || !LocationEntrances.IsSpawned(proxy))
+            {
+                // Not seen: found later, once dungeons are on and the location has spawned.
+                return;
+            }
+
+            _entrances.Clear();
+            LocationEntrances.Collect(proxy, _entrances);
+            bool allHandled = true;
+            float radius = settings.TargetRadius.Value;
+            string? locationName = null;
+            foreach (Teleport entrance in _entrances)
+            {
+                Vector3 origin = entrance.transform.position;
+                if (IsSeenVein(origin))
+                {
+                    continue;
+                }
+
+                if ((origin - playerPosition).sqrMagnitude > radius * radius)
+                {
+                    allHandled = false;
+                    continue;
+                }
+
+                locationName ??= LocationEntrances.LocationName(view);
+                TargetKind? kind = catalog.ClassifyEntrance(entrance, locationName);
+                if (kind == null)
+                {
+                    continue;
+                }
+
+                _seenPositions.Add(origin);
+                try
+                {
+                    Highlight(view, entrance.gameObject, kind, player, settings);
+                }
+                catch (Exception exception)
+                {
+                    Plugin.Log.LogError($"Could not highlight {kind.DisplayName} ({locationName}): {exception}");
+                }
+            }
+
+            if (allHandled)
+            {
+                _seen.Add(view.GetZDO().m_uid);
+            }
+        }
+
+        private void Highlight(ZNetView view, GameObject target, TargetKind kind, Player player, ModConfig settings)
+        {
+            var highlight = new VeinHighlight(view, target, kind, settings.ToHighlightOptions());
             _highlights.Add(highlight);
 
             float distance = Vector3.Distance(player.transform.position, highlight.Position);
@@ -264,12 +371,20 @@ namespace OreFinder
                 ShowMessage(MessageHud.MessageType.TopLeft, $"{kind.DisplayName}: {distance:0} m");
             }
 
-            if (settings.MapPin.Value && !MapPins.TryAdd(highlight.Position, kind.DisplayName, settings.MapPinSpacing.Value, PinIcons.ToPinType(PinFor(kind.Group, settings))))
+            if (settings.MapPin.Value)
             {
-                Plugin.Debug($"No map pin for {kind.DisplayName}: another pin is within {settings.MapPinSpacing.Value:0.#} m");
+                if (Character.InInterior(highlight.Position))
+                {
+                    // Inside a dungeon the coordinates are the interior's, far above the zone centre: a pin there points at nothing.
+                    Plugin.Debug($"No map pin for {kind.DisplayName}: found inside a dungeon");
+                }
+                else if (!MapPins.TryAdd(highlight.Position, kind.DisplayName, settings.MapPinSpacing.Value, PinIcons.ToPinType(settings.PinFor(kind.Group))))
+                {
+                    Plugin.Debug($"No map pin for {kind.DisplayName}: another pin is within {settings.MapPinSpacing.Value:0.#} m");
+                }
             }
 
-            Plugin.Debug($"Found {kind.DisplayName} ({Utils.GetPrefabName(view.gameObject)}, key {kind.Key}) " +
+            Plugin.Debug($"Found {kind.DisplayName} ({Utils.GetPrefabName(target)}, key {kind.Key}) " +
                          $"at {highlight.Position}, {distance:0.#} m away");
         }
 
@@ -298,6 +413,30 @@ namespace OreFinder
             }
 
             _highlights.Clear();
+        }
+
+        private void RemoveHighlights(TargetGroup group)
+        {
+            for (int i = _highlights.Count - 1; i >= 0; i--)
+            {
+                if (_highlights[i].Kind.Group == group)
+                {
+                    _highlights[i].Remove();
+                    _highlights.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>Prefab hash of the game's location proxy, the net object every location is found through.</summary>
+        private static int LocationProxyPrefab
+        {
+            get
+            {
+                ZoneSystem zoneSystem = ZoneSystem.instance;
+                return zoneSystem != null && zoneSystem.m_locationProxyPrefab != null
+                    ? zoneSystem.m_locationProxyPrefab.name.GetStableHashCode()
+                    : 0;
+            }
         }
 
         private void LeaveWorld()
@@ -355,19 +494,6 @@ namespace OreFinder
             }
 
             return false;
-        }
-
-        private static PinIcon PinFor(TargetGroup group, ModConfig settings)
-        {
-            switch (group)
-            {
-                case TargetGroup.Ore:
-                    return settings.OrePin.Value;
-                case TargetGroup.Dungeon:
-                    return settings.DungeonPin.Value;
-                default:
-                    return settings.OtherPin.Value;
-            }
         }
 
         /// <summary>The catalog for the current target and name settings; rebuilt when any of them changes.</summary>

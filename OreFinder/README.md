@@ -1,9 +1,9 @@
 # Ore Finder
 
 Points you to the ore veins around you in Valheim 1.0, and to dungeon
-entrances, ancient roots and rare pickables. Every second the mod looks for
-ore within a configurable radius (20 m by default) and for the other targets
-within 40 m. The first time something comes into range it gets a screen arrow
+entrances, monster spawners, ancient roots and rare pickables. Every second the
+mod looks for ore within a configurable radius (20 m by default) and for the
+other targets within 40 m. The first time something comes into range it gets a screen arrow
 with its name and distance, a coloured light, a vertical beam and a glow, for
 10 seconds by default, plus a pin on the map. Each find is shown once, so
 walking past a deposit you already know does not nag you.
@@ -37,9 +37,13 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **Hidden ores need the Wishbone**: silver veins and the scrap piles the
   Wishbone reacts to are only found while you carry it, like in the game.
 - **More than ores**: entrances of crypts, caves and mines (with their own map
-  pin icon), ancient roots for the sap extractor, pickables you list (dragon
-  eggs, Jotun puffs, Magecap, Fiddlehead, Volture eggs by default) and trees you
-  list by their wood.
+  pin icon), monster spawners (greydwarf nests, bone and body piles, surtling
+  spawners and other respawning spawn points, with a hammer pin), ancient roots
+  for the sap extractor, pickables you list (dragon eggs, Jotun puffs, Magecap,
+  Fiddlehead, Volture eggs by default) and trees you list by their wood.
+- **Each group on its own switch**: ores, dungeon entrances, roots and spawners
+  can be turned on and off separately, in the config, from the console
+  (`orefinder dungeons off`) or with their own hotkeys.
 - **Toggle key**: F9 by default, configurable, with modifiers if you like. The
   state is saved to the config file.
 
@@ -61,6 +65,9 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 |-----|---------|-------------|
 | `Enabled` | `true` | Enable the finder. The toggle key flips this setting in game and saves it. |
 | `ToggleKey` | `F9` | Key that turns the finder on and off in game. Modifiers are allowed, e.g. `F9 + LeftControl`. Ignored while typing in the chat or the console. |
+| `OresToggleKey` | unset | Key that turns the ore search (`FindOres`) on and off on its own, leaving the other targets as they are. |
+| `DungeonsToggleKey` | unset | Key that turns the dungeon entrance search (`Dungeons`) on and off on its own. |
+| `SpawnersToggleKey` | unset | Key that turns the spawner search (`Spawners`) on and off on its own. |
 | `IsDebug` | `false` | Log every vein that is found, with its prefab and the item that made it count as ore. |
 
 ### Detection
@@ -69,6 +76,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 |-----|---------|-------------|
 | `Radius` | `20` | Search radius in metres around the player, 1 to 200. |
 | `ScanInterval` | `1` | Seconds between two scans, 0.1 to 30. |
+| `FindOres` | `true` | Look for ores at all. Off = only the targets from the Targets section are found; `Ores` still says which ores count. `orefinder ores on|off` and `OresToggleKey` flip this setting. |
 | `Ores` | empty | Which ores to look for, comma-separated. Empty = every ore. Otherwise item names (`CopperOre`, `TinOre`, `SilverOre`, `IronScrap`, `FlametalOre`, `FlametalOreNew`) or object prefab names (`rock4_copper`, `silvervein`, `MineRock_Obsidian`). |
 
 ### Highlight
@@ -88,6 +96,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 |-----|---------|-------------|
 | `Dungeons` | `true` | Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, and whatever a game update adds). |
 | `Roots` | `true` | Find ancient roots, the sap extractor spots in the Mistlands. |
+| `Spawners` | `true` | Find monster spawners: greydwarf nests, evil bone piles, body piles and the like, plus the invisible spawn points that respawn their creature (surtling spawners at fire geysers, ...). Spawn points that fire only once are skipped. |
 | `Pickables` | `Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, Pickable_VoltureEgg` | Pickables to find, by the object's prefab name or by the item it gives (`DragonEgg`, `Thistle`, `Cloudberry`), comma-separated. Other useful ones: `Pickable_Thistle`, `CloudberryBush`, `Pickable_BogIronOre`, `Pickable_MountainCaveCrystal`. Already picked ones are skipped until they regrow. Empty = none. |
 | `Trees` | empty | Trees to find, by the wood they drop (`YggdrasilWood`, `Blackwood`, `Frostwood`, `ElderBark`, `FineWood`, ...), comma-separated. Empty = none. |
 | `TargetRadius` | `40` | Search radius in metres for everything except ores, 1 to 200. `Radius` is for ores. |
@@ -104,7 +113,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | Key | Default | Description |
 |-----|---------|-------------|
 | `CustomNames` | `false` | Show your own names from `Names` instead of the game's names (Copper deposit, Silver vein, ...) in the screen marker, the message and the map pin. |
-| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, GoldOre=B, Obsidian=O, Pickable_Mushroom_Magecap=Mc, Pickable_Fiddlehead=Fh, $item_ancientroot=YR` | Your names as `key=name` pairs separated by commas. The key is the ore item (`CopperOre`, `GoldOre`), the pickable's prefab or item (`Pickable_DragonEgg`, `DragonEgg`), the wood of a tree (`YggdrasilWood`), a dungeon's location key (`$location_forestcrypt`) or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Targets without a pair get the initials of their name: Burial Chambers = `BC`, Sunken Crypt = `SC`, Dragon egg = `DE`, Magecap = `Ma`. |
+| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, GoldOre=B, Obsidian=O, Pickable_Mushroom_Magecap=Mc, Pickable_Fiddlehead=Fh, $item_ancientroot=YR` | Your names as `key=name` pairs separated by commas. The key is the ore item (`CopperOre`, `GoldOre`), the pickable's prefab or item (`Pickable_DragonEgg`, `DragonEgg`), the wood of a tree (`YggdrasilWood`), a dungeon's location key (`$location_forestcrypt`), a spawner's prefab (`Spawner_GreydwarfNest`) or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Targets without a pair get the initials of their name: Burial Chambers = `BC`, Sunken Crypt = `SC`, Dragon egg = `DE`, Magecap = `Ma`, Greydwarf spawner = `GS`. |
 
 ### Map
 
@@ -114,6 +123,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | `MapPinSpacing` | `10` | Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres, 0 to 100. `0` = always add. Moving or momentary pins (players, shouts, pings, events) do not count. |
 | `OrePin` | `Dot` | Map pin icon for ores: `Fire`, `House`, `Hammer`, `Dot` or `Portal`, the five icons you can place yourself. |
 | `DungeonPin` | `House` | Map pin icon for dungeon entrances. |
+| `SpawnerPin` | `Hammer` | Map pin icon for spawners. |
 | `OtherPin` | `Dot` | Map pin icon for roots, pickables and trees. |
 
 ### What counts as ore
@@ -143,7 +153,16 @@ orefinder on       # turn the finder on (same as the toggle key)
 orefinder off      # turn it off
 orefinder reset    # forget the veins already shown, so they are highlighted again
 orefinder reload   # re-read the config file
+
+orefinder ores off        # stop looking for ores, keep the other targets
+orefinder dungeons on     # look for dungeon entrances again
+orefinder spawners        # flip the spawner search
+orefinder roots off
 ```
+
+The group commands change `FindOres`, `Dungeons`, `Spawners` and `Roots` in
+the config, like the hotkeys do. Pickables and trees are lists; empty the list
+to turn them off.
 
 ## How it works
 
@@ -162,11 +181,23 @@ turns into) carries a `Beacon` component, which is what the Wishbone's finder
 effect listens for. The Wishbone check looks at the inventory once per scan.
 
 The other targets are recognised by their components too, so nothing is
-hardcoded to a list of prefabs: a dungeon entrance is a `Teleport` with an
-enter text (the exits inside have none), a root is a `ResourceRoot`, a pickable
-is a `Pickable` whose item is in the list (its picked state is read from the
-object, so picked ones wait until they regrow), and a tree is a `TreeBase`
-whose log chain (`TreeLog` and its sub-logs) drops a listed wood.
+hardcoded to a list of prefabs: a root is a `ResourceRoot`, a spawner is a
+`SpawnArea` (nests, piles) or a `CreatureSpawner` with a respawn time, a
+pickable is a `Pickable` whose item is in the list (its picked state is read
+from the object, so picked ones wait until they regrow), and a tree is a
+`TreeBase` whose log chain (`TreeLog` and its sub-logs) drops a listed wood.
+
+Dungeon entrances take a detour. A door is a `Teleport` trigger, but the game
+does not spawn it as a network object: a location is spawned in two parts,
+every `ZNetView` on its own and everything else as one plain object under the
+location's `LocationProxy` (which is a network object). The doors are in the
+second part, so they never appear in the instance table. The finder looks at
+every proxy within `TargetRadius` + 50 m (a proxy stands at the location's
+centre, the door can be some way out), takes the teleports under it that are
+not inside the interior (the game keeps interiors above 3000 m; the exits are
+there) and marks each door by its own position. The door is named after its
+enter text (Burial Chambers, Sunken Crypt, ...) or, without one, after the
+location.
 
 The highlight does not touch the vein's game object: the light and beam are
 separate objects, and the glow is a material property block that is cleared

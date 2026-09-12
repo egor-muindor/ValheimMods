@@ -3,52 +3,16 @@ using UnityEngine;
 
 namespace OreFinder.Detection
 {
-    /// <summary>What to look for besides ores, mirrored from the config.</summary>
-    public sealed class TargetOptions
-    {
-        public bool Dungeons { get; set; } = true;
-
-        public bool Roots { get; set; } = true;
-
-        public NameList Pickables { get; set; } = NameList.Parse(string.Empty);
-
-        public NameList Trees { get; set; } = NameList.Parse(string.Empty);
-
-        public string Describe()
-        {
-            var parts = new List<string>();
-            if (Dungeons)
-            {
-                parts.Add("dungeon entrances");
-            }
-
-            if (Roots)
-            {
-                parts.Add("roots");
-            }
-
-            if (!Pickables.IsEmpty)
-            {
-                parts.Add($"pickables ({Pickables.Describe()})");
-            }
-
-            if (!Trees.IsEmpty)
-            {
-                parts.Add($"trees ({Trees.Describe()})");
-            }
-
-            return parts.Count == 0 ? "none" : string.Join(", ", parts);
-        }
-    }
-
     /// <summary>
     /// Classifies loaded objects, once per prefab. Ores qualify through their drop table:
     /// <c>MineRock5</c> (copper, silver, flametal), <c>MineRock</c> (tin, obsidian) and
     /// <c>DropOnDestroyed</c> (scrap piles); an intact deposit is a plain <c>Destructible</c>
     /// that spawns the fractured <c>MineRock5</c> on its first destroy, so the spawned prefab
-    /// is inspected as well. Dungeon entrances are <c>Teleport</c> objects with an enter text,
-    /// roots are <c>ResourceRoot</c>, pickables are <c>Pickable</c> objects whose item is in
-    /// the list, trees are <c>TreeBase</c> objects whose log chain drops a listed wood.
+    /// is inspected as well. Dungeon entrances are <c>Teleport</c> triggers outside a dungeon
+    /// interior (see <see cref="LocationEntrances"/> for where they live), roots are
+    /// <c>ResourceRoot</c>, spawners are <c>SpawnArea</c> (nests, piles) or a <c>CreatureSpawner</c>
+    /// that respawns, pickables are <c>Pickable</c> objects whose item is in the list, trees
+    /// are <c>TreeBase</c> objects whose log chain drops a listed wood.
     /// </summary>
     public sealed class TargetCatalog
     {
@@ -94,12 +58,44 @@ namespace OreFinder.Detection
             return InspectOre(go, prefabName)
                    ?? InspectDungeon(go, prefabName)
                    ?? InspectRoot(go, prefabName)
+                   ?? InspectSpawner(go, prefabName)
                    ?? InspectPickable(go, prefabName)
                    ?? InspectTree(go, prefabName);
         }
 
+        /// <summary>
+        /// The kind of an entrance door found under a location proxy, or null when dungeons
+        /// are off or the teleport is an exit inside the interior. Not cached: every proxy
+        /// shares one prefab. <paramref name="locationName"/> names the door when it has no
+        /// enter text of its own.
+        /// </summary>
+        public TargetKind? ClassifyEntrance(Teleport teleport, string locationName)
+        {
+            if (!Targets.Dungeons || !IsEntrance(teleport))
+            {
+                return null;
+            }
+
+            string key = !string.IsNullOrEmpty(teleport.m_enterText) ? teleport.m_enterText : locationName;
+            return Make(TargetGroup.Dungeon, key, locationName, Localize(key), false);
+        }
+
+        /// <summary>
+        /// A door into a dungeon, as opposed to the exit inside it: the game keeps every interior
+        /// above 3000 m (<c>Character.InInterior</c>), the doors stand on the ground.
+        /// </summary>
+        public static bool IsEntrance(Teleport? teleport)
+        {
+            return teleport != null && teleport.m_targetPoint != null && !Character.InInterior(teleport.transform.position);
+        }
+
         private TargetKind? InspectOre(GameObject go, string prefabName)
         {
+            if (!Targets.Ores)
+            {
+                return null;
+            }
+
             _drops.Clear();
             _dropNames.Clear();
             _hidden = false;
@@ -120,14 +116,62 @@ namespace OreFinder.Detection
                 return null;
             }
 
-            Teleport teleport = go.GetComponent<Teleport>();
-            if (teleport == null || string.IsNullOrEmpty(teleport.m_enterText))
+            // Vanilla doors live under the location proxy (LocationEntrances); this catches a
+            // door that is a net object of its own, as a modded location might spawn it.
+            Teleport teleport = go.GetComponentInChildren<Teleport>(false);
+            return ClassifyEntrance(teleport, prefabName);
+        }
+
+        private TargetKind? InspectSpawner(GameObject go, string prefabName)
+        {
+            if (!Targets.Spawners)
             {
-                // Exits inside the dungeons have no enter text.
                 return null;
             }
 
-            return Make(TargetGroup.Dungeon, teleport.m_enterText, prefabName, Localize(teleport.m_enterText), false);
+            // A nest or pile: the component may sit on a child of the net object.
+            SpawnArea area = go.GetComponentInChildren<SpawnArea>(false);
+            if (area != null)
+            {
+                GameObject? creature = null;
+                foreach (SpawnArea.SpawnData spawn in area.m_prefabs)
+                {
+                    if (spawn.m_prefab != null)
+                    {
+                        creature = spawn.m_prefab;
+                        break;
+                    }
+                }
+
+                return Make(TargetGroup.Spawner, prefabName, prefabName, SpawnerName(go, creature, prefabName), false);
+            }
+
+            // An invisible spawn point; only the ones that respawn their creature are worth a mark.
+            CreatureSpawner spawner = go.GetComponentInChildren<CreatureSpawner>(false);
+            if (spawner == null || spawner.m_respawnTimeMinuts <= 0f)
+            {
+                return null;
+            }
+
+            return Make(TargetGroup.Spawner, prefabName, prefabName, SpawnerName(go, spawner.m_creaturePrefab, prefabName), false);
+        }
+
+        /// <summary>The spawner's own hover name, or "&lt;creature&gt; spawner", or the prefab name.</summary>
+        private static string SpawnerName(GameObject go, GameObject? creature, string prefabName)
+        {
+            HoverText hover = go.GetComponent<HoverText>();
+            if (hover != null && !string.IsNullOrEmpty(hover.m_text))
+            {
+                return Localize(hover.m_text);
+            }
+
+            Character? character = creature != null ? creature.GetComponent<Character>() : null;
+            if (character != null && !string.IsNullOrEmpty(character.m_name))
+            {
+                return $"{Localize(character.m_name)} spawner";
+            }
+
+            return prefabName;
         }
 
         private TargetKind? InspectRoot(GameObject go, string prefabName)

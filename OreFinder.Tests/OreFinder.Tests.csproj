@@ -16,6 +16,8 @@
     <Compile Include="../OreFinder/Detection/OreFilter.cs" Link="Detection/OreFilter.cs" />
     <Compile Include="../OreFinder/Detection/OreNames.cs" Link="Detection/OreNames.cs" />
     <Compile Include="../OreFinder/Detection/NameList.cs" Link="Detection/NameList.cs" />
+    <Compile Include="../OreFinder/Detection/TargetOptions.cs" Link="Detection/TargetOptions.cs" />
+    <Compile Include="../OreFinder/Detection/TargetGroup.cs" Link="Detection/TargetGroup.cs" />
     <Compile Include="../OreFinder/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
   </ItemGroup>
 

@@ -9,7 +9,9 @@ namespace OreFinder.Highlight
     /// One highlighted vein: a pulsing point light above it, a vertical beam and an emissive
     /// tint on its own materials, for a fixed time. Nothing is attached to the vein's game
     /// object, so the game's own mesh handling is untouched; the tint is a material property
-    /// block that is cleared when the highlight ends.
+    /// block that is cleared when the highlight ends. The target is usually the net object
+    /// itself; for a dungeon door it is the door under the location proxy, and the net object
+    /// (the proxy) only tells when the target is gone.
     /// </summary>
     public sealed class VeinHighlight
     {
@@ -49,7 +51,7 @@ namespace OreFinder.Highlight
 
         private LineRenderer? _beam;
 
-        public VeinHighlight(ZNetView view, TargetKind kind, HighlightOptions options)
+        public VeinHighlight(ZNetView view, GameObject target, TargetKind kind, HighlightOptions options)
         {
             _view = view;
             Kind = kind;
@@ -57,8 +59,8 @@ namespace OreFinder.Highlight
             _start = Time.time;
             _duration = Mathf.Max(0.5f, options.Duration);
 
-            Bounds bounds = BoundsOf(view.gameObject, out bool hasBounds);
-            Position = hasBounds ? bounds.center : view.transform.position;
+            Bounds bounds = BoundsOf(target, out bool hasBounds);
+            Position = hasBounds ? bounds.center : target.transform.position;
             float extent = hasBounds ? Mathf.Max(bounds.extents.x, bounds.extents.y, bounds.extents.z) : 2f;
             float top = hasBounds ? bounds.max.y : Position.y + 2f;
 
@@ -67,7 +69,7 @@ namespace OreFinder.Highlight
 
             try
             {
-                Build(kind, options, top, extent, view.gameObject);
+                Build(kind, options, top, extent, target);
             }
             catch
             {

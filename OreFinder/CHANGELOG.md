@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 - 2026-09-12
+
+- Fixed: dungeon entrances were never found. The doors are not network objects: the game spawns them, with the rest of a location's non-networked parts, as one object under the location's proxy, so the scan of loaded network objects never saw them. The finder now looks under every location proxy nearby and marks each door by its own position. Location proxies are looked at from `TargetRadius` + 50 m, because a proxy stands at the location's centre and the door can be some way out. A door without an enter text is named after its location.
+- New: monster spawners. `Spawners` (on by default) finds greydwarf nests, evil bone piles, body piles and the like (`SpawnArea`), plus the invisible spawn points that respawn their creature (`CreatureSpawner` with a respawn time: surtling spawners at fire geysers, the respawning points in ruins and camps). Spawn points that fire only once are skipped. They get a red highlight and a hammer map pin (`SpawnerPin`); the name is the creature's ("Greydwarf spawner"), initials `GS` with custom names.
+- New: each group on its own switch. `FindOres` turns the ore search off while the other targets stay on; `orefinder ores|dungeons|roots|spawners [on|off]` flips a group from the console (no on/off = toggle); `OresToggleKey`, `DungeonsToggleKey` and `SpawnersToggleKey` (unset by default) do the same with a key. Turning a group off removes its highlights at once.
+- Changed: `orefinder status` lists the groups that are on ("targets: ores, dungeon entrances, ...") and the ore list separately.
+- Changed: no map pin for a find inside a dungeon (the interior's coordinates point at nothing on the map); the arrow, light and beam still show.
+
 ## 1.1.1 - 2026-09-12
 
 - Defaults checked against the game's ID list: `Pickables` now lists the pickable objects by their exact prefab names (`Pickable_DragonEgg`, `Pickable_Mushroom_JotunPuffs`, `Pickable_Mushroom_Magecap`, `Pickable_Fiddlehead`, `Pickable_VoltureEgg`); item names still work too. The short names for Magecap and Fiddlehead are keyed the same way.

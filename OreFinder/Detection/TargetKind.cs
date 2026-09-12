@@ -19,7 +19,8 @@ namespace OreFinder.Detection
         /// <summary>
         /// What identifies the target in the <c>Names</c> setting: the ore item (<c>CopperOre</c>),
         /// the dungeon's location key (<c>$location_forestcrypt</c>), the root's name key, the
-        /// pickable item (<c>DragonEgg</c>) or the wood item of a tree.
+        /// pickable item (<c>DragonEgg</c>), the wood item of a tree or the spawner's prefab
+        /// (<c>Spawner_GreydwarfNest</c>).
         /// </summary>
         public string Key { get; }
 
@@ -48,6 +49,8 @@ namespace OreFinder.Detection
                     return new Color(0.7f, 1f, 0.3f);
                 case TargetGroup.Tree:
                     return new Color(0.3f, 0.9f, 0.4f);
+                case TargetGroup.Spawner:
+                    return new Color(1f, 0.3f, 0.35f);
             }
 
             string name = key.ToLowerInvariant();
