@@ -6,6 +6,7 @@ BepInEx mods for Valheim 1.0.
 |-----|-------------|
 | [DeathTweaks](DeathTweaks/README.md) | Keep, drop or destroy items on death, keep food, tune skill loss, choose the respawn point. |
 | [QuickTeleport](QuickTeleport/README.md) | Faster portal and dungeon teleports: finish as soon as the destination is loaded, or run vanilla timing N times faster. |
+| [TidyChests](TidyChests/README.md) | Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. |
 
 ## Building
 
@@ -44,8 +45,9 @@ the repository root:
 ## Publishing to Thunderstore
 
 The packages are listed under the [Muindor](https://thunderstore.io/c/valheim/p/Muindor/)
-team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks) and
-[QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport).
+team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks),
+[QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport) and
+[TidyChests](https://thunderstore.io/c/valheim/p/Muindor/TidyChests).
 `<Mod>/thunderstore.toml` holds the listing metadata (categories, community,
 dependencies); the zip comes from the Release build. To publish a new version:
 

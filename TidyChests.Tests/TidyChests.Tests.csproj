@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>TidyChests.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    The stash rules, the planner and the screen marker math have no game or Unity dependency,
+    so their sources are compiled straight into this project. That keeps the tests runnable on
+    any machine without the game assemblies or a .NET Framework runtime.
+  -->
+  <ItemGroup>
+    <Compile Include="../TidyChests/Stash/ItemFacts.cs" Link="Stash/ItemFacts.cs" />
+    <Compile Include="../TidyChests/Stash/StashRuleSettings.cs" Link="Stash/StashRuleSettings.cs" />
+    <Compile Include="../TidyChests/Stash/StashVerdict.cs" Link="Stash/StashVerdict.cs" />
+    <Compile Include="../TidyChests/Stash/StashRules.cs" Link="Stash/StashRules.cs" />
+    <Compile Include="../TidyChests/Stash/StashModels.cs" Link="Stash/StashModels.cs" />
+    <Compile Include="../TidyChests/Stash/StashPlanner.cs" Link="Stash/StashPlanner.cs" />
+    <Compile Include="../TidyChests/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

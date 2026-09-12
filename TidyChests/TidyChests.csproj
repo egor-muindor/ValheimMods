@@ -1,0 +1,98 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>TidyChests</AssemblyName>
+    <RootNamespace>TidyChests</RootNamespace>
+    <Product>Tidy Chests</Product>
+    <Version>1.0.0</Version>
+    <Authors>Egor Fadeev</Authors>
+    <Description>Terraria-style quick stack for Valheim: a Stash button moves your materials into the nearby chests that already hold them, and a hotkey highlights the chests that contain the item under the cursor.</Description>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- BepInEx.PluginInfoProps generates PluginInfo.PLUGIN_GUID/NAME/VERSION from these -->
+    <BepInExPluginGuid>muindor.TidyChests</BepInExPluginGuid>
+    <BepInExPluginName>$(Product)</BepInExPluginName>
+    <BepInExPluginVersion>$(Version)</BepInExPluginVersion>
+    <!-- MSB3277: the game assemblies reference Unity modules by differing versions; harmless for a plugin -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <!-- Only TidyChests.dll belongs in the output: BepInEx, Harmony and the game provide everything else at runtime -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Game assemblies. Publicize="true" exposes private members at compile time
+    (Container.CheckAccess, InventoryGrid.GetHoveredElement, Localization.AddWord, ...)
+    so every patched or called member is referenced with nameof() and a game update
+    that renames or removes one fails the build instead of failing silently at runtime.
+  -->
+  <ItemGroup>
+    <Reference Include="assembly_valheim" HintPath="$(ValheimManagedDir)assembly_valheim.dll" Publicize="true" Private="false" />
+    <!-- ZInput, Utils.GetMainCamera, Vector2i -->
+    <Reference Include="assembly_utils" HintPath="$(ValheimManagedDir)assembly_utils.dll" Private="false" />
+    <!-- Localization (AddWord is private) -->
+    <Reference Include="assembly_guiutils" HintPath="$(ValheimManagedDir)assembly_guiutils.dll" Publicize="true" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(ValheimManagedDir)UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ValheimManagedDir)UnityEngine.CoreModule.dll" Private="false" />
+    <!-- RectTransform utilities and Canvas live in the UI module; Button in UnityEngine.UI; the button label is TextMeshPro -->
+    <Reference Include="UnityEngine.UIModule" HintPath="$(ValheimManagedDir)UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="UnityEngine.UI" HintPath="$(ValheimManagedDir)UnityEngine.UI.dll" Private="false" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(ValheimManagedDir)Unity.TextMeshPro.dll" Private="false" />
+    <!-- The screen markers are drawn with IMGUI (GUI, GUIStyle, Event) -->
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="$(ValheimManagedDir)UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ValheimManagedDir)UnityEngine.TextRenderingModule.dll" Private="false" />
+    <!-- KeyCode -->
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(ValheimManagedDir)UnityEngine.InputLegacyModule.dll" Private="false" />
+    <!-- The game assemblies are built against .NET Standard 2.1; compile against the facade the game ships -->
+    <Reference Include="netstandard" HintPath="$(ValheimManagedDir)netstandard.dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CheckGameAssemblies" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ValheimManagedDir)assembly_valheim.dll')"
+           Text="Valheim assemblies not found in '$(ValheimManagedDir)'. Copy valheim_Data/Managed to lib/Managed or set VALHEIM_MANAGED_DIR." />
+  </Target>
+
+  <!--
+    Release packaging (Release configuration only) into dist/TidyChests-<version>.zip:
+
+      manifest.json, icon.png, README.md, CHANGELOG.md, LICENSE   Thunderstore metadata
+      plugins/TidyChests/TidyChests.dll                            mod files
+
+    The same archive uploads to Thunderstore and installs by hand: copy the
+    plugins/TidyChests folder into BepInEx/plugins.
+  -->
+  <PropertyGroup>
+    <PackageSourceDir>$(MSBuildProjectDirectory)/Package/</PackageSourceDir>
+    <DistDir>$(RepoRoot)dist/</DistDir>
+    <PackageStagingDir>$(DistDir)package-$(AssemblyName)/</PackageStagingDir>
+    <PackageZip>$(DistDir)$(AssemblyName)-$(Version).zip</PackageZip>
+  </PropertyGroup>
+
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Error Condition="!Exists('$(PackageSourceDir)icon.png')" Text="Package/icon.png (256x256) is required for the release package." />
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(PackageSourceDir)manifest.json').Contains('&quot;version_number&quot;: &quot;$(Version)&quot;'))" Text="Package/manifest.json version_number does not match the project Version ($(Version))." />
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/thunderstore.toml').Contains('versionNumber = &quot;$(Version)&quot;'))" Text="thunderstore.toml versionNumber does not match the project Version ($(Version))." />
+
+    <RemoveDir Directories="$(PackageStagingDir)" />
+    <Copy SourceFiles="$(PackageSourceDir)manifest.json;$(PackageSourceDir)icon.png;$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/CHANGELOG.md;$(RepoRoot)LICENSE" DestinationFolder="$(PackageStagingDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageStagingDir)plugins/$(AssemblyName)/" />
+
+    <Delete Files="$(PackageZip)" />
+    <ZipDirectory SourceDirectory="$(PackageStagingDir)" DestinationFile="$(PackageZip)" Overwrite="true" />
+    <Message Importance="high" Text="Packaged $(PackageZip)" />
+  </Target>
+
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(ValheimPluginsDir)' != ''">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ValheimPluginsDir)$(AssemblyName)/" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) to $(ValheimPluginsDir)$(AssemblyName)/" />
+  </Target>
+
+</Project>

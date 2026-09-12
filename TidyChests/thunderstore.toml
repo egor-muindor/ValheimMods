@@ -1,0 +1,29 @@
+# Thunderstore publishing configuration for `tcli publish`.
+# The package zip itself is produced by `dotnet build -c Release` (see TidyChests.csproj);
+# tcli only uploads it. Run scripts/publish-thunderstore.sh TidyChests from the repository root.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "Muindor"
+name = "TidyChests"
+versionNumber = "1.0.0"
+description = "Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. Client-side."
+websiteUrl = "https://github.com/egor-muindor/ValheimMods"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2350"
+
+[build]
+icon = "./Package/icon.png"
+readme = "./README.md"
+outdir = "../dist/tcli"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "valheim" ]
+
+[publish.categories]
+valheim = [ "mods", "tweaks", "client-side", "ai-generated", "deep-north-update" ]
