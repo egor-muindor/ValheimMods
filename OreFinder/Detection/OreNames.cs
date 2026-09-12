@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace OreFinder.Detection
 {
     /// <summary>
-    /// The player's own names for the ores, from the <c>Names</c> setting: pairs such as
-    /// <c>CopperOre=C, TinOre=T</c>. Keys are ore item names or object prefab names, matched
-    /// like the <c>Ores</c> list (case-insensitive, <c>$item_</c> keys accepted). Pure string
-    /// logic, no game dependency.
+    /// The player's own names for the targets, from the <c>Names</c> setting: pairs such as
+    /// <c>CopperOre=C, TinOre=T</c>. Keys are ore items, location keys, pickable items or
+    /// object prefab names, matched like the <c>Ores</c> list (case-insensitive, <c>$item_</c>
+    /// keys accepted). Targets without a pair get <see cref="Initials"/>. Pure string logic,
+    /// no game dependency.
     /// </summary>
     public sealed class OreNames
     {
@@ -58,10 +59,10 @@ namespace OreFinder.Detection
             return new OreNames(names);
         }
 
-        /// <summary>The name for an ore object: by its ore item first, then by its own prefab name.</summary>
-        public bool TryGet(string oreItem, string objectPrefabName, out string name)
+        /// <summary>The name for a target: by its key (ore item, location key, ...) first, then by its own prefab name.</summary>
+        public bool TryGet(string key, string objectPrefabName, out string name)
         {
-            if (_names.TryGetValue(OreFilter.Normalize(oreItem), out name))
+            if (_names.TryGetValue(OreFilter.Normalize(key), out name))
             {
                 return true;
             }
@@ -73,6 +74,53 @@ namespace OreFinder.Detection
 
             name = string.Empty;
             return false;
+        }
+
+        /// <summary>
+        /// A short name made from a display name: the first letters of the first two words
+        /// ("Burial Chambers" = BC, "Dragon egg" = DE), or the first two letters of a single
+        /// word ("Magecap" = Ma). Empty for an empty name.
+        /// </summary>
+        public static string Initials(string displayName)
+        {
+            var words = new List<string>();
+            var word = new System.Text.StringBuilder();
+            foreach (char c in displayName)
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    word.Append(c);
+                }
+                else if (c == '\'' || c == '\u2019')
+                {
+                    // "Hildir's" stays one word.
+                }
+                else if (word.Length > 0)
+                {
+                    words.Add(word.ToString());
+                    word.Clear();
+                }
+            }
+
+            if (word.Length > 0)
+            {
+                words.Add(word.ToString());
+            }
+
+            if (words.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            if (words.Count == 1)
+            {
+                string only = words[0];
+                return only.Length == 1
+                    ? only.ToUpperInvariant()
+                    : char.ToUpperInvariant(only[0]) + only.Substring(1, 1).ToLowerInvariant();
+            }
+
+            return string.Concat(char.ToUpperInvariant(words[0][0]), char.ToUpperInvariant(words[1][0]));
         }
 
         /// <summary>The configured pairs, for the log.</summary>

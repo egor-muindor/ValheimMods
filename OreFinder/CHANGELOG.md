@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 - 2026-09-12
+
+- New targets besides ores, each with the same arrow, light, beam and map pin: dungeon entrances (any door with an Enter prompt: burial chambers, sunken crypts, troll caves, frost caves, infested mines, ...), ancient roots, and pickables from the `Pickables` list (dragon eggs, Jotun puffs, Magecap, Fiddlehead, Volture eggs by default). Trees can be listed by their wood in `Trees` (empty by default). Non-ore targets use their own `TargetRadius` (40 m).
+- Map pin icons per group: `OrePin` (dot), `DungeonPin` (house), `OtherPin` (dot), any of the five player pin icons.
+- Custom names: targets without a pair in `Names` get the initials of their name (Burial Chambers = BC, Dragon egg = DE). `Names` now also carries `MushroomMagecap=Mc, Fiddlehead=Fh, $item_ancientroot=YR`.
+
 ## 1.0.3 - 2026-09-12
 
 - New: hidden ores need the Wishbone. Veins the game marks for the Wishbone (silver veins, scrap piles with a beacon) are only found while the Wishbone is in your inventory; `WishboneNeeded` can require it equipped instead, or drop the requirement. Veins skipped for lack of the Wishbone are found later once you carry it.

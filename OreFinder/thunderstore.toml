@@ -8,8 +8,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "OreFinder"
-versionNumber = "1.0.3"
-description = "Points you to ore veins near you: a screen arrow with name and distance and a light beam on the vein, once per vein. Hotkey toggle, configurable radius and ore list. Client-side, Valheim 1.0."
+versionNumber = "1.1.0"
+description = "Points you to ore veins, dungeon entrances, ancient roots and rare pickables: screen arrow with name and distance, light beam, map pin, once per find. Hotkey toggle. Client-side, Valheim 1.0."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
 

@@ -34,7 +34,7 @@ namespace OreFinder
 
         private readonly List<ZNetView> _nearby = new List<ZNetView>();
 
-        private OreCatalog? _catalog;
+        private TargetCatalog? _catalog;
 
         private string? _catalogSource;
 
@@ -182,9 +182,10 @@ namespace OreFinder
 
         private void Scan(Player player, ModConfig settings)
         {
-            OreCatalog catalog = CatalogFor(settings);
+            TargetCatalog catalog = CatalogFor(settings);
             _nearby.Clear();
-            OreScanner.CollectNearby(player.transform.position, settings.Radius.Value, _nearby);
+            Vector3 playerPosition = player.transform.position;
+            OreScanner.CollectNearby(playerPosition, Mathf.Max(settings.Radius.Value, settings.TargetRadius.Value), _nearby);
             bool? hasWishbone = null;
 
             foreach (ZNetView view in _nearby)
@@ -195,10 +196,26 @@ namespace OreFinder
                     continue;
                 }
 
-                OreKind? kind = catalog.Classify(view);
+                TargetKind? kind = catalog.Classify(view);
                 if (kind == null)
                 {
                     continue;
+                }
+
+                float radius = kind.Group == TargetGroup.Ore ? settings.Radius.Value : settings.TargetRadius.Value;
+                if ((view.transform.position - playerPosition).sqrMagnitude > radius * radius)
+                {
+                    continue;
+                }
+
+                if (kind.Group == TargetGroup.Pickable)
+                {
+                    // Picked ones are left alone until they regrow; not marked as seen.
+                    Pickable pickable = view.GetComponent<Pickable>();
+                    if (pickable != null && pickable.m_picked)
+                    {
+                        continue;
+                    }
                 }
 
                 if (kind.Hidden && settings.WishboneNeeded.Value != WishboneRule.NotNeeded)
@@ -236,7 +253,7 @@ namespace OreFinder
             }
         }
 
-        private void Highlight(ZNetView view, OreKind kind, Player player, ModConfig settings)
+        private void Highlight(ZNetView view, TargetKind kind, Player player, ModConfig settings)
         {
             var highlight = new VeinHighlight(view, kind, settings.ToHighlightOptions());
             _highlights.Add(highlight);
@@ -247,12 +264,12 @@ namespace OreFinder
                 ShowMessage(MessageHud.MessageType.TopLeft, $"{kind.DisplayName}: {distance:0} m");
             }
 
-            if (settings.MapPin.Value && !MapPins.TryAdd(highlight.Position, kind.DisplayName, settings.MapPinSpacing.Value))
+            if (settings.MapPin.Value && !MapPins.TryAdd(highlight.Position, kind.DisplayName, settings.MapPinSpacing.Value, PinIcons.ToPinType(PinFor(kind.Group, settings))))
             {
                 Plugin.Debug($"No map pin for {kind.DisplayName}: another pin is within {settings.MapPinSpacing.Value:0.#} m");
             }
 
-            Plugin.Debug($"Found {kind.DisplayName} ({Utils.GetPrefabName(view.gameObject)}, ore item {kind.OreItem}) " +
+            Plugin.Debug($"Found {kind.DisplayName} ({Utils.GetPrefabName(view.gameObject)}, key {kind.Key}) " +
                          $"at {highlight.Position}, {distance:0.#} m away");
         }
 
@@ -340,17 +357,30 @@ namespace OreFinder
             return false;
         }
 
-        /// <summary>The catalog for the current <c>Ores</c> and <c>Names</c> settings; rebuilt when they change.</summary>
-        private OreCatalog CatalogFor(ModConfig settings)
+        private static PinIcon PinFor(TargetGroup group, ModConfig settings)
         {
-            string ores = settings.Ores.Value ?? string.Empty;
-            string names = settings.CustomNames.Value ? settings.Names.Value ?? string.Empty : string.Empty;
-            string source = ores + "\n" + settings.CustomNames.Value + "\n" + names;
+            switch (group)
+            {
+                case TargetGroup.Ore:
+                    return settings.OrePin.Value;
+                case TargetGroup.Dungeon:
+                    return settings.DungeonPin.Value;
+                default:
+                    return settings.OtherPin.Value;
+            }
+        }
+
+        /// <summary>The catalog for the current target and name settings; rebuilt when any of them changes.</summary>
+        private TargetCatalog CatalogFor(ModConfig settings)
+        {
+            string source = settings.CatalogSource();
             if (_catalog == null || _catalogSource != source)
             {
-                _catalog = new OreCatalog(OreFilter.Parse(ores), settings.CustomNames.Value ? OreNames.Parse(names) : null);
+                OreNames? names = settings.CustomNames.Value ? OreNames.Parse(settings.Names.Value) : null;
+                _catalog = new TargetCatalog(OreFilter.Parse(settings.Ores.Value), settings.ToTargetOptions(), names);
                 _catalogSource = source;
-                Plugin.Debug($"Looking for: {_catalog.Filter.Describe()}; names: {(_catalog.Names != null ? _catalog.Names.Describe() : "from the game")}");
+                Plugin.Debug($"Looking for ores: {_catalog.Ores.Describe()}; targets: {_catalog.Targets.Describe()}; " +
+                             $"names: {(names != null ? names.Describe() : "from the game")}");
             }
 
             return _catalog;

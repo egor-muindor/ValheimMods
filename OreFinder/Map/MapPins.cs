@@ -2,14 +2,14 @@ using UnityEngine;
 
 namespace OreFinder.Map
 {
-    /// <summary>Adds the map pin for a found vein: a dot named after the ore, saved with the player's map.</summary>
+    /// <summary>Adds the map pin for a found target, named after it and saved with the player's map.</summary>
     internal static class MapPins
     {
         /// <summary>
         /// Adds the pin unless any other pin lies within <paramref name="spacing"/> metres (0 = always add).
         /// Moving or momentary pins (players, shouts, pings, events) do not count. Returns true when a pin was added.
         /// </summary>
-        public static bool TryAdd(Vector3 position, string name, float spacing)
+        public static bool TryAdd(Vector3 position, string name, float spacing, Minimap.PinType type)
         {
             Minimap map = Minimap.instance;
             if (map == null)
@@ -28,7 +28,7 @@ namespace OreFinder.Map
                 }
             }
 
-            map.AddPin(position, Minimap.PinType.Icon3, name, save: true, isChecked: false);
+            map.AddPin(position, type, name, save: true, isChecked: false);
             return true;
         }
 

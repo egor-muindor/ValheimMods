@@ -1,10 +1,12 @@
 # Ore Finder
 
-Points you to the ore veins around you in Valheim 1.0. Every second the mod
-looks for ore within a configurable radius (20 m by default). The first time a
-vein comes into range it gets a screen arrow with its name and distance, a
-coloured light, a vertical beam and a glow, for 10 seconds by default. Each vein
-is shown once, so walking past a deposit you already know does not nag you.
+Points you to the ore veins around you in Valheim 1.0, and to dungeon
+entrances, ancient roots and rare pickables. Every second the mod looks for
+ore within a configurable radius (20 m by default) and for the other targets
+within 40 m. The first time something comes into range it gets a screen arrow
+with its name and distance, a coloured light, a vertical beam and a glow, for
+10 seconds by default, plus a pin on the map. Each find is shown once, so
+walking past a deposit you already know does not nag you.
 
 Only real ore counts: copper and tin deposits, silver veins, iron scrap piles,
 flametal. Plain rocks, obsidian and black marble are ignored unless you list
@@ -34,6 +36,10 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   so the map stays readable. Off by default.
 - **Hidden ores need the Wishbone**: silver veins and the scrap piles the
   Wishbone reacts to are only found while you carry it, like in the game.
+- **More than ores**: entrances of crypts, caves and mines (with their own map
+  pin icon), ancient roots for the sap extractor, pickables you list (dragon
+  eggs, Jotun puffs, Magecap, Fiddlehead, Volture eggs by default) and trees you
+  list by their wood.
 - **Toggle key**: F9 by default, configurable, with modifiers if you like. The
   state is saved to the config file.
 
@@ -76,6 +82,16 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | `Glow` | `true` | Tint the vein's own material with an emissive glow. Only works for materials whose shader has an emission colour. |
 | `Message` | `true` | Show a top-left message with the ore name and distance when a vein is found. |
 
+### Targets
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Dungeons` | `true` | Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, and whatever a game update adds). |
+| `Roots` | `true` | Find ancient roots, the sap extractor spots in the Mistlands. |
+| `Pickables` | `DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg` | Pickable items to find, by item name, comma-separated (`Thistle`, `CloudBerries`, ... work too). Already picked ones are skipped until they regrow. Empty = none. |
+| `Trees` | empty | Trees to find, by the wood they drop (`YggdrasilWood`, `Blackwood`, `ElderBark`, `FineWood`, ...), comma-separated. Empty = none. |
+| `TargetRadius` | `40` | Search radius in metres for everything except ores, 1 to 200. `Radius` is for ores. |
+
 ### Hidden
 
 | Key | Default | Description |
@@ -88,7 +104,7 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 | Key | Default | Description |
 |-----|---------|-------------|
 | `CustomNames` | `false` | Show your own names from `Names` instead of the game's names (Copper deposit, Silver vein, ...) in the screen marker, the message and the map pin. |
-| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O` | Your names as `item=name` pairs separated by commas. The item is the ore item or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Ores without a pair keep the game's name. |
+| `Names` | `CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O, MushroomMagecap=Mc, Fiddlehead=Fh, $item_ancientroot=YR` | Your names as `key=name` pairs separated by commas. The key is the ore item, the pickable item (`DragonEgg`), the wood of a tree (`YggdrasilWood`), a dungeon's location key (`$location_forestcrypt`) or the object prefab (`rock4_copper`, `silvervein`); the name is anything you like, spaces included. Targets without a pair get the initials of their name: Burial Chambers = `BC`, Sunken Crypt = `SC`, Dragon egg = `DE`, Magecap = `Ma`. |
 
 ### Map
 
@@ -96,6 +112,9 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 |-----|---------|-------------|
 | `MapPin` | `true` | Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself. |
 | `MapPinSpacing` | `10` | Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres, 0 to 100. `0` = always add. Moving or momentary pins (players, shouts, pings, events) do not count. |
+| `OrePin` | `Dot` | Map pin icon for ores: `Fire`, `House`, `Hammer`, `Dot` or `Portal`, the five icons you can place yourself. |
+| `DungeonPin` | `House` | Map pin icon for dungeon entrances. |
+| `OtherPin` | `Dot` | Map pin icon for roots, pickables and trees. |
 
 ### What counts as ore
 
@@ -140,6 +159,13 @@ and so is the rock that replaces an intact deposit after the first hit.
 Hidden ores are recognised the way the game does it: the object (or what it
 turns into) carries a `Beacon` component, which is what the Wishbone's finder
 effect listens for. The Wishbone check looks at the inventory once per scan.
+
+The other targets are recognised by their components too, so nothing is
+hardcoded to a list of prefabs: a dungeon entrance is a `Teleport` with an
+enter text (the exits inside have none), a root is a `ResourceRoot`, a pickable
+is a `Pickable` whose item is in the list (its picked state is read from the
+object, so picked ones wait until they regrow), and a tree is a `TreeBase`
+whose log chain (`TreeLog` and its sub-logs) drops a listed wood.
 
 The highlight does not touch the vein's game object: the light and beam are
 separate objects, and the glow is a material property block that is cleared

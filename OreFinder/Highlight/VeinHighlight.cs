@@ -49,7 +49,7 @@ namespace OreFinder.Highlight
 
         private LineRenderer? _beam;
 
-        public VeinHighlight(ZNetView view, OreKind kind, HighlightOptions options)
+        public VeinHighlight(ZNetView view, TargetKind kind, HighlightOptions options)
         {
             _view = view;
             Kind = kind;
@@ -76,7 +76,7 @@ namespace OreFinder.Highlight
             }
         }
 
-        private void Build(OreKind kind, HighlightOptions options, float top, float extent, GameObject target)
+        private void Build(TargetKind kind, HighlightOptions options, float top, float extent, GameObject target)
         {
             if (options.Light)
             {
@@ -127,7 +127,7 @@ namespace OreFinder.Highlight
 
         public ZDOID Id { get; }
 
-        public OreKind Kind { get; }
+        public TargetKind Kind { get; }
 
         /// <summary>Centre of the vein's visible geometry.</summary>
         public Vector3 Position { get; }

@@ -2,6 +2,7 @@ using System.Globalization;
 using BepInEx.Configuration;
 using OreFinder.Detection;
 using OreFinder.Highlight;
+using OreFinder.Map;
 using UnityEngine;
 
 namespace OreFinder
@@ -35,6 +36,19 @@ namespace OreFinder
                 "or object prefab names (rock4_copper, silvervein, MineRock_Obsidian, ...). Plain rocks, obsidian and " +
                 "black marble are not ores and only show up when listed here.");
 
+            Dungeons = config.Bind("Targets", "Dungeons", true,
+                "Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, ...).");
+            Roots = config.Bind("Targets", "Roots", true,
+                "Find ancient roots (the sap extractor spots in the Mistlands).");
+            Pickables = config.Bind("Targets", "Pickables", "DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg",
+                "Pickable items to find, by item name (DragonEgg, MushroomJotunPuffs, MushroomMagecap, Fiddlehead, VoltureEgg, Thistle, CloudBerries, ...), " +
+                "comma-separated. Already picked ones are skipped until they regrow. Empty = none.");
+            Trees = config.Bind("Targets", "Trees", "",
+                "Trees to find, by the wood they drop (YggdrasilWood, Blackwood, ElderBark, FineWood, ...), comma-separated. Empty = none.");
+            TargetRadius = config.Bind("Targets", "TargetRadius", 40f,
+                new ConfigDescription("Search radius in metres for everything except ores (Radius is for ores).",
+                    new AcceptableValueRange<float>(1f, 200f)));
+
             Duration = config.Bind("Highlight", "Duration", 10f,
                 new ConfigDescription("Seconds a newly found vein stays highlighted. Every vein is highlighted once; " +
                     "use the console command 'orefinder reset' to forget the veins already shown.",
@@ -61,16 +75,20 @@ namespace OreFinder
             CustomNames = config.Bind("Names", "CustomNames", false,
                 "Show your own names from the Names setting instead of the game's names (Copper deposit, Silver vein, ...) " +
                 "in the screen marker, the message and the map pin.");
-            Names = config.Bind("Names", "Names", "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O",
-                "Your names for the ores, as item=name pairs separated by commas: the item is the ore item (CopperOre, TinOre, SilverOre, " +
-                "IronScrap, FlametalOre, FlametalOreNew, ...) or the object prefab (rock4_copper, silvervein, ...), the name is anything you like. " +
-                "Ores without a pair keep the game's name. Only used when CustomNames is on.");
+            Names = config.Bind("Names", "Names",
+                "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, Obsidian=O, MushroomMagecap=Mc, Fiddlehead=Fh, $item_ancientroot=YR",
+                "Your names as key=name pairs separated by commas. The key is the ore item (CopperOre, ...), the pickable item (DragonEgg), " +
+                "the wood of a tree (YggdrasilWood), a dungeon's location key ($location_forestcrypt) or the object prefab (rock4_copper, silvervein). " +
+                "Targets without a pair get the initials of their name (Burial Chambers = BC, Dragon egg = DE, Magecap = Ma). Only used when CustomNames is on.");
 
             MapPin = config.Bind("Map", "MapPin", true,
                 "Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself.");
             MapPinSpacing = config.Bind("Map", "MapPinSpacing", 10f,
                 new ConfigDescription("Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres. 0 = always add.",
                     new AcceptableValueRange<float>(0f, 100f)));
+            OrePin = config.Bind("Map", "OrePin", PinIcon.Dot, "Map pin icon for ores.");
+            DungeonPin = config.Bind("Map", "DungeonPin", PinIcon.House, "Map pin icon for dungeon entrances.");
+            OtherPin = config.Bind("Map", "OtherPin", PinIcon.Dot, "Map pin icon for roots, pickables and trees.");
         }
 
         public ConfigEntry<bool> Enabled { get; }
@@ -84,6 +102,16 @@ namespace OreFinder
         public ConfigEntry<float> ScanInterval { get; }
 
         public ConfigEntry<string> Ores { get; }
+
+        public ConfigEntry<bool> Dungeons { get; }
+
+        public ConfigEntry<bool> Roots { get; }
+
+        public ConfigEntry<string> Pickables { get; }
+
+        public ConfigEntry<string> Trees { get; }
+
+        public ConfigEntry<float> TargetRadius { get; }
 
         public ConfigEntry<float> Duration { get; }
 
@@ -109,6 +137,30 @@ namespace OreFinder
 
         public ConfigEntry<float> MapPinSpacing { get; }
 
+        public ConfigEntry<PinIcon> OrePin { get; }
+
+        public ConfigEntry<PinIcon> DungeonPin { get; }
+
+        public ConfigEntry<PinIcon> OtherPin { get; }
+
+        /// <summary>The non-ore targets from the config.</summary>
+        public TargetOptions ToTargetOptions()
+        {
+            return new TargetOptions
+            {
+                Dungeons = Dungeons.Value,
+                Roots = Roots.Value,
+                Pickables = NameList.Parse(Pickables.Value),
+                Trees = NameList.Parse(Trees.Value),
+            };
+        }
+
+        /// <summary>Everything the catalog depends on, to know when to rebuild it.</summary>
+        public string CatalogSource()
+        {
+            return string.Join("\n", Ores.Value, Dungeons.Value, Roots.Value, Pickables.Value, Trees.Value, CustomNames.Value, CustomNames.Value ? Names.Value : string.Empty);
+        }
+
         /// <summary>Re-reads the config file from disk.</summary>
         public void Reload()
         {
@@ -126,8 +178,9 @@ namespace OreFinder
         {
             CultureInfo culture = CultureInfo.InvariantCulture;
             string ores = OreFilter.Parse(Ores.Value).Describe();
-            return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
-                   $"scan every {ScanInterval.Value.ToString("0.##", culture)} s, ores: {ores}, " +
+            return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m for ores, " +
+                   $"{TargetRadius.Value.ToString("0.#", culture)} m for the rest, scan every {ScanInterval.Value.ToString("0.##", culture)} s, ores: {ores}, " +
+                   $"targets: {ToTargetOptions().Describe()}, " +
                    $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, " +
                    $"names {(CustomNames.Value ? OreNames.Parse(Names.Value).Describe() : "from the game")}, " +
                    $"hidden ores {(WishboneNeeded.Value == WishboneRule.NotNeeded ? "always" : $"need {WishboneItem.Value} {(WishboneNeeded.Value == WishboneRule.Equipped ? "equipped" : "in the inventory")}")}, " +

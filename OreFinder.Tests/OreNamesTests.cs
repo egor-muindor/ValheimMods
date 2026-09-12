@@ -90,3 +90,38 @@ namespace OreFinder.Tests
         }
     }
 }
+
+namespace OreFinder.Tests
+{
+    public class InitialsTests
+    {
+        [Theory]
+        [InlineData("Burial Chambers", "BC")]
+        [InlineData("Sunken Crypt", "SC")]
+        [InlineData("Troll cave", "TC")]
+        [InlineData("Dragon egg", "DE")]
+        [InlineData("Jotun puffs", "JP")]
+        [InlineData("Hildir's crypt", "HC")]
+        [InlineData("Infested Mine of Doom", "IM")]
+        public void Initials_TakeTheFirstLettersOfTheFirstTwoWords(string name, string expected)
+        {
+            Assert.Equal(expected, OreNames.Initials(name));
+        }
+
+        [Theory]
+        [InlineData("Magecap", "Ma")]
+        [InlineData("thistle", "Th")]
+        [InlineData("X", "X")]
+        public void Initials_OfASingleWord_AreItsFirstTwoLetters(string name, string expected)
+        {
+            Assert.Equal(expected, OreNames.Initials(name));
+        }
+
+        [Fact]
+        public void Initials_OfNothing_AreEmpty()
+        {
+            Assert.Equal("", OreNames.Initials(""));
+            Assert.Equal("", OreNames.Initials(" - "));
+        }
+    }
+}
