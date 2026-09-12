@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 - 2026-09-12
+
+- Quick slot detection is now based on the item's grid position through the slot mods' public APIs instead of their cached slot contents, which could report empty slots during death.
+- With Extra Slots, `KeepQuickSlotItems` now covers quick, food, ammo and misc slots (everything except equipment slots), matching what players expect to keep.
+- The slot mod API is resolved at startup and reported in the log; the debug log shows each item's grid position.
+
 ## 1.0.1 - 2026-09-12
 
 - `KeepQuickSlotItems` now also works with Extra Slots (shudnal.ExtraSlots), not only EquipmentAndQuickSlots.

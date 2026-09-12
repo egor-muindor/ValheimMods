@@ -48,7 +48,8 @@ namespace DeathTweaks
             QuickSlotMods.Provider? provider = QuickSlotMods.Active;
             if (provider != null)
             {
-                Log.LogInfo($"Quick slot support: {provider.Name} {provider.LoadedVersion}");
+                // Resolving here logs the outcome at startup rather than at the first death.
+                _ = provider.Classifier;
             }
             else if (Settings.KeepQuickSlotItems.Value)
             {

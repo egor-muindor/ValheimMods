@@ -47,7 +47,7 @@ namespace DeathTweaks
             KeepHotbarItems = config.Bind("Toggles", "KeepHotbarItems", false,
                 "Keep items in the first inventory row. Overrides the item lists.");
             KeepQuickSlotItems = config.Bind("Toggles", "KeepQuickSlotItems", false,
-                "Keep items in quick slots. Overrides the item lists. Supported mods: EquipmentAndQuickSlots 3.x, Extra Slots.");
+                "Keep items in quick slots. Overrides the item lists. EquipmentAndQuickSlots 3.x: quick slots. Extra Slots: quick, food, ammo and misc slots.");
             UseTombStone = config.Bind("Toggles", "UseTombStone", true,
                 "Put dropped items in a tombstone. When false they are scattered on the ground.");
             CreateDeathEffects = config.Bind("Toggles", "CreateDeathEffects", true,

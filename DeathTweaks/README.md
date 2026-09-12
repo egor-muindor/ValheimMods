@@ -54,7 +54,7 @@ The config file `BepInEx/config/muindor.DeathTweaks.cfg` is created on first lau
 | `DestroyAllItems` | `false` | Destroy everything except quest items. Overrides all other item options except `KeepAllItems`. |
 | `KeepEquippedItems` | `false` | Keep equipped items. Overrides the item lists. |
 | `KeepHotbarItems` | `false` | Keep items in the first inventory row. Overrides the item lists. |
-| `KeepQuickSlotItems` | `false` | Keep items in quick slots (EquipmentAndQuickSlots 3.x or Extra Slots). Overrides the item lists. A warning is logged when neither mod is loaded. |
+| `KeepQuickSlotItems` | `false` | Keep items in quick slots. EquipmentAndQuickSlots 3.x: the quick slots. Extra Slots: quick, food, ammo and misc slots. Overrides the item lists. A warning is logged when neither mod is loaded. |
 | `KeepTeleportableItems` | `false` | Keep items that can go through portals. Does not override the item lists. |
 | `UseTombStone` | `true` | Put dropped items in a tombstone. When `false` they are scattered on the ground. |
 | `CreateDeathEffects` | `true` | Create the ragdoll and particle effects. |
@@ -125,9 +125,9 @@ deathtweaks reload   # re-read the config file
 
 - **EquipmentAndQuickSlots 3.x** and **Extra Slots** are supported. Their own
   keep-on-death settings are applied first; `KeepQuickSlotItems` only matters
-  for quick slot items those mods would drop. Extra Slots' food, ammo and misc
-  slots are governed by its own per-slot settings. Tombstone size and item
-  positions are handled by those mods' own patches.
+  for slot items those mods would drop. For Extra Slots it covers quick, food,
+  ammo and misc slots; equipment slots follow `KeepEquippedItems`. Tombstone
+  size and item positions are handled by those mods' own patches.
 - **World modifiers** for death are honoured, see the rule precedence above.
 - **Upgradeable pockets** (extra inventory rows) need no special handling.
 - Mods that replace `Player.OnDeath` or `Player.CreateTombStone` outright will
