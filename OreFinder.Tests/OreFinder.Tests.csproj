@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>OreFinder.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    The ore filter and the screen marker math have no game or Unity dependency, so their
+    sources are compiled straight into this project. That keeps the tests runnable on any
+    machine without the game assemblies or a .NET Framework runtime.
+  -->
+  <ItemGroup>
+    <Compile Include="../OreFinder/Detection/OreFilter.cs" Link="Detection/OreFilter.cs" />
+    <Compile Include="../OreFinder/Detection/OreNames.cs" Link="Detection/OreNames.cs" />
+    <Compile Include="../OreFinder/Detection/NameList.cs" Link="Detection/NameList.cs" />
+    <Compile Include="../OreFinder/Detection/TargetOptions.cs" Link="Detection/TargetOptions.cs" />
+    <Compile Include="../OreFinder/Detection/TargetGroup.cs" Link="Detection/TargetGroup.cs" />
+    <Compile Include="../OreFinder/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
