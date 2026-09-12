@@ -9,6 +9,11 @@ game version. The feature set and the config keys are the same, so an existing
 `aedenthorn.DeathTweaks.cfg` can be reused by renaming it to
 `muindor.DeathTweaks.cfg`.
 
+Client-side: install it on every player's game that should use it. Nothing is
+needed on the server, and players without the mod can play on the same server.
+
+Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://github.com/egor-muindor/ValheimMods).
+
 ## Features
 
 - Keep, drop or destroy items by item type or prefab name.
@@ -25,8 +30,12 @@ Kept equipped items stay equipped after respawn.
 ## Installation
 
 Requires [BepInEx 5](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/).
-Put `DeathTweaks.dll` into `BepInEx/plugins`. The config file
-`BepInEx/config/muindor.DeathTweaks.cfg` is created on first launch.
+
+- With a mod manager (r2modman, Thunderstore Mod Manager): install as usual.
+- By hand: unzip the release and copy the `plugins/DeathTweaks` folder into
+  `BepInEx/plugins`, so the mod ends up at `BepInEx/plugins/DeathTweaks/DeathTweaks.dll`.
+
+The config file `BepInEx/config/muindor.DeathTweaks.cfg` is created on first launch.
 
 ## Configuration
 

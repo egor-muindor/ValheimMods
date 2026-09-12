@@ -23,7 +23,10 @@ dotnet build -c Release
 dotnet test
 ```
 
-The plugin is written to `DeathTweaks/bin/Release/DeathTweaks.dll`. Set
+The plugin is written to `DeathTweaks/bin/Release/DeathTweaks.dll`. A Release
+build also produces `dist/DeathTweaks-<version>.zip`: a Thunderstore-ready
+package (manifest and icon live in `DeathTweaks/Package`) with the plugin under
+`plugins/DeathTweaks/`, which is also the layout for manual installs. Set
 `VALHEIM_PLUGINS_DIR` to your `BepInEx/plugins` folder to have every build
 copied there automatically. Machine-specific settings can also go into a
 gitignored `Environment.props` at the repository root:

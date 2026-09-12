@@ -47,6 +47,35 @@
            Text="Valheim assemblies not found in '$(ValheimManagedDir)'. Copy valheim_Data/Managed to lib/Managed or set VALHEIM_MANAGED_DIR." />
   </Target>
 
+  <!--
+    Release packaging (Release configuration only) into dist/DeathTweaks-<version>.zip:
+
+      manifest.json, icon.png, README.md, CHANGELOG.md, LICENSE   Thunderstore metadata
+      plugins/DeathTweaks/DeathTweaks.dll                          mod files
+
+    The same archive uploads to Thunderstore and installs by hand: copy the
+    plugins/DeathTweaks folder into BepInEx/plugins.
+  -->
+  <PropertyGroup>
+    <PackageSourceDir>$(MSBuildProjectDirectory)/Package/</PackageSourceDir>
+    <DistDir>$(RepoRoot)dist/</DistDir>
+    <PackageStagingDir>$(DistDir)package/</PackageStagingDir>
+    <PackageZip>$(DistDir)$(AssemblyName)-$(Version).zip</PackageZip>
+  </PropertyGroup>
+
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Error Condition="!Exists('$(PackageSourceDir)icon.png')" Text="Package/icon.png (256x256) is required for the release package." />
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(PackageSourceDir)manifest.json').Contains('&quot;version_number&quot;: &quot;$(Version)&quot;'))" Text="Package/manifest.json version_number does not match the project Version ($(Version))." />
+
+    <RemoveDir Directories="$(PackageStagingDir)" />
+    <Copy SourceFiles="$(PackageSourceDir)manifest.json;$(PackageSourceDir)icon.png;$(MSBuildProjectDirectory)/README.md;$(MSBuildProjectDirectory)/CHANGELOG.md;$(RepoRoot)LICENSE" DestinationFolder="$(PackageStagingDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageStagingDir)plugins/$(AssemblyName)/" />
+
+    <Delete Files="$(PackageZip)" />
+    <ZipDirectory SourceDirectory="$(PackageStagingDir)" DestinationFile="$(PackageZip)" Overwrite="true" />
+    <Message Importance="high" Text="Packaged $(PackageZip)" />
+  </Target>
+
   <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(ValheimPluginsDir)' != ''">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ValheimPluginsDir)$(AssemblyName)/" />
     <Message Importance="high" Text="Deployed $(TargetFileName) to $(ValheimPluginsDir)$(AssemblyName)/" />
