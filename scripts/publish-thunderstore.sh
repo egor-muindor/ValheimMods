@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Publish the current DeathTweaks release package to Thunderstore.
+# Publish a mod's current release package to Thunderstore.
 #
-# Usage: scripts/publish-thunderstore.sh [--dry-run]
+# Usage: scripts/publish-thunderstore.sh <Mod> [--dry-run]      e.g. DeathTweaks, QuickTeleport
 #
 # The package zip is built by `dotnet build -c Release`; this script only uploads it.
 # The API token is read from TCLI_AUTH_TOKEN, or from 1Password when the gitignored
@@ -9,17 +9,20 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-mod_dir="$repo_root/DeathTweaks"
+mod="${1:-}"
+[[ -n "$mod" && "$mod" != --* ]] || { echo "Usage: $0 <Mod> [--dry-run]" >&2; exit 1; }
+mod_dir="$repo_root/$mod"
+[[ -f "$mod_dir/$mod.csproj" ]] || { echo "Unknown mod: $mod ($mod_dir/$mod.csproj not found)" >&2; exit 1; }
 dry_run=false
-[[ "${1:-}" == "--dry-run" ]] && dry_run=true
+[[ "${2:-}" == "--dry-run" ]] && dry_run=true
 
 command -v tcli >/dev/null || { echo "tcli is not installed: dotnet tool install -g tcli" >&2; exit 1; }
 
 version="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['version_number'])" "$mod_dir/Package/manifest.json")"
-zip="$repo_root/dist/DeathTweaks-$version.zip"
+zip="$repo_root/dist/$mod-$version.zip"
 
-echo "Building release package $version"
-dotnet build "$mod_dir/DeathTweaks.csproj" -c Release --nologo -v quiet
+echo "Building release package $mod $version"
+dotnet build "$mod_dir/$mod.csproj" -c Release --nologo -v quiet
 [[ -f "$zip" ]] || { echo "Package not found: $zip" >&2; exit 1; }
 
 if [[ -z "${TCLI_AUTH_TOKEN:-}" ]]; then
@@ -32,7 +35,7 @@ if [[ -z "${TCLI_AUTH_TOKEN:-}" ]]; then
 fi
 
 if $dry_run; then
-    echo "Dry run: would publish $zip as Muindor-DeathTweaks-$version with $mod_dir/thunderstore.toml"
+    echo "Dry run: would publish $zip as Muindor-$mod-$version with $mod_dir/thunderstore.toml"
     exit 0
 fi
 

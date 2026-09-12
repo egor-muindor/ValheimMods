@@ -5,6 +5,7 @@ BepInEx mods for Valheim 1.0.
 | Mod | Description |
 |-----|-------------|
 | [DeathTweaks](DeathTweaks/README.md) | Keep, drop or destroy items on death, keep food, tune skill loss, choose the respawn point. |
+| [QuickTeleport](QuickTeleport/README.md) | Faster portal and dungeon teleports: finish as soon as the destination is loaded, or run vanilla timing N times faster. |
 
 ## Building
 
@@ -23,13 +24,13 @@ dotnet build -c Release
 dotnet test
 ```
 
-The plugin is written to `DeathTweaks/bin/Release/DeathTweaks.dll`. A Release
-build also produces `dist/DeathTweaks-<version>.zip`: a Thunderstore-ready
-package (manifest and icon live in `DeathTweaks/Package`) with the plugin under
-`plugins/DeathTweaks/`, which is also the layout for manual installs. Set
-`VALHEIM_PLUGINS_DIR` to your `BepInEx/plugins` folder to have every build
-copied there automatically. Machine-specific settings can also go into a
-gitignored `Environment.props` at the repository root:
+Each mod is written to `<Mod>/bin/Release/<Mod>.dll`. A Release build also
+produces `dist/<Mod>-<version>.zip`: a Thunderstore-ready package (manifest and
+icon live in `<Mod>/Package`) with the plugin under `plugins/<Mod>/`, which is
+also the layout for manual installs. Set `VALHEIM_PLUGINS_DIR` to your
+`BepInEx/plugins` folder to have every build copied there automatically.
+Machine-specific settings can also go into a gitignored `Environment.props` at
+the repository root:
 
 ```xml
 <Project>
@@ -42,16 +43,18 @@ gitignored `Environment.props` at the repository root:
 
 ## Publishing to Thunderstore
 
-The package is listed as [Muindor/DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks).
-`DeathTweaks/thunderstore.toml` holds the listing metadata (categories, community,
+The packages are listed under the [Muindor](https://thunderstore.io/c/valheim/p/Muindor/)
+team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks) and
+[QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport).
+`<Mod>/thunderstore.toml` holds the listing metadata (categories, community,
 dependencies); the zip comes from the Release build. To publish a new version:
 
-1. Bump `<Version>` in `DeathTweaks.csproj`, `version_number` in
-   `DeathTweaks/Package/manifest.json` and `versionNumber` in
-   `DeathTweaks/thunderstore.toml` (the build fails if they differ), add a
-   `CHANGELOG.md` entry, commit and tag `DeathTweaks-v<version>`.
-2. Run `scripts/publish-thunderstore.sh` (add `--dry-run` to only build and
-   print what would be uploaded). It needs [tcli](https://github.com/thunderstore-io/thunderstore-cli)
+1. Bump `<Version>` in `<Mod>.csproj`, `version_number` in
+   `<Mod>/Package/manifest.json` and `versionNumber` in `<Mod>/thunderstore.toml`
+   (the build fails if they differ), add a `CHANGELOG.md` entry, commit and tag
+   `<Mod>-v<version>`.
+2. Run `scripts/publish-thunderstore.sh <Mod>` (add `--dry-run` to only build
+   and print what would be uploaded). It needs [tcli](https://github.com/thunderstore-io/thunderstore-cli)
    (`dotnet tool install -g tcli`) and a token in `TCLI_AUTH_TOKEN`, or a
    1Password reference in a gitignored `.publish.env`:
 
