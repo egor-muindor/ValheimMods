@@ -6,6 +6,7 @@ BepInEx mods for Valheim 1.0.
 |-----|-------------|
 | [DeathTweaks](DeathTweaks/README.md) | Keep, drop or destroy items on death, keep food, tune skill loss, choose the respawn point. |
 | [QuickTeleport](QuickTeleport/README.md) | Faster portal and dungeon teleports: finish as soon as the destination is loaded, or run vanilla timing N times faster. |
+| [OreFinder](OreFinder/README.md) | Points you to ore veins nearby: screen arrow with name and distance and a light beam on the vein, once per vein; hotkey toggle, configurable radius and ore list. |
 
 ## Building
 
@@ -44,8 +45,9 @@ the repository root:
 ## Publishing to Thunderstore
 
 The packages are listed under the [Muindor](https://thunderstore.io/c/valheim/p/Muindor/)
-team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks) and
-[QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport).
+team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks),
+[QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport) and
+[OreFinder](https://thunderstore.io/c/valheim/p/Muindor/OreFinder).
 `<Mod>/thunderstore.toml` holds the listing metadata (categories, community,
 dependencies); the zip comes from the Release build. To publish a new version:
 

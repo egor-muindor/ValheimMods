@@ -1,0 +1,29 @@
+# Thunderstore publishing configuration for `tcli publish`.
+# The package zip itself is produced by `dotnet build -c Release` (see OreFinder.csproj);
+# tcli only uploads it. Run scripts/publish-thunderstore.sh OreFinder from the repository root.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "Muindor"
+name = "OreFinder"
+versionNumber = "1.0.0"
+description = "Points you to ore veins near you: a screen arrow with name and distance and a light beam on the vein, once per vein. Hotkey toggle, configurable radius and ore list. Client-side, Valheim 1.0."
+websiteUrl = "https://github.com/egor-muindor/ValheimMods"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2350"
+
+[build]
+icon = "./Package/icon.png"
+readme = "./README.md"
+outdir = "../dist/tcli"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "valheim" ]
+
+[publish.categories]
+valheim = [ "mods", "tweaks", "client-side", "ai-generated", "deep-north-update" ]

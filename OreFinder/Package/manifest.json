@@ -1,0 +1,9 @@
+{
+  "name": "OreFinder",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/egor-muindor/ValheimMods",
+  "description": "Points you to ore veins near you: a screen arrow with name and distance and a light beam on the vein, once per vein. Hotkey toggle, configurable radius and ore list. Client-side, Valheim 1.0.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2350"
+  ]
+}
