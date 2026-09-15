@@ -3,6 +3,9 @@ using BepInEx.Logging;
 using HarmonyLib;
 using TidyChests.Compat;
 using TidyChests.Find;
+using TidyChests.Index;
+using TidyChests.Knowledge;
+using TidyChests.Ui;
 
 namespace TidyChests
 {
@@ -30,6 +33,15 @@ namespace TidyChests
         /// <summary>The running finder, once the plugin has loaded.</summary>
         public static ChestFinder? Finder { get; private set; }
 
+        /// <summary>The running chest list, once the plugin has loaded.</summary>
+        public static ChestBrowser? Browser { get; private set; }
+
+        /// <summary>The running knowledge scan, once the plugin has loaded.</summary>
+        public static KnowledgeScanner? Scanner { get; private set; }
+
+        /// <summary>What the chests in range hold; shared by the chest list and the knowledge scan.</summary>
+        internal static ChestIndex Index { get; } = new ChestIndex();
+
         /// <summary>True when the plugin has loaded and the <c>Enabled</c> setting is on.</summary>
         public static bool Enabled => Settings != null && Settings.Enabled.Value;
 
@@ -38,6 +50,8 @@ namespace TidyChests
             Log = Logger;
             Settings = new ModConfig(Config);
             Finder = gameObject.AddComponent<ChestFinder>();
+            Browser = gameObject.AddComponent<ChestBrowser>();
+            Scanner = gameObject.AddComponent<KnowledgeScanner>();
 
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             _harmony.PatchAll(typeof(Plugin).Assembly);

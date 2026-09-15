@@ -26,6 +26,16 @@ namespace TidyChests
 
         public const string Hover = "tidychests_hover";
 
+        public const string BrowserTitle = "tidychests_browser_title";
+
+        public const string BrowserSearch = "tidychests_browser_search";
+
+        public const string BrowserChests = "tidychests_browser_chests";
+
+        public const string BrowserEmpty = "tidychests_browser_empty";
+
+        public const string BrowserNoMatch = "tidychests_browser_no_match";
+
         private const string DefaultLanguage = "English";
 
         private static readonly Dictionary<string, Dictionary<string, string>> Words = new Dictionary<string, Dictionary<string, string>>
@@ -39,6 +49,11 @@ namespace TidyChests
                 [Found] = "{0}: found in {1} chests",
                 [NotFound] = "{0}: not in any chest within {1} m",
                 [Hover] = "Point at an item in the inventory or the crafting panel and press {0} to find it in nearby chests",
+                [BrowserTitle] = "Chests nearby",
+                [BrowserSearch] = "Search by name",
+                [BrowserChests] = "chests: {0} · {1} m",
+                [BrowserEmpty] = "No chest within {0} m holds anything",
+                [BrowserNoMatch] = "Nothing matches \"{0}\"",
             },
             ["Russian"] = new Dictionary<string, string>
             {
@@ -49,6 +64,11 @@ namespace TidyChests
                 [Found] = "{0}: есть в сундуках ({1})",
                 [NotFound] = "{0}: нет ни в одном сундуке в радиусе {1} м",
                 [Hover] = "Наведите курсор на предмет в инвентаре или в крафте и нажмите {0}, чтобы найти его в сундуках",
+                [BrowserTitle] = "Сундуки рядом",
+                [BrowserSearch] = "Поиск по названию",
+                [BrowserChests] = "сундуков: {0} · {1} м",
+                [BrowserEmpty] = "В радиусе {0} м нет сундуков с предметами",
+                [BrowserNoMatch] = "Ничего не найдено по запросу «{0}»",
             },
         };
 
@@ -89,6 +109,10 @@ namespace TidyChests
         {
             Translations.Apply(__instance, language);
             StashButton.RefreshLabel();
+            ChestBrowser.RefreshLabels();
+
+            // The index keeps the localized item names; they belong to the old language now.
+            Plugin.Index.Clear();
         }
     }
 }

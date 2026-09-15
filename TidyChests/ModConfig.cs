@@ -58,6 +58,21 @@ namespace TidyChests
                 "Position of the Stash button relative to the weight display of the inventory panel, in UI pixels (x right, y up).");
             ButtonSize = config.Bind("Button", "ButtonSize", new Vector2(120f, 38f),
                 "Width and height of the Stash button in UI pixels.");
+
+            ScanRadius = config.Bind("Scan", "ScanRadius", 50f,
+                new ConfigDescription("Chests within this many metres are read by the chest list and by the knowledge scan. Reading costs nothing on the network: the game already keeps the contents of every loaded chest on your client. Above roughly 90 m the chests are no longer loaded, so nothing more is found.",
+                    new AcceptableValueRange<float>(5f, 90f)));
+            ScanInterval = config.Bind("Scan", "ScanInterval", 5f,
+                new ConfigDescription("Seconds between two scans of the chests in range. Chests whose contents did not change are skipped, so a short interval is cheap.",
+                    new AcceptableValueRange<float>(1f, 60f)));
+
+            LearnFromChests = config.Bind("Knowledge", "LearnFromChests", true,
+                "Count the items lying in the chests in range as found, so their recipes unlock without carrying every stack yourself. Meant for co-op, where a team mate gathers a material you have never held. Trophies count too. This cannot be undone: turning the option off later does not lock a recipe again.");
+
+            BrowserKey = config.Bind("Browser", "BrowserKey", new KeyboardShortcut(KeyCode.O, KeyCode.LeftControl),
+                "Opens and closes the list of everything in the chests in range, with a search box. Modifiers are allowed; set it to \"None\" to disable the panel.");
+            BrowserSize = config.Bind("Browser", "BrowserSize", new Vector2(520f, 560f),
+                "Width and height of the chest list panel in UI pixels.");
         }
 
         public ConfigEntry<bool> Enabled { get; }
@@ -92,6 +107,16 @@ namespace TidyChests
 
         public ConfigEntry<Vector2> ButtonSize { get; }
 
+        public ConfigEntry<float> ScanRadius { get; }
+
+        public ConfigEntry<float> ScanInterval { get; }
+
+        public ConfigEntry<bool> LearnFromChests { get; }
+
+        public ConfigEntry<KeyboardShortcut> BrowserKey { get; }
+
+        public ConfigEntry<Vector2> BrowserSize { get; }
+
         /// <summary>Re-reads the config file from disk.</summary>
         public void Reload()
         {
@@ -124,7 +149,9 @@ namespace TidyChests
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, " +
                    $"find key {FindKey.Value}, highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
-                   $"button {(ShowButton.Value ? "shown" : "hidden")}";
+                   $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
+                   $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
+                   $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}";
         }
     }
 }

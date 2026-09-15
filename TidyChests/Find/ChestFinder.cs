@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using BepInEx.Configuration;
 using TidyChests.Containers;
 using TidyChests.Hud;
 using UnityEngine;
@@ -28,10 +27,21 @@ namespace TidyChests.Find
         public int HighlightCount => _highlights.Count;
 
         /// <summary>
-        /// Highlights every container in range that holds an item named <paramref name="sharedName"/>.
-        /// Returns the number of containers found; the caller decides about the inventory.
+        /// Highlights every container within the stash radius that holds an item named
+        /// <paramref name="sharedName"/>. Returns the number of containers found; the caller
+        /// decides about the inventory.
         /// </summary>
         public int Find(string sharedName, string displayName)
+        {
+            return Find(sharedName, displayName, Plugin.Settings.Radius.Value);
+        }
+
+        /// <summary>
+        /// Highlights every container within <paramref name="radius"/> metres that holds an
+        /// item named <paramref name="sharedName"/>. The chest list searches a wider radius
+        /// than the find key, so it passes its own.
+        /// </summary>
+        public int Find(string sharedName, string displayName, float radius)
         {
             ModConfig settings = Plugin.Settings;
             Player player = Player.m_localPlayer;
@@ -42,7 +52,7 @@ namespace TidyChests.Find
 
             RemoveHighlights();
             _nearby.Clear();
-            ContainerRegistry.CollectNearby(player.transform.position, settings.Radius.Value, _nearby);
+            ContainerRegistry.CollectNearby(player.transform.position, radius, _nearby);
             HighlightOptions options = settings.ToHighlightOptions();
 
             foreach (Container container in _nearby)
@@ -98,7 +108,7 @@ namespace TidyChests.Find
                 }
 
                 UpdateHighlights();
-                if (InventoryGui.IsVisible() && IsPressed(Plugin.Settings.FindKey.Value))
+                if (InventoryGui.IsVisible() && Shortcut.IsPressed(Plugin.Settings.FindKey.Value))
                 {
                     FindHovered();
                 }
@@ -319,37 +329,5 @@ namespace TidyChests.Find
             return carrier != null && carrier != Player.m_localPlayer;
         }
 
-        /// <summary>
-        /// The shortcut's main key went down this frame with its modifiers held. Unlike
-        /// <c>KeyboardShortcut.IsDown</c>, other keys may be held as well. Ignored while a
-        /// text field has the keyboard.
-        /// </summary>
-        private static bool IsPressed(KeyboardShortcut shortcut)
-        {
-            if (shortcut.MainKey == KeyCode.None)
-            {
-                return false;
-            }
-
-            if (global::Console.IsVisible() || TextInput.IsVisible() || (Chat.instance != null && Chat.instance.HasFocus()))
-            {
-                return false;
-            }
-
-            if (!ZInput.GetKeyDown(shortcut.MainKey, logWarning: false))
-            {
-                return false;
-            }
-
-            foreach (KeyCode modifier in shortcut.Modifiers)
-            {
-                if (!ZInput.GetKey(modifier, logWarning: false))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
     }
 }

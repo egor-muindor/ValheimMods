@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
@@ -12,6 +13,13 @@ namespace TidyChests.Containers
     internal static class ContainerRegistry
     {
         private static readonly List<Container> All = new List<Container>();
+
+        // Reused between calls: the knowledge scan and the browser collect on a timer, and a
+        // dictionary plus a closure per call would be garbage for the sake of one sort.
+        private static readonly List<Nearby> Buffer = new List<Nearby>();
+
+        private static readonly Comparison<Nearby> ByDistance =
+            (a, b) => a.DistanceSquared.CompareTo(b.DistanceSquared);
 
         public static int Count => All.Count;
 
@@ -32,7 +40,7 @@ namespace TidyChests.Containers
         public static void CollectNearby(Vector3 center, float radius, List<Container> result)
         {
             float radiusSquared = radius * radius;
-            var distances = new Dictionary<Container, float>();
+            Buffer.Clear();
             for (int i = All.Count - 1; i >= 0; i--)
             {
                 Container container = All[i];
@@ -45,12 +53,31 @@ namespace TidyChests.Containers
                 float distanceSquared = (container.transform.position - center).sqrMagnitude;
                 if (distanceSquared <= radiusSquared)
                 {
-                    result.Add(container);
-                    distances[container] = distanceSquared;
+                    Buffer.Add(new Nearby(container, distanceSquared));
                 }
             }
 
-            result.Sort((a, b) => distances[a].CompareTo(distances[b]));
+            Buffer.Sort(ByDistance);
+            foreach (Nearby nearby in Buffer)
+            {
+                result.Add(nearby.Container);
+            }
+
+            // Nothing outside a call should keep containers alive.
+            Buffer.Clear();
+        }
+
+        private readonly struct Nearby
+        {
+            public Nearby(Container container, float distanceSquared)
+            {
+                Container = container;
+                DistanceSquared = distanceSquared;
+            }
+
+            public Container Container { get; }
+
+            public float DistanceSquared { get; }
         }
     }
 

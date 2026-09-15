@@ -3,15 +3,19 @@ using UnityEngine;
 namespace TidyChests.Containers
 {
     /// <summary>
-    /// Whether the local player may put items into a container from a distance, and how to
-    /// get write access to it. The checks mirror what vanilla does when a chest is opened
-    /// (ward, privacy) plus what a remote write needs: nobody else using it, and ownership
-    /// of its network object. With MultiUserChest the last two are its business.
+    /// Whether the local player may look into a container or put items into it from a
+    /// distance, and how to get write access to it. The checks mirror what vanilla does when a
+    /// chest is opened (ward, privacy) plus what a remote write needs: nobody else using it,
+    /// and ownership of its network object. With MultiUserChest the last two are its business.
     /// </summary>
     internal static class ContainerAccess
     {
-        /// <summary>True when items may be moved into <paramref name="container"/>; otherwise <paramref name="reason"/> says why not.</summary>
-        public static bool CanStashInto(Container container, long playerId, bool multiUserChest, out string reason)
+        /// <summary>
+        /// True when the local player could open <paramref name="container"/> by hand, so its
+        /// contents may be listed and learned from; otherwise <paramref name="reason"/> says
+        /// why not. Says nothing about writing: see <see cref="CanStashInto"/>.
+        /// </summary>
+        public static bool CanRead(Container container, long playerId, out string reason)
         {
             reason = "";
             if (container == null || container.GetInventory() == null)
@@ -46,6 +50,18 @@ namespace TidyChests.Containers
                 return false;
             }
 
+            return true;
+        }
+
+        /// <summary>True when items may be moved into <paramref name="container"/>; otherwise <paramref name="reason"/> says why not.</summary>
+        public static bool CanStashInto(Container container, long playerId, bool multiUserChest, out string reason)
+        {
+            if (!CanRead(container, playerId, out reason))
+            {
+                return false;
+            }
+
+            ZNetView view = container.m_nview;
             if (IsOpenByLocalPlayer(container) || multiUserChest)
             {
                 return true;

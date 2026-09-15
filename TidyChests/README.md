@@ -6,7 +6,10 @@ already hold that kind of item (10 m by default). Equipment, tools, weapons,
 equipped items, quest items and the slots of your quick slot mod stay where they
 are. And when you wonder where you put something, point at it in the inventory
 and press **T**: the inventory closes and every chest in range that holds it
-lights up, with an arrow and the count on screen.
+lights up, with an arrow and the count on screen. **Ctrl+O** lists everything the
+chests around you hold, with a search box. And in co-op, the materials your team
+mates drop in those chests unlock their recipes for you, without hunting down
+every new stack to touch it.
 
 Client-side: install it on every player's game that should use it. Nothing is
 needed on the server, and players without the mod can play on the same server.
@@ -33,6 +36,15 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   items in an open chest and in the crafting panel too: point at an ingredient
   of the selected recipe, at the recipe's icon or at an entry of the recipe list
   to see which chests hold that item.
+- **Chest list** (`Ctrl+O` by default): every item in the chests within the scan
+  radius, one row per kind, with the total, how many chests hold it and how far
+  the nearest one is. Type to filter by name; click a row to close the list and
+  light up every chest holding that item. Escape or the same key closes it.
+- **Learning from chests**: the items lying in the chests around you count as
+  found, so their recipes unlock. Valheim normally unlocks a recipe only once the
+  material has been in your own inventory, which in a party means hunting down
+  every stack a team mate gathered. Trophies count too. **This cannot be undone**:
+  turning `LearnFromChests` off later does not lock a recipe again.
 - **Localized**: the button label and the messages follow the game language
   (English and Russian included, English elsewhere).
 - **Multiplayer**: with [MultiUserChest](https://thunderstore.io/c/valheim/p/MSchmoecker/MultiUserChest/)
@@ -57,7 +69,7 @@ The config file `BepInEx/config/muindor.TidyChests.cfg` is created on first laun
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `Enabled` | `true` | Enable the mod: the Stash button and the find key. |
+| `Enabled` | `true` | Enable the mod: the Stash button, the find key, the chest list and the learning from chests. |
 | `IsDebug` | `false` | Log every item decision and every chest that is considered when stashing. |
 
 ### Stash
@@ -89,10 +101,33 @@ The config file `BepInEx/config/muindor.TidyChests.cfg` is created on first laun
 | `ButtonOffset` | `41, -56` | Position of the button relative to the weight display of the inventory panel, in UI pixels (x right, y up). Adjust if another UI mod puts something there. |
 | `ButtonSize` | `120, 38` | Width and height of the button in UI pixels. |
 
+### Scan
+
+Used by the chest list and by the learning from chests.
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ScanRadius` | `50` | Chests within this many metres are read, 5 to 90. Above roughly 90 m the chests are no longer loaded, so nothing more is found. |
+| `ScanInterval` | `5` | Seconds between two scans, 1 to 60. Chests whose contents did not change are skipped, so a short interval is cheap. |
+
+### Knowledge
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `LearnFromChests` | `true` | Count the items in the chests in range as found, so their recipes unlock. Cannot be undone; see above. |
+
+### Browser
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `BrowserKey` | `O + LeftControl` | Opens and closes the chest list. Modifiers are allowed; set it to `None` to disable the panel. |
+| `BrowserSize` | `520, 560` | Width and height of the panel in UI pixels. |
+
 ## Console command
 
 ```
 tidychests stash    # stash now, without the button
+tidychests scan     # scan the chests in range for items you do not know yet
 tidychests status   # show the active settings
 tidychests reload   # re-read the config file
 ```
@@ -106,12 +141,27 @@ that intercept these calls keep working. Which item goes where is decided by a
 small planner on snapshots of the inventory and of the chests in range, and the
 same rules run in the unit tests.
 
+Reading the chests costs nothing on the network. The game already sends every
+client the contents of the chests around it (`ZDOMan` replicates the ZDO data of
+everything in the active area) and re-reads them once a second
+(`Container.CheckForChanges`), so the chest list and the learning only look at
+what is already in memory, and a chest whose data revision did not change is not
+even re-read. Known materials are local player data, saved in the character file,
+not in a network object. Neither feature sends a single extra packet or takes
+ownership of a chest; only the Stash button writes.
+
 | Feature | Patched member |
 |---------|----------------|
 | Container list | `Container.Awake` and `Container.OnDestroyed` postfixes keep a list of loaded containers |
 | Stash button | `InventoryGui.Show` postfix clones the "take all" button into the player panel |
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
 | Console command | `Terminal.InitTerminal` postfix |
+| Chest list input | `Player.TakeInput` postfix stops the player moving, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
+
+Items are learned through the game's own `Player.AddKnownItem`, a couple per
+frame, so trophies, the unlock messages and the recipe list stay vanilla's
+business and a storeroom full of unknown materials unlocks over a second instead
+of freezing a frame.
 
 The find key is read in a plain `Update`; the hovered inventory item is found
 the way the game finds it for the tooltip, and the crafting panel's ingredient
@@ -123,8 +173,10 @@ vanilla run.
 
 - Extra Slots, EquipmentAndQuickSlots 3.x, Better Archery: their slots are
   detected through the mods' own APIs and never stashed.
-- MultiUserChest: supported, see above. Craft From Containers and other mods that
-  only read chests are unaffected.
+- MultiUserChest: supported, see above.
+- Craft From Containers: complementary, not overlapping. It spends the resources
+  in nearby chests on a recipe you already know; this mod unlocks the recipe in
+  the first place. Nothing here touches the resource cost of a craft.
 - Other quick stack mods (QuickStackStore, QuickerStack, ...) should run
   alongside; they add their own buttons and hotkeys. Not tested together.
 - Auga or other UI replacements without a "take all" button: the Stash button is
