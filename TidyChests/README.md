@@ -39,7 +39,9 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **Chest list** (`Ctrl+O` by default): every item in the chests within the scan
   radius, one row per kind, with the total, how many chests hold it and how far
   the nearest one is. Type to filter by name; click a row to close the list and
-  light up every chest holding that item. Escape or the same key closes it.
+  light up every chest holding that item. Escape or the same key closes it. While
+  it is open the character stands still and the wheel scrolls the list rather
+  than zooming the camera.
 - **Learning from chests**: the items lying in the chests around you count as
   found, so their recipes unlock. Valheim normally unlocks a recipe only once the
   material has been in your own inventory, which in a party means hunting down
@@ -156,7 +158,7 @@ ownership of a chest; only the Stash button writes.
 | Stash button | `InventoryGui.Show` postfix clones the "take all" button into the player panel |
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
 | Console command | `Terminal.InitTerminal` postfix |
-| Chest list input | `Player.TakeInput` postfix stops the player moving, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
+| Chest list input | `Player.TakeInput` and `PlayerController.TakeInput` postfixes stop interacting, walking and the mouse look, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `ZInput.GetMouseScrollWheel` postfix hands the wheel to the list instead of the camera zoom, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
 
 Items are learned through the game's own `Player.AddKnownItem`, a couple per
 frame, so trophies, the unlock messages and the recipe list stay vanilla's

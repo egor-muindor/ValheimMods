@@ -7,6 +7,7 @@ using TidyChests.Find;
 using TidyChests.Index;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace TidyChests.Ui
@@ -39,6 +40,11 @@ namespace TidyChests.Ui
 
         private const float IconSize = 32f;
 
+        private const float ScrollbarWidth = 14f;
+
+        /// <summary>Rows one wheel step moves the list.</summary>
+        private const float ScrollStepRows = 3f;
+
         /// <summary>Seconds between two re-reads of the chests while the panel is open.</summary>
         private const float RefreshInterval = 0.4f;
 
@@ -53,6 +59,8 @@ namespace TidyChests.Ui
         private RectTransform? _panel;
 
         private RectTransform? _content;
+
+        private ScrollRect? _scroll;
 
         private GuiInputField? _search;
 
@@ -70,6 +78,9 @@ namespace TidyChests.Ui
 
         private float _nextRefresh;
 
+        /// <summary>The wheel value the input patch took away from the rest of the game this frame.</summary>
+        private float _wheel;
+
         /// <summary>
         /// The inventory reports itself visible for another frame or two after it is told to
         /// hide (<c>m_hiddenFrames</c>), so the panel must not read that as "something else
@@ -86,6 +97,19 @@ namespace TidyChests.Ui
 
         /// <summary>True while the player is typing in the search box.</summary>
         public static bool IsSearchFocused => _instance != null && _instance._search != null && _instance._search.isFocused;
+
+        /// <summary>
+        /// Hands the panel the mouse wheel the input patch took away from the camera zoom.
+        /// The largest value of the frame wins, because several systems ask for it per frame
+        /// and each call reports the same movement.
+        /// </summary>
+        public static void FeedScrollWheel(float delta)
+        {
+            if (_instance != null && Mathf.Abs(delta) > Mathf.Abs(_instance._wheel))
+            {
+                _instance._wheel = delta;
+            }
+        }
 
         public bool IsOpen => _panel != null && _panel.gameObject.activeSelf;
 
@@ -206,6 +230,9 @@ namespace TidyChests.Ui
                         return;
                     }
 
+                    KeepSearchFocused();
+                    ConsumeScrollWheel();
+
                     if (Time.time >= _nextRefresh)
                     {
                         _nextRefresh = Time.time + RefreshInterval;
@@ -226,6 +253,47 @@ namespace TidyChests.Ui
                 Close();
                 Plugin.Log.LogError($"The chest list was closed after an error: {exception}");
             }
+        }
+
+        /// <summary>
+        /// Puts the keyboard back into the search box whenever something took it away without
+        /// closing the panel: switching the keyboard layout drops the focus, and so does
+        /// dragging the scrollbar. Skipped while a mouse button is held, so a drag in progress
+        /// is not interrupted.
+        /// </summary>
+        private void KeepSearchFocused()
+        {
+            if (_search == null || _search.isFocused || ZInput.GetMouseButton(0) || ZInput.GetMouseButton(1))
+            {
+                return;
+            }
+
+            _search.ActivateInputField();
+            _search.caretPosition = _search.text.Length;
+            _search.selectionAnchorPosition = _search.text.Length;
+        }
+
+        /// <summary>
+        /// Moves the list by the wheel. Only the sign is used: the value the game reports per
+        /// wheel step is not a fixed scale, which is why vanilla clamps and accumulates it.
+        /// </summary>
+        private void ConsumeScrollWheel()
+        {
+            float wheel = _wheel;
+            _wheel = 0f;
+            if (wheel == 0f || _scroll == null || _content == null || _scroll.viewport == null)
+            {
+                return;
+            }
+
+            float hidden = _content.rect.height - _scroll.viewport.rect.height;
+            if (hidden <= 1f)
+            {
+                return;
+            }
+
+            float step = Mathf.Sign(wheel) * ScrollStepRows * RowHeight / hidden;
+            _scroll.verticalNormalizedPosition = Mathf.Clamp01(_scroll.verticalNormalizedPosition + step);
         }
 
         /// <summary>Re-reads the chests in range and rebuilds the rows.</summary>
@@ -401,6 +469,7 @@ namespace TidyChests.Ui
             // from the previous build points at destroyed objects by now.
             _rows.Clear();
             _content = null;
+            _scroll = null;
             _search = null;
             _title = null;
             _status = null;
@@ -435,7 +504,7 @@ namespace TidyChests.Ui
 
             _title = CreateText("Title", _panel, TitleHeight, 20f, TextAlignmentOptions.Center, 0f);
             _search = CreateSearch(_panel);
-            CreateList(_panel);
+            CreateList(_panel, gui);
 
             RefreshLabels();
             panel.SetActive(false);
@@ -521,6 +590,11 @@ namespace TidyChests.Ui
             field.characterLimit = 0;
             field.lineType = TMP_InputField.LineType.SingleLine;
             field.contentType = TMP_InputField.ContentType.Standard;
+
+            // The focus is given back whenever something takes it (see KeepSearchFocused), so
+            // selecting everything on focus would let the next keystroke wipe what was typed.
+            field.onFocusSelectAll = false;
+            field.resetOnDeActivation = false;
             field.text = "";
             field.onValueChanged.AddListener(OnQueryChanged);
 
@@ -534,7 +608,7 @@ namespace TidyChests.Ui
         }
 
         /// <summary>The scrolling area with the rows, plus the message shown when there is nothing to list.</summary>
-        private void CreateList(RectTransform panel)
+        private void CreateList(RectTransform panel, InventoryGui gui)
         {
             float top = Padding + TitleHeight + Gap + SearchHeight + Gap;
 
@@ -546,9 +620,9 @@ namespace TidyChests.Ui
             var viewportGo = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
             var viewport = (RectTransform)viewportGo.transform;
             viewport.SetParent(scrollRect, false);
-            Stretch(viewport, 0f, 0f, 0f, 0f);
+            Stretch(viewport, 0f, ScrollbarWidth + Gap * 0.5f, 0f, 0f);
 
-            // Fully transparent, but still a raycast target so the wheel scrolls over empty space.
+            // Fully transparent, but still a raycast target so a click anywhere in the list works.
             Image viewportImage = viewportGo.GetComponent<Image>();
             viewportImage.color = new Color(0f, 0f, 0f, 0f);
 
@@ -561,18 +635,60 @@ namespace TidyChests.Ui
             _content.anchoredPosition = Vector2.zero;
             _content.sizeDelta = new Vector2(0f, 0f);
 
-            ScrollRect scroll = scrollGo.GetComponent<ScrollRect>();
-            scroll.content = _content;
-            scroll.viewport = viewport;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = RowHeight;
-            scroll.inertia = false;
+            _scroll = scrollGo.GetComponent<ScrollRect>();
+            _scroll.content = _content;
+            _scroll.viewport = viewport;
+            _scroll.horizontal = false;
+            _scroll.vertical = true;
+            _scroll.movementType = ScrollRect.MovementType.Clamped;
+            _scroll.inertia = false;
+
+            // The wheel is handled by ConsumeScrollWheel, which knows the row height; letting
+            // the scroll rect add its own step on top would double the movement.
+            _scroll.scrollSensitivity = 0f;
+
+            Scrollbar? bar = CreateScrollbar(scrollRect, gui);
+            if (bar != null)
+            {
+                _scroll.verticalScrollbar = bar;
+                _scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            }
 
             _status = CreateText("Status", scrollRect, 0f, 17f, TextAlignmentOptions.Top, 0f);
             Stretch((RectTransform)_status.transform, 0f, 0f, Gap, 0f);
             _status.gameObject.SetActive(false);
+        }
+
+        /// <summary>A copy of the crafting panel's scrollbar, pinned to the right of the list.</summary>
+        private Scrollbar? CreateScrollbar(RectTransform scrollRect, InventoryGui gui)
+        {
+            Scrollbar template = gui.m_recipeListScroll;
+            if (template == null)
+            {
+                Plugin.Log.LogWarning("No scrollbar to copy for the chest list; use the mouse wheel to scroll it.");
+                return null;
+            }
+
+            Scrollbar bar = Instantiate(template, scrollRect);
+            bar.name = "Scrollbar";
+            bar.gameObject.SetActive(true);
+            bar.onValueChanged.RemoveAllListeners();
+
+            // A listener wired in the prefab would still point at the crafting panel's list.
+            for (int i = 0; i < bar.onValueChanged.GetPersistentEventCount(); i++)
+            {
+                bar.onValueChanged.SetPersistentListenerState(i, UnityEventCallState.Off);
+            }
+
+            bar.direction = Scrollbar.Direction.BottomToTop;
+
+            var rect = (RectTransform)bar.transform;
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 0.5f);
+            rect.offsetMin = new Vector2(-ScrollbarWidth, 0f);
+            rect.offsetMax = Vector2.zero;
+            return bar;
         }
 
         private Row CreateRow(RectTransform content)

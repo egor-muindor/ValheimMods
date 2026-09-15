@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 - 2026-09-15
+
+Fixes to the chest list, from the first in-game test of 1.1.0.
+
+- The character no longer walks, attacks or looks around while the list is open. Walking and the mouse look are gated by a second check, `PlayerController.TakeInput`, which 1.1.0 did not patch, so typing a name into the search box moved the player.
+- The mouse wheel scrolls the list three rows per step instead of crawling, and no longer zooms the camera at the same time. Only the sign of the wheel is used, because the value the game reports per step has no fixed scale.
+- The list has a scrollbar, copied from the crafting panel's.
+- The search box keeps the keyboard when the keyboard layout is switched with a shortcut, or after the scrollbar is dragged, and what was typed is no longer selected when the focus comes back.
+
 ## 1.1.0 - 2026-09-15
 
 - Learning from chests (`LearnFromChests`, on by default): the items lying in the chests around you count as found, so their recipes unlock. Meant for co-op, where a team mate gathers a material you have never held and vanilla keeps the recipe locked until you touch the stack yourself. Trophies count too. This cannot be undone: turning the option off later does not lock a recipe again.
