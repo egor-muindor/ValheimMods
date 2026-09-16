@@ -439,9 +439,12 @@ namespace CombatStats.Ui
             UiStyle.PlaceTopStretch(header.rectTransform, Padding, Padding, 122f, 14f);
             header.text = "player";
 
-            TMP_Text columns = UiStyle.Text("Columns", _panel, 11f, TextAlignmentOptions.MidlineRight, UiStyle.Dim);
-            UiStyle.PlaceTopStretch(columns.rectTransform, Padding, Padding, 122f, 14f);
-            columns.text = "damage         share      hits        avg";
+            // Pinned at the same distances from the right edge as the columns of a row, so the
+            // heads stay over their numbers whatever the window is resized to.
+            Column("damage", 250f, 152f);
+            Column("share", 148f, 104f);
+            Column("hits", 100f, 52f);
+            Column("avg", 48f, 0f);
 
             Image separator = UiStyle.Box("Separator", _panel, new Color(0.45f, 0.38f, 0.25f, 0.5f));
             separator.sprite = UiStyle.Flat();
@@ -476,6 +479,20 @@ namespace CombatStats.Ui
             _content.pivot = new Vector2(0f, 1f);
             _content.anchoredPosition = Vector2.zero;
             _content.sizeDelta = new Vector2(0f, 0f);
+        }
+
+        /// <summary>One head of the column table, over the numbers it names.</summary>
+        private void Column(string text, float from, float to)
+        {
+            TMP_Text label = UiStyle.Text("Column" + text, _panel!, 11f, TextAlignmentOptions.MidlineRight, UiStyle.Dim);
+            label.text = text;
+
+            RectTransform rect = label.rectTransform;
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.offsetMin = new Vector2(-(from + Padding), -136f);
+            rect.offsetMax = new Vector2(-(to + Padding), -122f);
         }
 
         private void BuildWindowTabs()

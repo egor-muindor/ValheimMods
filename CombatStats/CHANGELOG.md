@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+- The buttons of the detail window were drawn without their labels, which left the window tabs,
+  the `settings` button and the `close` button of the settings panel invisible. They were there
+  and they worked; there was nothing to read on them.
+- The column heads of the detail window are pinned to the same distances from the right edge as
+  the numbers they name, instead of being spaced out by hand.
+
 ## 1.0.0
 
 First release.
