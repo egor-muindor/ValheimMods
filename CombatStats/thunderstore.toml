@@ -1,0 +1,29 @@
+# Thunderstore publishing configuration for `tcli publish`.
+# The package zip itself is produced by `dotnet build -c Release` (see CombatStats.csproj);
+# tcli only uploads it. Run scripts/publish-thunderstore.sh CombatStats from the repository root.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "Muindor"
+name = "CombatStats"
+versionNumber = "1.0.0"
+description = "A combat meter: who dealt how much damage and of which kind, over the last 30 s, 5, 10 or 30 min. Compact window under the minimap, detail window with the breakdown. Client-side; a server can optionally enforce its config. Valheim 1.0."
+websiteUrl = "https://github.com/egor-muindor/ValheimMods"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2350"
+
+[build]
+icon = "./Package/icon.png"
+readme = "./README.md"
+outdir = "../dist/tcli"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "valheim" ]
+
+[publish.categories]
+valheim = [ "mods", "utility", "client-side", "server-side", "ai-generated", "deep-north-update" ]

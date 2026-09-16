@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Logging;
 using CombatStats.Collect;
 using CombatStats.Net;
+using CombatStats.Ui;
 using HarmonyLib;
 using Muindor.ServerConfig;
 
@@ -31,6 +32,12 @@ namespace CombatStats
         /// <summary>Everything recorded this session.</summary>
         internal static DamageCollector Collector { get; private set; } = null!;
 
+        /// <summary>The window that shows the fight as it happens.</summary>
+        internal static CompactMeter? Compact { get; private set; }
+
+        /// <summary>The window with the breakdown.</summary>
+        internal static DetailWindow? Detail { get; private set; }
+
         /// <summary>True when the plugin has loaded and the <c>Enabled</c> setting is on.</summary>
         public static bool Enabled => Settings != null && Settings.Enabled.Value;
 
@@ -42,6 +49,8 @@ namespace CombatStats
 
             Collector = new DamageCollector(Settings.HistorySeconds);
             gameObject.AddComponent<DamageChannel>();
+            Compact = gameObject.AddComponent<CompactMeter>();
+            Detail = gameObject.AddComponent<DetailWindow>();
 
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             _harmony.PatchAll(typeof(Plugin).Assembly);

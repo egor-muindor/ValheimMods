@@ -8,11 +8,12 @@ BepInEx mods for Valheim 1.0.
 | [QuickTeleport](QuickTeleport/README.md) | Faster portal and dungeon teleports: finish as soon as the destination is loaded, or run vanilla timing N times faster. |
 | [TidyChests](TidyChests/README.md) | Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. |
 | [OreFinder](OreFinder/README.md) | Points you to ore veins, dungeon entrances, monster spawners, ancient roots and rare pickables: screen arrow with name and distance, light beam and map pin, once per find; hotkey toggle, each group on its own switch. |
+| [CombatStats](CombatStats/README.md) | A combat meter: who dealt how much damage and of which kind, over the last 30 seconds, 5, 10 or 30 minutes. A compact window under the minimap that comes and goes with the fight, and a detail window with the breakdown. |
 
 ## Optional server configuration
 
-Every mod above changes how the game plays, so a server may want all its players
-on the same settings. Install the mod on a dedicated server (or on the machine
+Every mod above changes how the game plays, or what its players get to see, so a
+server may want all of them on the same settings. Install the mod on a dedicated server (or on the machine
 hosting the session) and turn `Server.ConfigPriority` on in its config file:
 every client that also has the mod then runs on the server's values for the
 settings marked `[synced]`, instead of its own.

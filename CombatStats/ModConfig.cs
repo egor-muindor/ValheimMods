@@ -59,10 +59,10 @@ namespace CombatStats
             CompactHideAfter = config.Bind("Compact", "CompactHideAfter", 5f,
                 new ConfigDescription("Seconds without a single event before the compact window fades out.",
                     new AcceptableValueRange<float>(1f, 120f)));
-            CompactAnchor = config.Bind("Compact", "CompactAnchor", ScreenAnchor.TopLeft,
-                "Which edge of the screen the compact window is pinned to. The offset below is measured from there.");
-            CompactOffset = config.Bind("Compact", "CompactOffset", new Vector2(24f, -180f),
-                "Position of the compact window from its anchor, in UI pixels (x right, y up).");
+            CompactAnchor = config.Bind("Compact", "CompactAnchor", ScreenAnchor.TopRight,
+                "Which corner or edge of the screen the compact window is pinned to. The offset below is measured from there.");
+            CompactOffset = config.Bind("Compact", "CompactOffset", new Vector2(-28f, -164f),
+                "Position of the compact window from its anchor, in UI pixels (x right, y up). The default puts it under the minimap.");
             CompactWidth = config.Bind("Compact", "CompactWidth", 320f,
                 new ConfigDescription("Width of the compact window in UI pixels.",
                     new AcceptableValueRange<float>(160f, 700f)));
