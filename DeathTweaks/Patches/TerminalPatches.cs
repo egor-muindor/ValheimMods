@@ -25,11 +25,11 @@ namespace DeathTweaks.Patches
             {
                 case "reload":
                     Plugin.Settings.Reload();
-                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: config reloaded");
+                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: config reloaded, {Plugin.Settings.Sync.Describe()}");
                     break;
 
                 case "status":
-                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME} {MyPluginInfo.PLUGIN_VERSION}: {(Plugin.Enabled ? "enabled" : "disabled")}");
+                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME} {MyPluginInfo.PLUGIN_VERSION}: {(Plugin.Enabled ? "enabled" : "disabled")}, {Plugin.Settings.Sync.Describe()}");
                     terminal.AddString("Item rules: " + Plugin.Settings.BuildRules().Describe());
                     terminal.AddString($"Tombstone: {Plugin.Settings.UseTombStone.Value}, keep food: {Plugin.Settings.KeepFoodLevels.Value}, reduce skills: {Plugin.Settings.ReduceSkills.Value} (factor {Plugin.Settings.SkillReduceFactor.Value})");
                     break;

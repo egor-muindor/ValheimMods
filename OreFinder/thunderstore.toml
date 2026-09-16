@@ -8,8 +8,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "OreFinder"
-versionNumber = "1.2.0"
-description = "Points you to ore veins, dungeon entrances, spawners, ancient roots and rare pickables: screen arrow with name and distance, light beam, map pin, once per find. Hotkey toggle. Client-side, Valheim 1.0."
+versionNumber = "1.3.0"
+description = "Points you to ore veins, dungeon entrances, spawners, ancient roots and rare pickables: screen arrow, light beam, map pin, once per find. Hotkey toggle. Client-side; a server can optionally enforce its config. Valheim 1.0."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
 
@@ -26,4 +26,4 @@ repository = "https://thunderstore.io"
 communities = [ "valheim" ]
 
 [publish.categories]
-valheim = [ "mods", "utility", "client-side", "ai-generated", "deep-north-update" ]
+valheim = [ "mods", "utility", "client-side", "server-side", "ai-generated", "deep-north-update" ]

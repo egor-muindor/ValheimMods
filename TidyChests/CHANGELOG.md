@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 - 2026-09-16
+
+- Optional server configuration. A server that also runs TidyChests and turns the new `Server.ConfigPriority` on decides `Enabled`, `Radius`, `IncludeHotbar`, `ItemTypes`, `Blacklist`, `ScanRadius`, `ScanInterval` and `LearnFromChests` for the players who have the mod, so everyone on it reaches as far and stashes by the same rules. The settings that travel are marked `[synced]` in the config file.
+- Keys, the Stash button, the panels and the highlights stay each player's own and are never sent.
+- The mod stays optional on both sides: it is not part of the game's version check, players without it are unaffected, and it keeps working on servers that do not have it or that leave `ConfigPriority` off.
+- The client's config file is never written to. The server's values live in memory for as long as the connection lasts and are dropped when it ends; a setting changed on a running server is sent to the connected players right away.
+- `tidychests status` and `tidychests reload` say where the active settings come from.
+
 ## 1.1.1 - 2026-09-15
 
 Fixes to the chest list, from the first in-game test of 1.1.0.

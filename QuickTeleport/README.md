@@ -44,6 +44,29 @@ The config file `BepInEx/config/muindor.QuickTeleport.cfg` is created on first l
 
 ## Configuration
 
+### Server
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ConfigPriority` | `false` | Server only. When on, this server's settings replace those of every client that also has the mod. |
+
+Install the mod on a dedicated server, or on the machine hosting the session,
+and turn `ConfigPriority` on to give every player the same teleport timing:
+every client that also has Quick Teleport then runs on the server's settings
+instead of its own. Everything except `IsDebug` travels; those settings are
+marked `[synced]` in the generated `.cfg`.
+
+This never makes the mod required on either side:
+
+- Players without it are unaffected. The mod is not part of the game's version
+  check, so it never blocks a connection either way.
+- A player with it can still join a server that does not have it, or one that
+  leaves `ConfigPriority` off, and keeps their own settings.
+- The client's `.cfg` is never written to. The server's values live in memory
+  for as long as the connection lasts and are dropped when it ends.
+- Changing a setting on a running server sends it to the connected players
+  right away.
+
 ### General
 
 | Key | Default | Description |
@@ -103,7 +126,7 @@ in the console (F5) to apply without restarting.
 ## Console command
 
 ```
-quickteleport status   # show the active settings
+quickteleport status   # show the active settings and where they come from
 quickteleport reload   # re-read the config file
 ```
 

@@ -8,8 +8,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "TidyChests"
-versionNumber = "1.1.1"
-description = "Quick stack into nearby chests, a hotkey to find where an item is stored, Ctrl+O to search everything in the chests around you, and recipes that unlock from the materials your team mates store. Client-side."
+versionNumber = "1.2.0"
+description = "Quick stack into nearby chests, a hotkey to find where an item is stored, Ctrl+O to search everything in the chests around you, and recipes that unlock from your team mates' materials. Client-side; a server can optionally enforce its config."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
 
@@ -26,4 +26,4 @@ repository = "https://thunderstore.io"
 communities = [ "valheim" ]
 
 [publish.categories]
-valheim = [ "mods", "tweaks", "client-side", "ai-generated", "deep-north-update" ]
+valheim = [ "mods", "tweaks", "client-side", "server-side", "ai-generated", "deep-north-update" ]

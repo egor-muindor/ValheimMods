@@ -8,8 +8,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "DeathTweaks"
-versionNumber = "1.0.2"
-description = "Keep, drop or destroy items on death by type or name, keep food, tune or disable skill loss, respawn at the start or at fixed coordinates. Client-side. Written for Valheim 1.0, works with EquipmentAndQuickSlots 3.x."
+versionNumber = "1.1.0"
+description = "Keep, drop or destroy items on death by type or name, keep food, tune or disable skill loss, respawn at the start or at fixed coordinates. Client-side; a server can optionally enforce its config. Valheim 1.0, works with EquipmentAndQuickSlots 3.x."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
 
@@ -26,4 +26,4 @@ repository = "https://thunderstore.io"
 communities = [ "valheim" ]
 
 [publish.categories]
-valheim = [ "mods", "tweaks", "client-side", "ai-generated", "deep-north-update" ]
+valheim = [ "mods", "tweaks", "client-side", "server-side", "ai-generated", "deep-north-update" ]

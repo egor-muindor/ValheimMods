@@ -5,7 +5,7 @@
     <AssemblyName>OreFinder</AssemblyName>
     <RootNamespace>OreFinder</RootNamespace>
     <Product>Ore Finder</Product>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Finds ore veins, dungeon entrances, monster spawners, ancient roots and rare pickables around the player: a screen arrow with name and distance, a light beam and a map pin, once per find. Hotkey toggle, configurable radius and lists.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -26,6 +26,14 @@
     <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" PrivateAssets="all" />
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    The optional server configuration channel, shared by every mod in this repository.
+    Compiled in rather than shipped as a second assembly, so a mod stays a single file to install.
+  -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)Shared/ServerConfig/*.cs" LinkBase="ServerConfig" />
   </ItemGroup>
 
   <!--

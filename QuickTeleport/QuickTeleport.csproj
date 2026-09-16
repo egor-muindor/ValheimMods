@@ -5,7 +5,7 @@
     <AssemblyName>QuickTeleport</AssemblyName>
     <RootNamespace>QuickTeleport</RootNamespace>
     <Product>Quick Teleport</Product>
-    <Version>1.0.3</Version>
+    <Version>1.1.0</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Faster portal and dungeon teleports for Valheim: end the teleport as soon as the screen is black and the destination is loaded, or run the vanilla timing N times faster.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -26,6 +26,14 @@
     <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" PrivateAssets="all" />
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    The optional server configuration channel, shared by every mod in this repository.
+    Compiled in rather than shipped as a second assembly, so a mod stays a single file to install.
+  -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)Shared/ServerConfig/*.cs" LinkBase="ServerConfig" />
   </ItemGroup>
 
   <!--

@@ -59,11 +59,41 @@ The config file `BepInEx/config/muindor.OreFinder.cfg` is created on first launc
 
 ## Configuration
 
+### Server
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ConfigPriority` | `false` | Server only. When on, this server's settings replace those of every client that also has the mod. |
+
+Install the mod on a dedicated server, or on the machine hosting the session,
+and turn `ConfigPriority` on to keep a party in step: every client that also has
+Ore Finder then looks for the same things and writes the same names on the map.
+The server decides the whole of `Detection`, `Targets`, `Hidden`, `Names` and
+`Map`, plus `Enabled` - so a shared map ends up with one set of pin names and
+icons instead of one per player. Those settings are marked `[synced]` in the
+generated `.cfg`.
+
+The keys and the look of the highlight (`Highlight`, the toggle keys, `IsDebug`)
+stay each player's own. While the server decides `Enabled` or a group switch,
+the toggle keys and `orefinder on|off|ores|dungeons|spawners|roots` say so and
+change nothing.
+
+This never makes the mod required on either side:
+
+- Players without it are unaffected. The mod is not part of the game's version
+  check, so it never blocks a connection either way.
+- A player with it can still join a server that does not have it, or one that
+  leaves `ConfigPriority` off, and keeps their own settings.
+- The client's `.cfg` is never written to. The server's values live in memory
+  for as long as the connection lasts and are dropped when it ends.
+- Changing a setting on a running server sends it to the connected players
+  right away.
+
 ### General
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `Enabled` | `true` | Enable the finder. The toggle key flips this setting in game and saves it. |
+| `Enabled` | `true` | Enable the finder. The toggle key flips this setting in game and saves it, unless the server decides it. |
 | `ToggleKey` | `F9` | Key that turns the finder on and off in game. Modifiers are allowed, e.g. `F9 + LeftControl`. Ignored while typing in the chat or the console. |
 | `OresToggleKey` | unset | Key that turns the ore search (`FindOres`) on and off on its own, leaving the other targets as they are. |
 | `DungeonsToggleKey` | unset | Key that turns the dungeon entrance search (`Dungeons`) on and off on its own. |
@@ -148,7 +178,7 @@ Ores = CopperOre, TinOre, SilverOre, IronScrap, FlametalOre, FlametalOreNew, Obs
 ## Console command
 
 ```
-orefinder status   # show the active settings and counters
+orefinder status   # show the active settings, where they come from, and the counters
 orefinder on       # turn the finder on (same as the toggle key)
 orefinder off      # turn it off
 orefinder reset    # forget the veins already shown, so they are highlighted again
@@ -161,8 +191,8 @@ orefinder roots off
 ```
 
 The group commands change `FindOres`, `Dungeons`, `Spawners` and `Roots` in
-the config, like the hotkeys do. Pickables and trees are lists; empty the list
-to turn them off.
+the config, like the hotkeys do, unless the server decides them. Pickables and
+trees are lists; empty the list to turn them off.
 
 ## How it works
 

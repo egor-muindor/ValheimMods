@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using Muindor.ServerConfig;
 
 namespace OreFinder
 {
@@ -10,6 +11,10 @@ namespace OreFinder
     ///
     /// Client-side: the mod only looks at the objects the game has already loaded around the
     /// local player and draws on the local HUD. Nothing is needed on the server.
+    ///
+    /// It is optional on the server all the same. Installed there with <c>ConfigPriority</c> on it
+    /// decides what the players who also have it look for and what the map pins are called; players
+    /// without it are unaffected, and the mod keeps working on servers that do not have it.
     /// </summary>
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public sealed class Plugin : BaseUnityPlugin
@@ -27,6 +32,7 @@ namespace OreFinder
         {
             Log = Logger;
             Settings = new ModConfig(Config);
+            ConfigChannel.Activate(Settings.Sync, Log);
             Finder = gameObject.AddComponent<Finder>();
 
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);

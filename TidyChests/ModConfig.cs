@@ -1,13 +1,21 @@
 using System;
 using System.Globalization;
 using BepInEx.Configuration;
+using Muindor.ServerConfig;
 using TidyChests.Find;
 using TidyChests.Stash;
 using UnityEngine;
 
 namespace TidyChests
 {
-    /// <summary>Typed access to <c>muindor.TidyChests.cfg</c>.</summary>
+    /// <summary>
+    /// Typed access to <c>muindor.TidyChests.cfg</c>.
+    ///
+    /// What the mod may do with the chests - how far it reaches, which items it moves, whether it
+    /// unlocks recipes from what the chests hold - is bound through <see cref="Sync"/>, so a server
+    /// that also runs TidyChests with <c>ConfigPriority</c> on decides it for everyone. Keys, the
+    /// Stash button, the panels and the highlights stay each player's own.
+    /// </summary>
     public sealed class ModConfig
     {
         private static readonly string[] ItemTypeNames = Enum.GetNames(typeof(ItemDrop.ItemData.ItemType));
@@ -22,18 +30,20 @@ namespace TidyChests
             _config = config;
             string typeList = string.Join(", ", ItemTypeNames);
 
-            Enabled = config.Bind("General", "Enabled", true, "Enable this mod: the Stash button and the find key.");
+            Sync = new ConfigSync(config, MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION, Plugin.Log);
+
+            Enabled = Sync.Bind("General", "Enabled", true, "Enable this mod: the Stash button and the find key.");
             IsDebug = config.Bind("General", "IsDebug", false,
                 "Log every item decision and every chest that is considered when stashing.");
 
-            Radius = config.Bind("Stash", "Radius", 10f,
+            Radius = Sync.Bind("Stash", "Radius", 10f,
                 new ConfigDescription("Chests within this many metres of the player are used, both by the Stash button and by the find key.",
                     new AcceptableValueRange<float>(1f, 20f)));
-            IncludeHotbar = config.Bind("Stash", "IncludeHotbar", false,
+            IncludeHotbar = Sync.Bind("Stash", "IncludeHotbar", false,
                 "Also stash items from the first inventory row (the hotbar).");
-            ItemTypes = config.Bind("Stash", "ItemTypes", DefaultItemTypes,
+            ItemTypes = Sync.Bind("Stash", "ItemTypes", DefaultItemTypes,
                 $"Item types that may be stashed (comma-separated). Equipment, tools and weapons are left out by default. Valid types: {typeList}");
-            Blacklist = config.Bind("Stash", "Blacklist", "",
+            Blacklist = Sync.Bind("Stash", "Blacklist", "",
                 "Items that are never stashed (comma-separated). Use prefab names or item names, for example: Wood, $item_coal, Resin");
             ShowMessage = config.Bind("Stash", "ShowMessage", true,
                 "Show a message with the result after stashing.");
@@ -59,14 +69,14 @@ namespace TidyChests
             ButtonSize = config.Bind("Button", "ButtonSize", new Vector2(120f, 38f),
                 "Width and height of the Stash button in UI pixels.");
 
-            ScanRadius = config.Bind("Scan", "ScanRadius", 50f,
+            ScanRadius = Sync.Bind("Scan", "ScanRadius", 50f,
                 new ConfigDescription("Chests within this many metres are read by the chest list and by the knowledge scan. Reading costs nothing on the network: the game already keeps the contents of every loaded chest on your client. Above roughly 90 m the chests are no longer loaded, so nothing more is found.",
                     new AcceptableValueRange<float>(5f, 90f)));
-            ScanInterval = config.Bind("Scan", "ScanInterval", 5f,
+            ScanInterval = Sync.Bind("Scan", "ScanInterval", 5f,
                 new ConfigDescription("Seconds between two scans of the chests in range. Chests whose contents did not change are skipped, so a short interval is cheap.",
                     new AcceptableValueRange<float>(1f, 60f)));
 
-            LearnFromChests = config.Bind("Knowledge", "LearnFromChests", true,
+            LearnFromChests = Sync.Bind("Knowledge", "LearnFromChests", true,
                 "Count the items lying in the chests in range as found, so their recipes unlock without carrying every stack yourself. Meant for co-op, where a team mate gathers a material you have never held. Trophies count too. This cannot be undone: turning the option off later does not lock a recipe again.");
 
             BrowserKey = config.Bind("Browser", "BrowserKey", new KeyboardShortcut(KeyCode.O, KeyCode.LeftControl),
@@ -75,17 +85,20 @@ namespace TidyChests
                 "Width and height of the chest list panel in UI pixels.");
         }
 
-        public ConfigEntry<bool> Enabled { get; }
+        /// <summary>The settings a server may decide, and where the current ones come from.</summary>
+        public ConfigSync Sync { get; }
+
+        public SyncedEntry<bool> Enabled { get; }
 
         public ConfigEntry<bool> IsDebug { get; }
 
-        public ConfigEntry<float> Radius { get; }
+        public SyncedEntry<float> Radius { get; }
 
-        public ConfigEntry<bool> IncludeHotbar { get; }
+        public SyncedEntry<bool> IncludeHotbar { get; }
 
-        public ConfigEntry<string> ItemTypes { get; }
+        public SyncedEntry<string> ItemTypes { get; }
 
-        public ConfigEntry<string> Blacklist { get; }
+        public SyncedEntry<string> Blacklist { get; }
 
         public ConfigEntry<bool> ShowMessage { get; }
 
@@ -107,11 +120,11 @@ namespace TidyChests
 
         public ConfigEntry<Vector2> ButtonSize { get; }
 
-        public ConfigEntry<float> ScanRadius { get; }
+        public SyncedEntry<float> ScanRadius { get; }
 
-        public ConfigEntry<float> ScanInterval { get; }
+        public SyncedEntry<float> ScanInterval { get; }
 
-        public ConfigEntry<bool> LearnFromChests { get; }
+        public SyncedEntry<bool> LearnFromChests { get; }
 
         public ConfigEntry<KeyboardShortcut> BrowserKey { get; }
 
@@ -151,7 +164,7 @@ namespace TidyChests
                    $"find key {FindKey.Value}, highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
                    $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
-                   $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}";
+                   $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, {Sync.Describe()}";
         }
     }
 }

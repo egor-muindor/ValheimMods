@@ -9,6 +9,26 @@ BepInEx mods for Valheim 1.0.
 | [TidyChests](TidyChests/README.md) | Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. |
 | [OreFinder](OreFinder/README.md) | Points you to ore veins, dungeon entrances, monster spawners, ancient roots and rare pickables: screen arrow with name and distance, light beam and map pin, once per find; hotkey toggle, each group on its own switch. |
 
+## Optional server configuration
+
+Every mod above changes how the game plays, so a server may want all its players
+on the same settings. Install the mod on a dedicated server (or on the machine
+hosting the session) and turn `Server.ConfigPriority` on in its config file:
+every client that also has the mod then runs on the server's values for the
+settings marked `[synced]`, instead of its own.
+
+It stays optional on both sides. None of these mods is part of the game's
+version check, so it never blocks a connection: players without the mod are
+unaffected, and a player with it can still join a server that does not have it,
+or one that leaves `ConfigPriority` off, and keeps their own settings. The
+client's own config file is never written to - the server's values live in
+memory for as long as the connection lasts.
+
+Which settings travel is a per-mod decision, listed in each mod's README.
+Broadly: rules of play do, keys and the look of the HUD do not. The
+implementation is shared, in [`Shared/ServerConfig`](Shared/ServerConfig), and
+compiled into each mod rather than shipped as a second assembly.
+
 ## Building
 
 Requirements:

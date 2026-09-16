@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using Muindor.ServerConfig;
 using TidyChests.Compat;
 using TidyChests.Find;
 using TidyChests.Index;
@@ -16,6 +17,10 @@ namespace TidyChests
     ///
     /// Client-side: items are moved with the same inventory calls the vanilla "stack all"
     /// button uses, so the server needs nothing and other players need not have the mod.
+    ///
+    /// It is optional on the server all the same. Installed there with <c>ConfigPriority</c> on it
+    /// decides the stash and scan settings for the players who also have it; players without it are
+    /// unaffected, and the mod keeps working on servers that do not have it.
     /// </summary>
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency(SlotMods.ExtraSlotsGuid, BepInDependency.DependencyFlags.SoftDependency)]
@@ -49,6 +54,7 @@ namespace TidyChests
         {
             Log = Logger;
             Settings = new ModConfig(Config);
+            ConfigChannel.Activate(Settings.Sync, Log);
             Finder = gameObject.AddComponent<ChestFinder>();
             Browser = gameObject.AddComponent<ChestBrowser>();
             Scanner = gameObject.AddComponent<KnowledgeScanner>();

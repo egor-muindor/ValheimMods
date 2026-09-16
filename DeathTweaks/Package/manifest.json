@@ -1,8 +1,8 @@
 {
   "name": "DeathTweaks",
-  "version_number": "1.0.2",
+  "version_number": "1.1.0",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
-  "description": "Keep, drop or destroy items on death by type or name, keep food, tune or disable skill loss, respawn at the start or at fixed coordinates. Client-side. Written for Valheim 1.0, works with EquipmentAndQuickSlots 3.x.",
+  "description": "Keep, drop or destroy items on death by type or name, keep food, tune or disable skill loss, respawn at the start or at fixed coordinates. Client-side; a server can optionally enforce its config. Valheim 1.0, works with EquipmentAndQuickSlots 3.x.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350"
   ]

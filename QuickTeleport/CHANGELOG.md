@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-09-16
+
+- Optional server configuration. A server that also runs QuickTeleport and turns the new `Server.ConfigPriority` on decides every setting except `IsDebug` for the players who have the mod, so everyone on it travels at the same speed. The settings that travel are marked `[synced]` in the config file.
+- The mod stays optional on both sides: it is not part of the game's version check, players without it are unaffected, and it keeps working on servers that do not have it or that leave `ConfigPriority` off.
+- The client's config file is never written to. The server's values live in memory for as long as the connection lasts and are dropped when it ends; a setting changed on a running server is sent to the connected players right away.
+- `quickteleport status` and `quickteleport reload` say where the active settings come from.
+
 ## 1.0.3 - 2026-09-12
 
 - Dungeon entrances (crypts, caves) no longer wait for `SettleTime`: the interior is loaded together with the entrance, so nothing is left to arrive from the server. With the default fade they now take a fraction of a second.

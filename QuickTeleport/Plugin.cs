@@ -2,6 +2,7 @@ using System;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using Muindor.ServerConfig;
 
 namespace QuickTeleport
 {
@@ -11,6 +12,10 @@ namespace QuickTeleport
     /// Vanilla still performs the teleport (<c>Player.UpdateTeleport</c>). The mod only decides
     /// how fast the vanilla teleport clock runs, when the destination counts as loaded, and how
     /// long the screen fade takes. Client-side: nothing is needed on the server.
+    ///
+    /// It is optional on the server all the same. Installed there with <c>ConfigPriority</c> on it
+    /// decides the timing for the players who also have it; players without it are unaffected, and
+    /// the mod keeps working on servers that do not have it.
     /// </summary>
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public sealed class Plugin : BaseUnityPlugin
@@ -28,6 +33,7 @@ namespace QuickTeleport
         {
             Log = Logger;
             Settings = new ModConfig(Config);
+            ConfigChannel.Activate(Settings.Sync, Log);
 
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             _harmony.PatchAll(typeof(Plugin).Assembly);

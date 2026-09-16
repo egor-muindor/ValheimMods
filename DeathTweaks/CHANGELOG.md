@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-09-16
+
+- Optional server configuration. A server that also runs DeathTweaks and turns the new `Server.ConfigPriority` on decides every setting except `IsDebug` for the players who have the mod, so a death means the same thing for everyone on it. The settings that travel are marked `[synced]` in the config file.
+- The mod stays optional on both sides: it is not part of the game's version check, players without it are unaffected, and it keeps working on servers that do not have it or that leave `ConfigPriority` off.
+- The client's config file is never written to. The server's values live in memory for as long as the connection lasts and are dropped when it ends; a setting changed on a running server is sent to the connected players right away.
+- `deathtweaks status` and `deathtweaks reload` say where the active settings come from.
+
 ## 1.0.2 - 2026-09-12
 
 - Quick slot detection is now based on the item's grid position through the slot mods' public APIs instead of their cached slot contents, which could report empty slots during death.

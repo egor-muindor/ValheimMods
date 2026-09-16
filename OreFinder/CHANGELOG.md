@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 - 2026-09-16
+
+- Optional server configuration. A server that also runs OreFinder and turns the new `Server.ConfigPriority` on decides `Enabled` and the whole of `Detection`, `Targets`, `Hidden`, `Names` and `Map` for the players who have the mod, so a party looks for the same things and a shared map ends up with one set of pin names and icons instead of one per player. The settings that travel are marked `[synced]` in the config file.
+- The toggle keys, the `Highlight` section and `IsDebug` stay each player's own and are never sent. While the server decides `Enabled` or a group switch, the toggle keys and `orefinder on|off|ores|dungeons|spawners|roots` say so and change nothing.
+- The mod stays optional on both sides: it is not part of the game's version check, players without it are unaffected, and it keeps working on servers that do not have it or that leave `ConfigPriority` off.
+- The client's config file is never written to. The server's values live in memory for as long as the connection lasts and are dropped when it ends; a setting changed on a running server is sent to the connected players right away.
+- `orefinder status` and `orefinder reload` say where the active settings come from.
+
 ## 1.2.0 - 2026-09-12
 
 - Fixed: dungeon entrances were never found. The doors are not network objects: the game spawns them, with the rest of a location's non-networked parts, as one object under the location's proxy, so the scan of loaded network objects never saw them. The finder now looks under every location proxy nearby and marks each door by its own position. Location proxies are looked at from `TargetRadius` + 50 m, because a proxy stands at the location's centre and the door can be some way out. A door without an enter text is named after its location.

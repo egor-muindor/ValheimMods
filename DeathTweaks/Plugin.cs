@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Logging;
 using DeathTweaks.Compat;
 using HarmonyLib;
+using Muindor.ServerConfig;
 
 namespace DeathTweaks
 {
@@ -12,6 +13,10 @@ namespace DeathTweaks
     /// The vanilla death pipeline (<c>Player.OnDeath</c>) is never replaced. Each feature
     /// patches the smallest vanilla method that owns the behaviour, so game updates that
     /// change other parts of the pipeline are picked up automatically.
+    ///
+    /// The mod is optional on both sides. Installed on a server with <c>ConfigPriority</c> on it
+    /// decides the death rules for the players who also have it; players without it are unaffected,
+    /// and the mod keeps working on servers that do not have it.
     /// </summary>
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     [BepInDependency(QuickSlotMods.EquipmentAndQuickSlotsGuid, BepInDependency.DependencyFlags.SoftDependency)]
@@ -31,6 +36,7 @@ namespace DeathTweaks
         {
             Log = Logger;
             Settings = new ModConfig(Config);
+            ConfigChannel.Activate(Settings.Sync, Log);
 
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
             _harmony.PatchAll(typeof(Plugin).Assembly);

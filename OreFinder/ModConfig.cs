@@ -1,5 +1,6 @@
 using System.Globalization;
 using BepInEx.Configuration;
+using Muindor.ServerConfig;
 using OreFinder.Detection;
 using OreFinder.Highlight;
 using OreFinder.Map;
@@ -7,7 +8,14 @@ using UnityEngine;
 
 namespace OreFinder
 {
-    /// <summary>Typed access to <c>muindor.OreFinder.cfg</c>.</summary>
+    /// <summary>
+    /// Typed access to <c>muindor.OreFinder.cfg</c>.
+    ///
+    /// What is found, and what it is called on the map, is bound through <see cref="Sync"/>: a server
+    /// that also runs OreFinder with <c>ConfigPriority</c> on decides it, so a party sees the same
+    /// targets and writes the same pin names on a shared map. Keys and the look of the highlight
+    /// stay each player's own.
+    /// </summary>
     public sealed class ModConfig
     {
         private readonly ConfigFile _config;
@@ -16,8 +24,10 @@ namespace OreFinder
         {
             _config = config;
 
-            Enabled = config.Bind("General", "Enabled", true,
-                "Enable the finder. The toggle key flips this setting in game and saves it.");
+            Sync = new ConfigSync(config, MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION, Plugin.Log);
+
+            Enabled = Sync.Bind("General", "Enabled", true,
+                "Enable the finder. The toggle key flips this setting in game and saves it, unless the server decides it.");
             ToggleKey = config.Bind("General", "ToggleKey", new KeyboardShortcut(KeyCode.F9),
                 "Key that turns the finder on and off in game. Modifiers are allowed, e.g. \"F9 + LeftControl\". Ignored while typing in the chat or the console.");
             OresToggleKey = config.Bind("General", "OresToggleKey", KeyboardShortcut.Empty,
@@ -29,36 +39,36 @@ namespace OreFinder
             IsDebug = config.Bind("General", "IsDebug", false,
                 "Log every vein that is found, with its prefab and the item that made it count as ore.");
 
-            Radius = config.Bind("Detection", "Radius", 20f,
+            Radius = Sync.Bind("Detection", "Radius", 20f,
                 new ConfigDescription("Search radius in metres around the player.",
                     new AcceptableValueRange<float>(1f, 200f)));
-            ScanInterval = config.Bind("Detection", "ScanInterval", 1f,
+            ScanInterval = Sync.Bind("Detection", "ScanInterval", 1f,
                 new ConfigDescription("Seconds between two scans.",
                     new AcceptableValueRange<float>(0.1f, 30f)));
-            FindOres = config.Bind("Detection", "FindOres", true,
+            FindOres = Sync.Bind("Detection", "FindOres", true,
                 "Look for ores at all. Off = only the targets from the Targets section are found; the Ores list below still says which ores count. " +
                 "The console command 'orefinder ores on|off' and OresToggleKey flip this setting.");
-            Ores = config.Bind("Detection", "Ores", "",
+            Ores = Sync.Bind("Detection", "Ores", "",
                 "Which ores to look for, comma-separated. Empty = every ore: any mineable object that drops an item " +
                 "whose name contains the word Ore or Scrap (copper, tin, silver, iron scrap piles, flametal). " +
                 "Otherwise list item names (CopperOre, TinOre, SilverOre, IronScrap, FlametalOre, FlametalOreNew, ...) " +
                 "or object prefab names (rock4_copper, silvervein, MineRock_Obsidian, ...). Plain rocks, obsidian and " +
                 "black marble are not ores and only show up when listed here.");
 
-            Dungeons = config.Bind("Targets", "Dungeons", true,
+            Dungeons = Sync.Bind("Targets", "Dungeons", true,
                 "Find the entrances of crypts, caves and mines: any door with an Enter prompt (burial chambers, sunken crypts, troll caves, frost caves, infested mines, ...).");
-            Roots = config.Bind("Targets", "Roots", true,
+            Roots = Sync.Bind("Targets", "Roots", true,
                 "Find ancient roots (the sap extractor spots in the Mistlands).");
-            Spawners = config.Bind("Targets", "Spawners", true,
+            Spawners = Sync.Bind("Targets", "Spawners", true,
                 "Find monster spawners: greydwarf nests, evil bone piles, body piles and the like, plus the invisible spawn points that respawn " +
                 "their creature (surtling spawners at fire geysers, ...). Spawn points that fire only once are skipped.");
-            Pickables = config.Bind("Targets", "Pickables", "Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, Pickable_VoltureEgg",
+            Pickables = Sync.Bind("Targets", "Pickables", "Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, Pickable_VoltureEgg",
                 "Pickables to find, by the object's prefab name (Pickable_DragonEgg, Pickable_Mushroom_JotunPuffs, Pickable_Mushroom_Magecap, Pickable_Fiddlehead, " +
                 "Pickable_VoltureEgg, Pickable_Thistle, CloudberryBush, Pickable_BogIronOre, ...) or by the item it gives (DragonEgg, Thistle, Cloudberry, ...), " +
                 "comma-separated. Already picked ones are skipped until they regrow. Empty = none.");
-            Trees = config.Bind("Targets", "Trees", "",
+            Trees = Sync.Bind("Targets", "Trees", "",
                 "Trees to find, by the wood they drop (YggdrasilWood, Blackwood, Frostwood, ElderBark, FineWood, ...), comma-separated. Empty = none.");
-            TargetRadius = config.Bind("Targets", "TargetRadius", 40f,
+            TargetRadius = Sync.Bind("Targets", "TargetRadius", 40f,
                 new ConfigDescription("Search radius in metres for everything except ores (Radius is for ores).",
                     new AcceptableValueRange<float>(1f, 200f)));
 
@@ -78,34 +88,37 @@ namespace OreFinder
             Message = config.Bind("Highlight", "Message", true,
                 "Show a message in the top-left corner with the ore name and distance when a vein is found.");
 
-            WishboneNeeded = config.Bind("Hidden", "WishboneNeeded", WishboneRule.InInventory,
+            WishboneNeeded = Sync.Bind("Hidden", "WishboneNeeded", WishboneRule.InInventory,
                 "Hidden ores are the ones the game marks for the Wishbone: silver veins and the scrap piles with a beacon. " +
                 "InInventory: found only while the Wishbone is anywhere in your inventory. Equipped: only while it is equipped, " +
                 "like the game's own finder. NotNeeded: always found. Hidden veins skipped for lack of the Wishbone are found later once you carry it.");
-            WishboneItem = config.Bind("Hidden", "WishboneItem", "Wishbone",
+            WishboneItem = Sync.Bind("Hidden", "WishboneItem", "Wishbone",
                 "Item that counts as the Wishbone, by prefab name or $item_ name. Change it for a modded finder item.");
 
-            CustomNames = config.Bind("Names", "CustomNames", false,
+            CustomNames = Sync.Bind("Names", "CustomNames", false,
                 "Show your own names from the Names setting instead of the game's names (Copper deposit, Silver vein, ...) " +
                 "in the screen marker, the message and the map pin.");
-            Names = config.Bind("Names", "Names",
+            Names = Sync.Bind("Names", "Names",
                 "CopperOre=C, TinOre=T, SilverOre=S, IronScrap=I, FlametalOre=F, FlametalOreNew=F, GoldOre=B, Obsidian=O, Pickable_Mushroom_Magecap=Mc, Pickable_Fiddlehead=Fh, $item_ancientroot=YR",
                 "Your names as key=name pairs separated by commas. The key is the ore item (CopperOre, GoldOre, ...), the pickable's prefab or item (Pickable_DragonEgg, DragonEgg), " +
                 "the wood of a tree (YggdrasilWood), a dungeon's location key ($location_forestcrypt), a spawner's prefab (Spawner_GreydwarfNest) or the object prefab (rock4_copper, silvervein). " +
                 "Targets without a pair get the initials of their name (Burial Chambers = BC, Dragon egg = DE, Magecap = Ma). Only used when CustomNames is on.");
 
-            MapPin = config.Bind("Map", "MapPin", true,
+            MapPin = Sync.Bind("Map", "MapPin", true,
                 "Add a dot pin named after the ore to the map when a vein is found. The pin is saved with your map like one you placed yourself.");
-            MapPinSpacing = config.Bind("Map", "MapPinSpacing", 10f,
+            MapPinSpacing = Sync.Bind("Map", "MapPinSpacing", 10f,
                 new ConfigDescription("Do not add a pin when any other pin (yours, the mod's, a death marker, ...) is within this many metres. 0 = always add.",
                     new AcceptableValueRange<float>(0f, 100f)));
-            OrePin = config.Bind("Map", "OrePin", PinIcon.Dot, "Map pin icon for ores.");
-            DungeonPin = config.Bind("Map", "DungeonPin", PinIcon.House, "Map pin icon for dungeon entrances.");
-            SpawnerPin = config.Bind("Map", "SpawnerPin", PinIcon.Hammer, "Map pin icon for spawners.");
-            OtherPin = config.Bind("Map", "OtherPin", PinIcon.Dot, "Map pin icon for roots, pickables and trees.");
+            OrePin = Sync.Bind("Map", "OrePin", PinIcon.Dot, "Map pin icon for ores.");
+            DungeonPin = Sync.Bind("Map", "DungeonPin", PinIcon.House, "Map pin icon for dungeon entrances.");
+            SpawnerPin = Sync.Bind("Map", "SpawnerPin", PinIcon.Hammer, "Map pin icon for spawners.");
+            OtherPin = Sync.Bind("Map", "OtherPin", PinIcon.Dot, "Map pin icon for roots, pickables and trees.");
         }
 
-        public ConfigEntry<bool> Enabled { get; }
+        /// <summary>The settings a server may decide, and where the current ones come from.</summary>
+        public ConfigSync Sync { get; }
+
+        public SyncedEntry<bool> Enabled { get; }
 
         public ConfigEntry<KeyboardShortcut> ToggleKey { get; }
 
@@ -117,25 +130,25 @@ namespace OreFinder
 
         public ConfigEntry<bool> IsDebug { get; }
 
-        public ConfigEntry<float> Radius { get; }
+        public SyncedEntry<float> Radius { get; }
 
-        public ConfigEntry<float> ScanInterval { get; }
+        public SyncedEntry<float> ScanInterval { get; }
 
-        public ConfigEntry<bool> FindOres { get; }
+        public SyncedEntry<bool> FindOres { get; }
 
-        public ConfigEntry<string> Ores { get; }
+        public SyncedEntry<string> Ores { get; }
 
-        public ConfigEntry<bool> Dungeons { get; }
+        public SyncedEntry<bool> Dungeons { get; }
 
-        public ConfigEntry<bool> Roots { get; }
+        public SyncedEntry<bool> Roots { get; }
 
-        public ConfigEntry<bool> Spawners { get; }
+        public SyncedEntry<bool> Spawners { get; }
 
-        public ConfigEntry<string> Pickables { get; }
+        public SyncedEntry<string> Pickables { get; }
 
-        public ConfigEntry<string> Trees { get; }
+        public SyncedEntry<string> Trees { get; }
 
-        public ConfigEntry<float> TargetRadius { get; }
+        public SyncedEntry<float> TargetRadius { get; }
 
         public ConfigEntry<float> Duration { get; }
 
@@ -149,28 +162,28 @@ namespace OreFinder
 
         public ConfigEntry<bool> Message { get; }
 
-        public ConfigEntry<WishboneRule> WishboneNeeded { get; }
+        public SyncedEntry<WishboneRule> WishboneNeeded { get; }
 
-        public ConfigEntry<string> WishboneItem { get; }
+        public SyncedEntry<string> WishboneItem { get; }
 
-        public ConfigEntry<bool> CustomNames { get; }
+        public SyncedEntry<bool> CustomNames { get; }
 
-        public ConfigEntry<string> Names { get; }
+        public SyncedEntry<string> Names { get; }
 
-        public ConfigEntry<bool> MapPin { get; }
+        public SyncedEntry<bool> MapPin { get; }
 
-        public ConfigEntry<float> MapPinSpacing { get; }
+        public SyncedEntry<float> MapPinSpacing { get; }
 
-        public ConfigEntry<PinIcon> OrePin { get; }
+        public SyncedEntry<PinIcon> OrePin { get; }
 
-        public ConfigEntry<PinIcon> DungeonPin { get; }
+        public SyncedEntry<PinIcon> DungeonPin { get; }
 
-        public ConfigEntry<PinIcon> SpawnerPin { get; }
+        public SyncedEntry<PinIcon> SpawnerPin { get; }
 
-        public ConfigEntry<PinIcon> OtherPin { get; }
+        public SyncedEntry<PinIcon> OtherPin { get; }
 
         /// <summary>The on/off setting of a group, or null for the groups that are lists (pickables, trees).</summary>
-        public ConfigEntry<bool>? SwitchFor(TargetGroup group)
+        public SyncedEntry<bool>? SwitchFor(TargetGroup group)
         {
             switch (group)
             {
@@ -246,7 +259,7 @@ namespace OreFinder
                    $"highlight {Duration.Value.ToString("0.#", culture)} s, map pins {(MapPin.Value ? "on" : "off")}, " +
                    $"names {(CustomNames.Value ? OreNames.Parse(Names.Value).Describe() : "from the game")}, " +
                    $"hidden ores {(WishboneNeeded.Value == WishboneRule.NotNeeded ? "always" : $"need {WishboneItem.Value} {(WishboneNeeded.Value == WishboneRule.Equipped ? "equipped" : "in the inventory")}")}, " +
-                   $"toggle key {ToggleKey.Value}";
+                   $"toggle key {ToggleKey.Value}, {Sync.Describe()}";
         }
     }
 }

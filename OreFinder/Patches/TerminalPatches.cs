@@ -1,5 +1,5 @@
-using BepInEx.Configuration;
 using HarmonyLib;
+using Muindor.ServerConfig;
 using OreFinder.Detection;
 
 namespace OreFinder.Patches
@@ -40,8 +40,9 @@ namespace OreFinder.Patches
                 case "off":
                     if (finder != null)
                     {
-                        finder.SetEnabled(action == "on");
-                        terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {action}");
+                        terminal.AddString(finder.SetEnabled(action == "on")
+                            ? $"{MyPluginInfo.PLUGIN_NAME}: {action}"
+                            : $"{MyPluginInfo.PLUGIN_NAME}: unchanged, {Finder.LockedNotice}");
                     }
 
                     break;
@@ -69,7 +70,7 @@ namespace OreFinder.Patches
 
         private static void SwitchGroup(Terminal terminal, Finder? finder, TargetGroup group, string? state)
         {
-            ConfigEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
+            SyncedEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
             if (entry == null)
             {
                 terminal.AddString($"Usage: {Usage}");
@@ -94,13 +95,19 @@ namespace OreFinder.Patches
                     return;
             }
 
+            if (entry.IsLocked)
+            {
+                terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {TargetGroups.Label(group)} unchanged, {Finder.LockedNotice}");
+                return;
+            }
+
             if (finder != null)
             {
                 finder.SetGroupEnabled(group, enabled);
             }
             else
             {
-                entry.Value = enabled;
+                entry.LocalValue = enabled;
             }
 
             terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {TargetGroups.Label(group)} {(enabled ? "on" : "off")}");

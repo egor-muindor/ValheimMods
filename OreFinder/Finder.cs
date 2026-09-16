@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using Muindor.ServerConfig;
 using OreFinder.Detection;
 using OreFinder.Highlight;
 using OreFinder.Hud;
@@ -58,10 +59,22 @@ namespace OreFinder
         /// <summary>Veins highlighted since entering the world.</summary>
         public int SeenCount => _seenPositions.Count;
 
-        /// <summary>Turns the finder on or off, saves the setting and tells the player.</summary>
-        public void SetEnabled(bool enabled)
+        /// <summary>What the player is told when the server decides a switch they tried to flip.</summary>
+        public const string LockedNotice = "the server decides this setting";
+
+        /// <summary>
+        /// Turns the finder on or off, saves the setting and tells the player. Returns false, and
+        /// changes nothing, while the server decides the setting.
+        /// </summary>
+        public bool SetEnabled(bool enabled)
         {
-            Plugin.Settings.Enabled.Value = enabled;
+            if (Plugin.Settings.Enabled.IsLocked)
+            {
+                ShowMessage(MessageHud.MessageType.Center, $"{MyPluginInfo.PLUGIN_NAME}: {LockedNotice}");
+                return false;
+            }
+
+            Plugin.Settings.Enabled.LocalValue = enabled;
             if (!enabled)
             {
                 RemoveHighlights();
@@ -69,18 +82,28 @@ namespace OreFinder
 
             ShowMessage(MessageHud.MessageType.Center, enabled ? $"{MyPluginInfo.PLUGIN_NAME}: on" : $"{MyPluginInfo.PLUGIN_NAME}: off");
             Plugin.Log.LogInfo(enabled ? "Enabled" : "Disabled");
+            return true;
         }
 
-        /// <summary>Turns one group of targets on or off, saves the setting and tells the player. Ignored for the list groups.</summary>
-        public void SetGroupEnabled(TargetGroup group, bool enabled)
+        /// <summary>
+        /// Turns one group of targets on or off, saves the setting and tells the player. Returns
+        /// false for the list groups (pickables, trees) and while the server decides the setting.
+        /// </summary>
+        public bool SetGroupEnabled(TargetGroup group, bool enabled)
         {
-            ConfigEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
+            SyncedEntry<bool>? entry = Plugin.Settings.SwitchFor(group);
             if (entry == null)
             {
-                return;
+                return false;
             }
 
-            entry.Value = enabled;
+            if (entry.IsLocked)
+            {
+                ShowMessage(MessageHud.MessageType.Center, $"{MyPluginInfo.PLUGIN_NAME}: {LockedNotice}");
+                return false;
+            }
+
+            entry.LocalValue = enabled;
             if (!enabled)
             {
                 RemoveHighlights(group);
@@ -89,6 +112,7 @@ namespace OreFinder
             string label = TargetGroups.Label(group);
             ShowMessage(MessageHud.MessageType.Center, $"{MyPluginInfo.PLUGIN_NAME}: {label} {(enabled ? "on" : "off")}");
             Plugin.Log.LogInfo($"{label} {(enabled ? "enabled" : "disabled")}");
+            return true;
         }
 
         /// <summary>Forgets the veins already shown, so they are highlighted again. Returns how many were forgotten.</summary>

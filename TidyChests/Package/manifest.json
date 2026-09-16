@@ -1,8 +1,8 @@
 {
   "name": "TidyChests",
-  "version_number": "1.1.1",
+  "version_number": "1.2.0",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
-  "description": "Quick stack into nearby chests, a hotkey to find where an item is stored, Ctrl+O to search everything in the chests around you, and recipes that unlock from the materials your team mates store. Client-side.",
+  "description": "Quick stack into nearby chests, a hotkey to find where an item is stored, Ctrl+O to search everything in the chests around you, and recipes that unlock from your team mates' materials. Client-side; a server can optionally enforce its config.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350"
   ]
