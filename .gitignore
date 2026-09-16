@@ -24,3 +24,4 @@ Environment.props
 
 # Working notes, research and implementation plans are kept out of the repository
 docs/superpowers/
+.superpowers/

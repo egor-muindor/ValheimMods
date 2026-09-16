@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>CombatStats.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    The damage kinds, the one-second ring the statistics live in, the wire format of a shared
+    batch and the damage-over-time attribution have no game or Unity dependency, so their
+    sources are compiled straight into this project. That keeps the tests runnable on any
+    machine without the game assemblies or a .NET Framework runtime.
+  -->
+  <ItemGroup>
+    <Compile Include="../CombatStats/Model/DamageKind.cs" Link="Model/DamageKind.cs" />
+    <Compile Include="../CombatStats/Model/CombatChannel.cs" Link="Model/CombatChannel.cs" />
+    <Compile Include="../CombatStats/Stats/WindowSnapshot.cs" Link="Stats/WindowSnapshot.cs" />
+    <Compile Include="../CombatStats/Stats/StatsRecorder.cs" Link="Stats/StatsRecorder.cs" />
+    <Compile Include="../CombatStats/Net/EventCodec.cs" Link="Net/EventCodec.cs" />
+    <Compile Include="../CombatStats/Collect/DotAttribution.cs" Link="Collect/DotAttribution.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
