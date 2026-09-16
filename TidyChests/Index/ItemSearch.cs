@@ -5,8 +5,8 @@ namespace TidyChests.Index
 {
     /// <summary>
     /// Turns the contents of the containers in range into the rows of the browser: one row per
-    /// item kind with the total count, and a name filter over those rows. Pure: no game types,
-    /// so it is covered by unit tests.
+    /// item kind with the total count, a name filter over those rows, and the order they are
+    /// listed in. Pure: no game types, so it is covered by unit tests.
     /// </summary>
     public static class ItemSearch
     {
@@ -105,6 +105,104 @@ namespace TidyChests.Index
         public static bool Matches(ItemTotal total, string query)
         {
             return Rank(total, (query ?? "").Trim()) >= 0;
+        }
+
+        /// <summary>
+        /// The rows the panel shows, in the order it shows them: the query applied, then
+        /// <paramref name="sort"/>.
+        ///
+        /// Without a query the pinned items form a block of their own at the top, sorted the same
+        /// way as the rest. A query drops the pinning: the point of typing a name is to see what
+        /// matches it, best match first, and a pinned row that does not match is not wanted at the
+        /// top of that answer. Inside a group of equally good matches the chosen sort still decides.
+        /// </summary>
+        public static List<ItemTotal> Arrange(IReadOnlyList<ItemTotal> totals, string query, BrowserSort sort, FavoriteList? favorites)
+        {
+            string trimmed = (query ?? "").Trim();
+            Comparison<ItemTotal> order = OrderFor(sort);
+            var result = new List<ItemTotal>(totals.Count);
+
+            if (trimmed.Length == 0)
+            {
+                result.AddRange(totals);
+                result.Sort(order);
+                return Pin(result, favorites);
+            }
+
+            var ranks = new Dictionary<ItemTotal, int>();
+            foreach (ItemTotal total in totals)
+            {
+                int rank = Rank(total, trimmed);
+                if (rank >= 0)
+                {
+                    ranks[total] = rank;
+                    result.Add(total);
+                }
+            }
+
+            result.Sort((a, b) =>
+            {
+                int byRank = ranks[a].CompareTo(ranks[b]);
+                return byRank != 0 ? byRank : order(a, b);
+            });
+
+            return result;
+        }
+
+        /// <summary>The pinned rows first, each block keeping the order it came in.</summary>
+        private static List<ItemTotal> Pin(List<ItemTotal> rows, FavoriteList? favorites)
+        {
+            if (favorites == null || favorites.Count == 0)
+            {
+                return rows;
+            }
+
+            var pinned = new List<ItemTotal>();
+            var rest = new List<ItemTotal>(rows.Count);
+            foreach (ItemTotal row in rows)
+            {
+                if (favorites.Contains(row.Name))
+                {
+                    pinned.Add(row);
+                }
+                else
+                {
+                    rest.Add(row);
+                }
+            }
+
+            pinned.AddRange(rest);
+            return pinned;
+        }
+
+        /// <summary>
+        /// The comparison behind one <see cref="BrowserSort"/>. Counts tie often, so the name
+        /// always breaks the tie: the same chests must produce the same list twice running.
+        /// </summary>
+        private static Comparison<ItemTotal> OrderFor(BrowserSort sort)
+        {
+            switch (sort)
+            {
+                case BrowserSort.CountAscending:
+                    return (a, b) =>
+                    {
+                        int byCount = a.Count.CompareTo(b.Count);
+                        return byCount != 0 ? byCount : CompareByDisplayName(a, b);
+                    };
+
+                case BrowserSort.NameAscending:
+                    return CompareByDisplayName;
+
+                case BrowserSort.NameDescending:
+                    return (a, b) => CompareByDisplayName(b, a);
+
+                default:
+                    return (a, b) =>
+                    {
+                        int byCount = b.Count.CompareTo(a.Count);
+                        return byCount != 0 ? byCount : CompareByDisplayName(a, b);
+                    };
+            }
         }
 
         /// <summary>0 for a name that starts with the query, 1 for a name that contains it, 2 for a token match, -1 for no match.</summary>

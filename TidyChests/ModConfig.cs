@@ -3,6 +3,7 @@ using System.Globalization;
 using BepInEx.Configuration;
 using Muindor.ServerConfig;
 using TidyChests.Find;
+using TidyChests.Index;
 using TidyChests.Stash;
 using UnityEngine;
 
@@ -83,6 +84,13 @@ namespace TidyChests
                 "Opens and closes the list of everything in the chests in range, with a search box. Modifiers are allowed; set it to \"None\" to disable the panel.");
             BrowserSize = config.Bind("Browser", "BrowserSize", new Vector2(520f, 560f),
                 "Width and height of the chest list panel in UI pixels.");
+            Sort = config.Bind("Browser", "Sort", BrowserSort.CountDescending,
+                "Order of the chest list while its search box is empty. Click the Name or Count header in the list to change it, and click the active one again to flip it; the choice is saved here. " +
+                "While something is typed in the search box the best matches come first and this decides the order among equally good ones.");
+            Favorites = config.Bind("Browser", "Favorites", "",
+                "Items pinned to the top of the chest list, comma-separated. Click the diamond on the left of a row to pin or unpin it; the list is saved here as you click. " +
+                "A pinned item stays in the list even when no chest in range holds it any more, shown with a count of 0, so you can see that it ran out. Pinning is ignored while you are searching. " +
+                "The names are the game's own item names: $item_wood, $item_coal, $item_ironscrap");
         }
 
         /// <summary>The settings a server may decide, and where the current ones come from.</summary>
@@ -130,6 +138,10 @@ namespace TidyChests
 
         public ConfigEntry<Vector2> BrowserSize { get; }
 
+        public ConfigEntry<BrowserSort> Sort { get; }
+
+        public ConfigEntry<string> Favorites { get; }
+
         /// <summary>Re-reads the config file from disk.</summary>
         public void Reload()
         {
@@ -164,7 +176,8 @@ namespace TidyChests
                    $"find key {FindKey.Value}, highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
                    $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
-                   $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, {Sync.Describe()}";
+                   $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, " +
+                   $"list sorted by {Sort.Value}, {FavoriteList.Parse(Favorites.Value).Count} pinned, {Sync.Describe()}";
         }
     }
 }

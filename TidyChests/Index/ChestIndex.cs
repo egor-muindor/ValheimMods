@@ -25,6 +25,11 @@ namespace TidyChests.Index
 
         private readonly Dictionary<string, ItemDrop.ItemData> _samples = new Dictionary<string, ItemDrop.ItemData>();
 
+        /// <summary>Every item kind the game knows, by shared name. Built on demand, see <see cref="TryGetKnownItem"/>.</summary>
+        private readonly Dictionary<string, ItemDrop.ItemData> _known = new Dictionary<string, ItemDrop.ItemData>();
+
+        private ObjectDB? _knownFrom;
+
         private readonly List<ChestContents> _chests = new List<ChestContents>();
 
         private readonly List<Container> _nearby = new List<Container>();
@@ -95,6 +100,28 @@ namespace TidyChests.Index
             return _samples.TryGetValue(name, out item);
         }
 
+        /// <summary>
+        /// An item of that kind even when no container in range holds one. A pinned row still
+        /// wants its icon after the last of it was used up, and nothing nearby can supply it,
+        /// so the game's own item list answers instead.
+        /// </summary>
+        public bool TryGetKnownItem(string name, out ItemDrop.ItemData item)
+        {
+            if (_samples.TryGetValue(name, out item))
+            {
+                return true;
+            }
+
+            BuildKnownItems();
+            return _known.TryGetValue(name, out item);
+        }
+
+        /// <summary>The name of an item kind as the player reads it, for rows no container supplied.</summary>
+        public string DisplayNameOf(string sharedName)
+        {
+            return DisplayName(sharedName);
+        }
+
         /// <summary>Drops everything, including the localized names. Used on a language or world change.</summary>
         public void Clear()
         {
@@ -103,6 +130,42 @@ namespace TidyChests.Index
             _samples.Clear();
             _chests.Clear();
             _nearby.Clear();
+            _known.Clear();
+            _knownFrom = null;
+        }
+
+        /// <summary>
+        /// Reads the game's item list once per <c>ObjectDB</c>. A world change builds a new one,
+        /// which the identity check below notices; a destroyed one compares unequal as well.
+        /// </summary>
+        private void BuildKnownItems()
+        {
+            ObjectDB database = ObjectDB.instance;
+            if (database == null || database == _knownFrom)
+            {
+                return;
+            }
+
+            _known.Clear();
+            _knownFrom = database;
+            foreach (GameObject prefab in database.m_items)
+            {
+                if (prefab == null)
+                {
+                    continue;
+                }
+
+                ItemDrop drop = prefab.GetComponent<ItemDrop>();
+                ItemDrop.ItemData? data = drop != null ? drop.m_itemData : null;
+                if (data?.m_shared == null || string.IsNullOrEmpty(data.m_shared.m_name) || _known.ContainsKey(data.m_shared.m_name))
+                {
+                    continue;
+                }
+
+                _known[data.m_shared.m_name] = data;
+            }
+
+            Plugin.Debug($"Item list read for the pinned rows: {_known.Count} kinds");
         }
 
         /// <summary>The contents of one container, re-read only when its ZDO data revision moved.</summary>

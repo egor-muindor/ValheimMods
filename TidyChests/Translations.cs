@@ -36,6 +36,20 @@ namespace TidyChests
 
         public const string BrowserNoMatch = "tidychests_browser_no_match";
 
+        public const string BrowserMissing = "tidychests_browser_missing";
+
+        public const string SortName = "tidychests_sort_name";
+
+        public const string SortNameUp = "tidychests_sort_name_up";
+
+        public const string SortNameDown = "tidychests_sort_name_down";
+
+        public const string SortCount = "tidychests_sort_count";
+
+        public const string SortCountUp = "tidychests_sort_count_up";
+
+        public const string SortCountDown = "tidychests_sort_count_down";
+
         private const string DefaultLanguage = "English";
 
         private static readonly Dictionary<string, Dictionary<string, string>> Words = new Dictionary<string, Dictionary<string, string>>
@@ -54,6 +68,15 @@ namespace TidyChests
                 [BrowserChests] = "chests: {0} · {1} m",
                 [BrowserEmpty] = "No chest within {0} m holds anything",
                 [BrowserNoMatch] = "Nothing matches \"{0}\"",
+                [BrowserMissing] = "none nearby",
+                // The direction is spelled out rather than drawn with an arrow glyph: the game's
+                // font has no guaranteed arrow, and "9-1" says which end is on top without one.
+                [SortName] = "Name",
+                [SortNameUp] = "Name A-Z",
+                [SortNameDown] = "Name Z-A",
+                [SortCount] = "Count",
+                [SortCountUp] = "Count 1-9",
+                [SortCountDown] = "Count 9-1",
             },
             ["Russian"] = new Dictionary<string, string>
             {
@@ -69,6 +92,13 @@ namespace TidyChests
                 [BrowserChests] = "сундуков: {0} · {1} м",
                 [BrowserEmpty] = "В радиусе {0} м нет сундуков с предметами",
                 [BrowserNoMatch] = "Ничего не найдено по запросу «{0}»",
+                [BrowserMissing] = "рядом нет",
+                [SortName] = "Название",
+                [SortNameUp] = "Название А-Я",
+                [SortNameDown] = "Название Я-А",
+                [SortCount] = "Количество",
+                [SortCountUp] = "Количество 1-9",
+                [SortCountDown] = "Количество 9-1",
             },
         };
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1 - 2026-09-16
+
+- The chest list has a header: click **Name** or **Count** to sort by that column, click the active one again to flip it. The list starts with the largest stacks at the top, and the choice is saved in `[Browser] Sort`.
+- Items can be pinned. Click the diamond on the left of a row and it stays at the top of the list, above everything else, in the same order the rest is sorted in. The pins are saved in `[Browser] Favorites` as item names, so they survive a restart and a language change.
+- A pinned item stays listed with a count of 0 once no chest in range holds it any more, so a material running out is visible instead of silently disappearing from the list. Such a row is dimmed and does nothing when clicked, since there is nothing to highlight.
+- Pinning is ignored while something is typed in the search box: a search answers with its best matches first. The sort still decides the order among equally good matches.
+- `tidychests status` reports the sort and how many items are pinned.
+
 ## 1.2.0 - 2026-09-16
 
 - Optional server configuration. A server that also runs TidyChests and turns the new `Server.ConfigPriority` on decides `Enabled`, `Radius`, `IncludeHotbar`, `ItemTypes`, `Blacklist`, `ScanRadius`, `ScanInterval` and `LearnFromChests` for the players who have the mod, so everyone on it reaches as far and stashes by the same rules. The settings that travel are marked `[synced]` in the config file.

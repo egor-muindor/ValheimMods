@@ -42,6 +42,28 @@ namespace TidyChests.Ui
 
         private const float ScrollbarWidth = 14f;
 
+        /// <summary>The clickable strip on the left of a row that pins the item.</summary>
+        private const float MarkColumn = 26f;
+
+        /// <summary>Side of the diamond drawn in that strip.</summary>
+        private const float MarkSize = 14f;
+
+        private const float HeaderHeight = 22f;
+
+        /// <summary>Where the name starts, past the pin and the icon.</summary>
+        private const float NameColumn = MarkColumn + IconSize + Gap;
+
+        /// <summary>Right edge of the count column, measured from the right edge of a row.</summary>
+        private const float AmountColumn = 250f;
+
+        /// <summary>Right edge of the "chests: n" column, measured from the right edge of a row.</summary>
+        private const float ChestsColumn = 160f;
+
+        /// <summary>The pin of an item the player marked, and of one they did not.</summary>
+        private static readonly Color MarkOn = new Color(1f, 0.82f, 0.35f, 1f);
+
+        private static readonly Color MarkOff = new Color(1f, 1f, 1f, 0.2f);
+
         /// <summary>Rows one wheel step moves the list.</summary>
         private const float ScrollStepRows = 3f;
 
@@ -67,6 +89,16 @@ namespace TidyChests.Ui
         private TMP_Text? _title;
 
         private TMP_Text? _status;
+
+        private TMP_Text? _sortByName;
+
+        private TMP_Text? _sortByCount;
+
+        /// <summary>The pinned items, as read from the config file.</summary>
+        private FavoriteList _favorites = FavoriteList.Parse("");
+
+        /// <summary>The config line <see cref="_favorites"/> was parsed from, to notice an edit by hand.</summary>
+        private string _favoritesSource = "";
 
         private TMP_FontAsset? _font;
 
@@ -133,6 +165,8 @@ namespace TidyChests.Ui
             {
                 placeholder.text = Translations.Get(Translations.BrowserSearch);
             }
+
+            _instance.UpdateHeader();
         }
 
         public void Toggle()
@@ -177,7 +211,9 @@ namespace TidyChests.Ui
 
             _nextRefresh = Time.time + RefreshInterval;
             _acceptScreenLossAfter = Time.time + 0.3f;
+            UpdateHeader();
             Refresh();
+            ScrollToTop();
         }
 
         public void Close()
@@ -308,18 +344,72 @@ namespace TidyChests.Ui
             ChestIndex index = Plugin.Index;
             index.Refresh(player.transform.position, Plugin.Settings.ScanRadius.Value);
 
+            SyncFavorites();
             _totals.Clear();
             _totals.AddRange(ItemSearch.Summarize(index.Chests));
+            AddMissingFavorites(index);
             ApplyQuery();
         }
 
-        /// <summary>Applies the search text to the rows already read.</summary>
+        /// <summary>Applies the search text and the chosen order to the rows already read.</summary>
         private void ApplyQuery()
         {
             _visible.Clear();
-            _visible.AddRange(ItemSearch.Filter(_totals, _query));
+            _visible.AddRange(ItemSearch.Arrange(_totals, _query, Plugin.Settings.Sort.Value, _favorites));
             FillRows();
             UpdateStatus();
+        }
+
+        /// <summary>
+        /// Re-reads the pinned items when the config line changed, which covers both a click on a
+        /// pin and an edit of the file followed by <c>tidychests reload</c>.
+        /// </summary>
+        private void SyncFavorites()
+        {
+            string source = Plugin.Settings.Favorites.Value ?? "";
+            if (source == _favoritesSource)
+            {
+                return;
+            }
+
+            _favoritesSource = source;
+            _favorites = FavoriteList.Parse(source);
+        }
+
+        /// <summary>
+        /// A row with a count of zero for every pinned item no container in range holds. That is
+        /// the point of pinning something: the list keeps saying it exists after the last of it
+        /// was used up, instead of quietly dropping it.
+        /// </summary>
+        private void AddMissingFavorites(ChestIndex index)
+        {
+            if (_favorites.Count == 0)
+            {
+                return;
+            }
+
+            foreach (string name in _favorites.Names)
+            {
+                if (HasRow(name))
+                {
+                    continue;
+                }
+
+                _totals.Add(new ItemTotal(name, index.DisplayNameOf(name), 0, 0, 0f));
+            }
+        }
+
+        private bool HasRow(string name)
+        {
+            foreach (ItemTotal total in _totals)
+            {
+                if (string.Equals(total.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void OnQueryChanged(string query)
@@ -376,19 +466,31 @@ namespace TidyChests.Ui
                 }
 
                 ItemTotal total = _visible[i];
+
+                // A pinned item no chest holds any more: listed, but there is nothing to find.
+                bool ranOut = total.Count <= 0;
+
                 row.Total = total;
                 row.Rect.gameObject.SetActive(true);
                 row.Rect.anchoredPosition = new Vector2(0f, -i * RowHeight);
+                row.Button.interactable = !ranOut;
                 row.Name.text = total.DisplayName;
+                row.Name.color = Fade(_fontColor, ranOut ? 0.45f : 1f);
                 row.Amount.text = "×" + total.Count.ToString(culture);
-                row.Chests.text = Translations.Get(
-                    Translations.BrowserChests,
-                    total.ChestCount.ToString(culture),
-                    total.NearestDistance.ToString("0.#", culture));
+                row.Amount.color = Fade(_fontColor, ranOut ? 0.45f : 1f);
+                row.Chests.text = ranOut
+                    ? Translations.Get(Translations.BrowserMissing)
+                    : Translations.Get(
+                        Translations.BrowserChests,
+                        total.ChestCount.ToString(culture),
+                        total.NearestDistance.ToString("0.#", culture));
 
-                Sprite? icon = Plugin.Index.TryGetSample(total.Name, out ItemDrop.ItemData item) ? IconOf(item) : null;
+                row.Mark.color = _favorites.Contains(total.Name) ? MarkOn : MarkOff;
+
+                Sprite? icon = Plugin.Index.TryGetKnownItem(total.Name, out ItemDrop.ItemData item) ? IconOf(item) : null;
                 row.Icon.sprite = icon;
                 row.Icon.enabled = icon != null;
+                row.Icon.color = Fade(Color.white, ranOut ? 0.45f : 1f);
             }
 
             _content.sizeDelta = new Vector2(_content.sizeDelta.x, _visible.Count * RowHeight);
@@ -397,8 +499,9 @@ namespace TidyChests.Ui
         private void OnRowClicked(Row row)
         {
             ItemTotal? total = row.Total;
-            if (total == null)
+            if (total == null || total.Count <= 0)
             {
+                // A pinned row that ran out: nothing to highlight, so the panel stays open.
                 return;
             }
 
@@ -417,6 +520,87 @@ namespace TidyChests.Ui
                 ? Translations.Get(Translations.Found, total.DisplayName, found)
                 : Translations.Get(Translations.NotFound, total.DisplayName, radius.ToString("0.#", CultureInfo.InvariantCulture));
             player.Message(MessageHud.MessageType.Center, message);
+        }
+
+        /// <summary>
+        /// Pins the item of a row, or unpins it, and writes the list to the config file straight
+        /// away: the point of a pin is that it is still there tomorrow.
+        /// </summary>
+        private void OnMarkClicked(Row row)
+        {
+            ItemTotal? total = row.Total;
+            if (total == null || string.IsNullOrEmpty(total.Name))
+            {
+                return;
+            }
+
+            bool pinned = _favorites.Toggle(total.Name);
+            _favoritesSource = _favorites.Format();
+            Plugin.Settings.Favorites.Value = _favoritesSource;
+            Plugin.Debug($"{total.DisplayName} ({total.Name}) {(pinned ? "pinned" : "unpinned")}");
+
+            // An item that is pinned while nothing holds it has no row yet; a rebuild makes one.
+            Refresh();
+        }
+
+        /// <summary>
+        /// The header of a column was clicked: sort by it, or flip the direction when it already
+        /// decides the order. The choice is saved, like the pins.
+        /// </summary>
+        private void OnSortClicked(bool byName)
+        {
+            BrowserSort current = Plugin.Settings.Sort.Value;
+            BrowserSort next;
+            if (byName)
+            {
+                next = current == BrowserSort.NameAscending ? BrowserSort.NameDescending : BrowserSort.NameAscending;
+            }
+            else
+            {
+                next = current == BrowserSort.CountDescending ? BrowserSort.CountAscending : BrowserSort.CountDescending;
+            }
+
+            Plugin.Settings.Sort.Value = next;
+            UpdateHeader();
+            ApplyQuery();
+            ScrollToTop();
+        }
+
+        /// <summary>The column that decides the order is spelled out with its direction and lit; the other is dim.</summary>
+        private void UpdateHeader()
+        {
+            if (_sortByName == null || _sortByCount == null)
+            {
+                return;
+            }
+
+            BrowserSort sort = Plugin.Settings.Sort.Value;
+            bool byName = sort == BrowserSort.NameAscending || sort == BrowserSort.NameDescending;
+
+            _sortByName.text = Translations.Get(
+                sort == BrowserSort.NameAscending ? Translations.SortNameUp
+                : sort == BrowserSort.NameDescending ? Translations.SortNameDown
+                : Translations.SortName);
+            _sortByCount.text = Translations.Get(
+                sort == BrowserSort.CountAscending ? Translations.SortCountUp
+                : sort == BrowserSort.CountDescending ? Translations.SortCountDown
+                : Translations.SortCount);
+
+            _sortByName.color = Fade(_fontColor, byName ? 1f : 0.5f);
+            _sortByCount.color = Fade(_fontColor, byName ? 0.5f : 1f);
+        }
+
+        private void ScrollToTop()
+        {
+            if (_scroll != null)
+            {
+                _scroll.verticalNormalizedPosition = 1f;
+            }
+        }
+
+        private static Color Fade(Color color, float factor)
+        {
+            return new Color(color.r, color.g, color.b, color.a * factor);
         }
 
         private static Sprite? IconOf(ItemDrop.ItemData item)
@@ -473,6 +657,8 @@ namespace TidyChests.Ui
             _search = null;
             _title = null;
             _status = null;
+            _sortByName = null;
+            _sortByCount = null;
 
             InventoryGui gui = InventoryGui.instance;
             Transform? canvas = FindCanvas(gui);
@@ -504,6 +690,7 @@ namespace TidyChests.Ui
 
             _title = CreateText("Title", _panel, TitleHeight, 20f, TextAlignmentOptions.Center, 0f);
             _search = CreateSearch(_panel);
+            CreateHeader(_panel);
             CreateList(_panel, gui);
 
             RefreshLabels();
@@ -607,10 +794,65 @@ namespace TidyChests.Ui
             return field;
         }
 
+        /// <summary>
+        /// The column headers that decide the order. They sit in the same horizontal band as a
+        /// row, scrollbar included, so each label stands over the column it sorts.
+        /// </summary>
+        private void CreateHeader(RectTransform panel)
+        {
+            // The list is inset by the scrollbar on the right, so the header is too; otherwise
+            // its labels would sit a few pixels to the right of the columns they sort.
+            float left = Padding;
+            float right = Padding + ScrollbarWidth + Gap * 0.5f;
+
+            var headerGo = new GameObject("Header", typeof(RectTransform));
+            var header = (RectTransform)headerGo.transform;
+            header.SetParent(panel, false);
+            header.anchorMin = new Vector2(0f, 1f);
+            header.anchorMax = new Vector2(1f, 1f);
+            header.pivot = new Vector2(0.5f, 1f);
+            header.sizeDelta = new Vector2(-(left + right), HeaderHeight);
+            header.anchoredPosition = new Vector2((left - right) * 0.5f, -(Padding + TitleHeight + Gap + SearchHeight + Gap));
+
+            RectTransform nameHeader = CreateHeaderButton(header, "SortByName", TextAlignmentOptions.Left, out _sortByName, () => OnSortClicked(true));
+            StretchHorizontally(nameHeader, NameColumn, AmountColumn);
+
+            RectTransform countHeader = CreateHeaderButton(header, "SortByCount", TextAlignmentOptions.Right, out _sortByCount, () => OnSortClicked(false));
+            PinRight(countHeader, AmountColumn, ChestsColumn);
+        }
+
+        /// <summary>
+        /// A clickable header label. The click target is a transparent background, as in a row, so
+        /// the label keeps the colour that says whether it is the active column.
+        /// </summary>
+        private RectTransform CreateHeaderButton(RectTransform parent, string name, TextAlignmentOptions alignment, out TMP_Text label, UnityAction onClick)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+
+            Image background = go.GetComponent<Image>();
+            background.color = new Color(1f, 1f, 1f, 0f);
+
+            Button button = go.GetComponent<Button>();
+            button.targetGraphic = background;
+            var colors = button.colors;
+            colors.normalColor = new Color(1f, 1f, 1f, 0f);
+            colors.highlightedColor = new Color(1f, 1f, 1f, 0.14f);
+            colors.pressedColor = new Color(1f, 1f, 1f, 0.24f);
+            colors.selectedColor = new Color(1f, 1f, 1f, 0f);
+            colors.disabledColor = new Color(1f, 1f, 1f, 0f);
+            button.colors = colors;
+            button.onClick.AddListener(onClick);
+
+            label = CreateText("Label", rect, 0f, 15f, alignment, 0f);
+            return rect;
+        }
+
         /// <summary>The scrolling area with the rows, plus the message shown when there is nothing to list.</summary>
         private void CreateList(RectTransform panel, InventoryGui gui)
         {
-            float top = Padding + TitleHeight + Gap + SearchHeight + Gap;
+            float top = Padding + TitleHeight + Gap + SearchHeight + Gap + HeaderHeight + Gap * 0.5f;
 
             var scrollGo = new GameObject("Scroll", typeof(RectTransform), typeof(ScrollRect));
             var scrollRect = (RectTransform)scrollGo.transform;
@@ -714,30 +956,80 @@ namespace TidyChests.Ui
             colors.disabledColor = new Color(1f, 1f, 1f, 0f);
             button.colors = colors;
 
+            Image mark = CreateMark(rect, out Button markButton);
+
             var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
             var iconRect = (RectTransform)iconGo.transform;
             iconRect.SetParent(rect, false);
             iconRect.anchorMin = new Vector2(0f, 0.5f);
             iconRect.anchorMax = new Vector2(0f, 0.5f);
             iconRect.pivot = new Vector2(0f, 0.5f);
-            iconRect.anchoredPosition = new Vector2(Gap, 0f);
+            iconRect.anchoredPosition = new Vector2(MarkColumn, 0f);
             iconRect.sizeDelta = new Vector2(IconSize, IconSize);
             Image icon = iconGo.GetComponent<Image>();
             icon.raycastTarget = false;
             icon.preserveAspect = true;
 
             TMP_Text name = CreateText("Name", rect, 0f, 18f, TextAlignmentOptions.Left, 0f);
-            StretchHorizontally((RectTransform)name.transform, Gap + IconSize + Gap, 250f);
+            StretchHorizontally((RectTransform)name.transform, NameColumn, AmountColumn);
 
             TMP_Text amount = CreateText("Amount", rect, 0f, 18f, TextAlignmentOptions.Right, 0f);
-            PinRight((RectTransform)amount.transform, 250f, 160f);
+            PinRight((RectTransform)amount.transform, AmountColumn, ChestsColumn);
 
             TMP_Text chests = CreateText("Chests", rect, 0f, 15f, TextAlignmentOptions.Right, 0.65f);
-            PinRight((RectTransform)chests.transform, 160f, Gap);
+            PinRight((RectTransform)chests.transform, ChestsColumn, Gap);
 
-            var row = new Row(rect, icon, name, amount, chests);
+            var row = new Row(rect, button, mark, icon, name, amount, chests);
             button.onClick.AddListener(() => OnRowClicked(row));
+            markButton.onClick.AddListener(() => OnMarkClicked(row));
             return row;
+        }
+
+        /// <summary>
+        /// The pin on the left of a row: a diamond the player clicks to keep the item at the top
+        /// of the list. Drawn rather than borrowed, because the game has no star sprite to copy
+        /// and its font has no star glyph to print. The click target is a transparent square
+        /// around it, so the diamond keeps the colour that says whether the item is pinned.
+        /// </summary>
+        private static Image CreateMark(RectTransform row, out Button button)
+        {
+            var holderGo = new GameObject("Mark", typeof(RectTransform), typeof(Image), typeof(Button));
+            var holder = (RectTransform)holderGo.transform;
+            holder.SetParent(row, false);
+            holder.anchorMin = new Vector2(0f, 0f);
+            holder.anchorMax = new Vector2(0f, 1f);
+            holder.pivot = new Vector2(0f, 0.5f);
+            holder.offsetMin = Vector2.zero;
+            holder.offsetMax = new Vector2(MarkColumn, 0f);
+
+            Image background = holderGo.GetComponent<Image>();
+            background.color = new Color(1f, 1f, 1f, 0f);
+
+            button = holderGo.GetComponent<Button>();
+            button.targetGraphic = background;
+            var colors = button.colors;
+            colors.normalColor = new Color(1f, 1f, 1f, 0f);
+            colors.highlightedColor = new Color(1f, 1f, 1f, 0.2f);
+            colors.pressedColor = new Color(1f, 1f, 1f, 0.32f);
+            colors.selectedColor = new Color(1f, 1f, 1f, 0f);
+            colors.disabledColor = new Color(1f, 1f, 1f, 0f);
+            button.colors = colors;
+
+            var diamondGo = new GameObject("Diamond", typeof(RectTransform), typeof(Image));
+            var diamond = (RectTransform)diamondGo.transform;
+            diamond.SetParent(holder, false);
+            diamond.anchorMin = new Vector2(0.5f, 0.5f);
+            diamond.anchorMax = new Vector2(0.5f, 0.5f);
+            diamond.pivot = new Vector2(0.5f, 0.5f);
+            diamond.anchoredPosition = Vector2.zero;
+            diamond.sizeDelta = new Vector2(MarkSize, MarkSize);
+            diamond.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
+            // No sprite: an Image without one draws a filled rectangle, which the turn makes a diamond.
+            Image image = diamondGo.GetComponent<Image>();
+            image.raycastTarget = false;
+            image.color = MarkOff;
+            return image;
         }
 
         /// <summary>
@@ -814,9 +1106,11 @@ namespace TidyChests.Ui
         /// <summary>One listed item kind and the objects that show it.</summary>
         private sealed class Row
         {
-            public Row(RectTransform rect, Image icon, TMP_Text name, TMP_Text amount, TMP_Text chests)
+            public Row(RectTransform rect, Button button, Image mark, Image icon, TMP_Text name, TMP_Text amount, TMP_Text chests)
             {
                 Rect = rect;
+                Button = button;
+                Mark = mark;
                 Icon = icon;
                 Name = name;
                 Amount = amount;
@@ -824,6 +1118,12 @@ namespace TidyChests.Ui
             }
 
             public RectTransform Rect { get; }
+
+            /// <summary>The whole row: clicking it highlights the chests holding the item.</summary>
+            public Button Button { get; }
+
+            /// <summary>The diamond that says whether the item is pinned.</summary>
+            public Image Mark { get; }
 
             public Image Icon { get; }
 

@@ -41,7 +41,9 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   the nearest one is. Type to filter by name; click a row to close the list and
   light up every chest holding that item. Escape or the same key closes it. While
   it is open the character stands still and the wheel scrolls the list rather
-  than zooming the camera.
+  than zooming the camera. The header sorts by name or by count, and the diamond
+  on the left of a row pins the item to the top of the list - where it stays,
+  with a count of 0, even after the last of it is gone.
 - **Learning from chests**: the items lying in the chests around you count as
   found, so their recipes unlock. Valheim normally unlocks a recipe only once the
   material has been in your own inventory, which in a party means hunting down
@@ -152,6 +154,30 @@ Used by the chest list and by the learning from chests.
 |-----|---------|-------------|
 | `BrowserKey` | `O + LeftControl` | Opens and closes the chest list. Modifiers are allowed; set it to `None` to disable the panel. |
 | `BrowserSize` | `520, 560` | Width and height of the panel in UI pixels. |
+| `Sort` | `CountDescending` | Order of the list while the search box is empty: `CountDescending`, `CountAscending`, `NameAscending` or `NameDescending`. Set by clicking the header, saved here. |
+| `Favorites` | empty | Pinned items, comma-separated, by the game's own item names (`$item_wood`, `$item_coal`). Set by clicking the diamond in the list, saved here. |
+
+#### Sorting and pinning
+
+The list has a header with two clickable columns. **Name** and **Count** each
+sort by that column; clicking the one that already decides the order flips its
+direction, and the active column says which way it is sorted (`Count 9-1`,
+`Name A-Z`). The list opens with the largest stacks first.
+
+The diamond on the left of every row pins the item. A pinned item sits above
+everything else, and the pinned block is sorted the same way as the rest. Two
+things make it more than a bookmark:
+
+- It stays in the list with a count of 0 once no chest in range holds it any
+  more, dimmed, instead of disappearing. That is how you see that the flax ran
+  out rather than noticing it is missing. Such a row does nothing when clicked -
+  there is no chest to light up.
+- It survives a restart and a language change: pins are stored by the game's
+  internal item name, not by the name on screen.
+
+Pinning is ignored while something is typed in the search box. A search should
+answer with its best matches first, not with the pins; the sort still decides
+the order among equally good matches.
 
 ## Console command
 

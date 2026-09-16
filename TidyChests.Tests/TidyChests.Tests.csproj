@@ -23,6 +23,8 @@
     <Compile Include="../TidyChests/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
     <Compile Include="../TidyChests/Index/IndexModels.cs" Link="Index/IndexModels.cs" />
     <Compile Include="../TidyChests/Index/ItemSearch.cs" Link="Index/ItemSearch.cs" />
+    <Compile Include="../TidyChests/Index/BrowserSort.cs" Link="Index/BrowserSort.cs" />
+    <Compile Include="../TidyChests/Index/FavoriteList.cs" Link="Index/FavoriteList.cs" />
     <Compile Include="../TidyChests/Knowledge/KnowledgePlan.cs" Link="Knowledge/KnowledgePlan.cs" />
   </ItemGroup>
 
