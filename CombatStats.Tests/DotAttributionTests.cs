@@ -55,16 +55,6 @@ namespace CombatStats.Tests
         }
 
         [Fact]
-        public void ForgettingATargetDropsItAtOnce()
-        {
-            var table = new DotAttribution(30d);
-            table.Remember(100d, Target, Sigrun);
-            table.Forget(Target);
-
-            Assert.False(table.TryResolve(101d, Target, out _));
-        }
-
-        [Fact]
         public void PruneDropsOnlyExpiredEntries()
         {
             var table = new DotAttribution(30d);

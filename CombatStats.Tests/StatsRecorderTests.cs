@@ -213,6 +213,32 @@ namespace CombatStats.Tests
         }
 
         [Fact]
+        public void ABucketTheRingLappedWithoutWritingToItIsNotRead()
+        {
+            var recorder = new StatsRecorder(60);
+            recorder.Record(0.5d, Me, Hit(DamageKind.Slash, 100f), estimated: false);
+
+            // A full lap later the second-zero bucket still holds its numbers, but it is stamped
+            // with a second that is no longer in any window: it must be skipped, not counted.
+            WindowSnapshot snapshot = recorder.Snapshot(90d, 60, Named);
+
+            Assert.Equal(0f, snapshot.Total, 3);
+            Assert.Empty(snapshot.Rows);
+        }
+
+        [Fact]
+        public void AWindowReachingBeforeTheStartOfTheClockIsFine()
+        {
+            var recorder = new StatsRecorder(60);
+            recorder.Record(1d, Me, Hit(DamageKind.Slash, 30f), estimated: false);
+
+            // Half a minute into a session a 30 s window starts at a negative second.
+            WindowSnapshot snapshot = recorder.Snapshot(5d, 30, Named);
+
+            Assert.Equal(30f, snapshot.Total, 3);
+        }
+
+        [Fact]
         public void AnEventWithNoDamageIsNotAHit()
         {
             var recorder = new StatsRecorder(1800);

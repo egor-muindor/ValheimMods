@@ -11,8 +11,9 @@ namespace CombatStats.Collect
     /// Where every event ends up: one ring of buckets per channel, the damage-over-time table, the
     /// names of the combatants seen so far, and the queue of events waiting to be shared.
     ///
-    /// Everything here is called from Harmony patches, so it must be cheap and must never throw:
-    /// a hit is recorded with one dictionary lookup and no allocation.
+    /// Everything here is called from Harmony patches, so it must be cheap: recording a hit is a
+    /// dictionary lookup into a pooled entry and allocates nothing. Sharing one costs a small
+    /// array per event, which is the price of holding it until the next packet goes out.
     /// </summary>
     internal sealed class DamageCollector
     {
@@ -61,7 +62,11 @@ namespace CombatStats.Collect
             return _recorders[(int)channel];
         }
 
-        /// <summary>The name to show for a combatant: what was seen locally, else the peer list.</summary>
+        /// <summary>
+        /// The name to show for a combatant: what was seen locally, else the player list the
+        /// server keeps. Only a real name is remembered - a placeholder would stick for the whole
+        /// session, and a player first seen through someone else's packet would never get a name.
+        /// </summary>
         public string NameOf(long id)
         {
             if (_names.TryGetValue(id, out string? known) && !string.IsNullOrEmpty(known))
@@ -69,9 +74,14 @@ namespace CombatStats.Collect
                 return known!;
             }
 
-            string resolved = ResolveName(id);
-            _names[id] = resolved;
-            return resolved;
+            string? resolved = ResolveName(id);
+            if (string.IsNullOrEmpty(resolved))
+            {
+                return "...";
+            }
+
+            _names[id] = resolved!;
+            return resolved!;
         }
 
         /// <summary>Events collected since the last packet, or null when there are none.</summary>
@@ -88,9 +98,13 @@ namespace CombatStats.Collect
         }
 
         /// <summary>
-        /// A blow is on its way to the target's owner. Only the attacker is taken from it, and
-        /// only when the blow carries fire, poison or spirit: those are stripped out of the hit
-        /// and tick later with nobody's name on them.
+        /// A blow that carried fire, poison or spirit has been through the target's owner. Those
+        /// three are stripped out of the hit there and tick later with nobody's name on them, so
+        /// the attacker is noted down for the ticks to be charged to.
+        ///
+        /// Called after the fact: the game only empties those three fields on the path that
+        /// reaches <c>ApplyDamage</c>, so finding them still filled means the blow was discarded -
+        /// a dodge, a corpse, PvP being off - and nothing will ever tick from it.
         /// </summary>
         public void OnBlow(Character target, HitData hit)
         {
@@ -99,7 +113,7 @@ namespace CombatStats.Collect
                 return;
             }
 
-            if (hit.m_damage.m_fire <= 0f && hit.m_damage.m_poison <= 0f && hit.m_damage.m_spirit <= 0f)
+            if (hit.m_damage.m_fire > 0f || hit.m_damage.m_poison > 0f || hit.m_damage.m_spirit > 0f)
             {
                 return;
             }
@@ -126,8 +140,10 @@ namespace CombatStats.Collect
 
             double now = Now;
             float total = Fill(hit);
-            if (total <= 0f)
+            if (total <= 0.1f)
             {
+                // What the game itself throws away: ApplyDamage returns before the health is
+                // touched, so recording it would count damage the target never took.
                 return;
             }
 
@@ -238,15 +254,34 @@ namespace CombatStats.Collect
             }
 
             Remember(id, name);
-            Record(CombatChannel.ObjectDamage, id, Now, estimated: false);
+
+            // Trees, rock and buildings apply their own resistances on the owner's side, and this
+            // is the sending side, so the figure is what was swung, not what landed.
+            Record(CombatChannel.ObjectDamage, id, Now, estimated: true);
         }
 
-        /// <summary>Events another client saw and shared.</summary>
-        public void OnRemote(Batch batch)
+        /// <summary>
+        /// Events another client saw and shared. A batch sent from outside the share radius is
+        /// not dropped whole: what it says about the local player is always kept, because the
+        /// owner of a creature can stand far from both the creature and the player hitting it.
+        /// </summary>
+        public void OnRemote(Batch batch, bool nearby)
         {
             double now = Now;
+            long local = LocalId();
+
             foreach (WireEvent shared in batch.Events)
             {
+                if (!nearby && shared.CombatantId != local)
+                {
+                    continue;
+                }
+
+                if (Attribution.IsCreature(shared.CombatantId) && !Plugin.Settings.CountPets.Value)
+                {
+                    continue;
+                }
+
                 CombatChannel channel = shared.Channel;
                 if (!Wanted(channel))
                 {
@@ -255,6 +290,13 @@ namespace CombatStats.Collect
 
                 Recorder(channel).Record(now, shared.CombatantId, shared.ByKind, shared.Estimated);
             }
+        }
+
+        /// <summary>The local player's row, or zero while there is no player.</summary>
+        public static long LocalId()
+        {
+            Player local = Player.m_localPlayer;
+            return local != null ? local.GetZDOID().UserID : 0L;
         }
 
         /// <summary>Housekeeping: drops damage-over-time marks nobody will ever claim.</summary>
@@ -294,30 +336,45 @@ namespace CombatStats.Collect
             }
         }
 
-        private static string ResolveName(long id)
+        /// <summary>
+        /// A name for a combatant seen only through the network. On a client the peer list holds
+        /// nothing but the server, so the answer comes from the player list the server sends
+        /// round: its character ids carry the same user id the meter keys players by.
+        /// </summary>
+        private static string? ResolveName(long id)
         {
             ZNet net = ZNet.instance;
-            if (net != null)
+            if (net == null)
             {
-                if (id == ZNet.GetUID())
-                {
-                    Player local = Player.m_localPlayer;
-                    if (local != null)
-                    {
-                        return local.GetPlayerName();
-                    }
-                }
+                return null;
+            }
 
-                foreach (ZNetPeer peer in net.GetPeers())
+            if (id == ZNet.GetUID())
+            {
+                Player local = Player.m_localPlayer;
+                if (local != null)
                 {
-                    if (peer.m_uid == id && !string.IsNullOrEmpty(peer.m_playerName))
-                    {
-                        return peer.m_playerName;
-                    }
+                    return local.GetPlayerName();
                 }
             }
 
-            return id < 0L ? "?" : "...";
+            foreach (ZNet.PlayerInfo player in net.GetPlayerList())
+            {
+                if (player.m_characterID.UserID == id && !string.IsNullOrEmpty(player.m_name))
+                {
+                    return player.m_name;
+                }
+            }
+
+            foreach (ZNetPeer peer in net.GetPeers())
+            {
+                if (peer.m_uid == id && !string.IsNullOrEmpty(peer.m_playerName))
+                {
+                    return peer.m_playerName;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>Splits a hit into the scratch array and returns what it adds up to.</summary>

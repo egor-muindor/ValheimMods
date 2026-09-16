@@ -103,6 +103,59 @@ namespace CombatStats.Tests
         }
 
         [Fact]
+        public void EveryChannelThisVersionHasIsAccepted()
+        {
+            var events = new List<WireEvent> { Event(7, CombatChannel.ObjectDamage, DamageKind.Chop, 20f) };
+
+            byte[] data = EventCodec.Encode(1L, 0f, 0f, 0f, events);
+
+            Assert.True(EventCodec.TryDecode(data, out Batch? batch, out string error), error);
+            Assert.Equal(CombatChannel.ObjectDamage, batch!.Events[0].Channel);
+        }
+
+        [Fact]
+        public void AChannelThisVersionDoesNotHaveIsRejected()
+        {
+            var events = new List<WireEvent> { Event(7, CombatChannel.DamageDealt, DamageKind.Slash, 10f) };
+            byte[] data = EventCodec.Encode(1L, 0f, 0f, 0f, events);
+
+            // version, sender, three floats, count, then the combatant of the first event.
+            data[1 + 8 + 12 + 2 + 8] = 7;
+
+            Assert.False(EventCodec.TryDecode(data, out Batch? batch, out string error));
+            Assert.Null(batch);
+            Assert.Contains("meter", error, System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ACountTheRestOfThePacketCannotHoldIsRefused()
+        {
+            byte[] data = EventCodec.Encode(1L, 0f, 0f, 0f, new List<WireEvent>());
+            int countOffset = 1 + 8 + 12;
+            data[countOffset] = 0x00;
+            data[countOffset + 1] = 0x08; // 2048 events, the most allowed, in an empty packet
+
+            Assert.False(EventCodec.TryDecode(data, out Batch? batch, out string error));
+            Assert.Null(batch);
+            Assert.Contains("fit", error, System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void MoreEventsThanFitAreTruncatedAndTheCountSaysSo()
+        {
+            var events = new List<WireEvent>();
+            for (int index = 0; index < EventCodec.MaxEvents + 10; index++)
+            {
+                events.Add(Event(index, CombatChannel.DamageDealt, DamageKind.Slash, 1f));
+            }
+
+            byte[] data = EventCodec.Encode(1L, 0f, 0f, 0f, events);
+
+            Assert.True(EventCodec.TryDecode(data, out Batch? batch, out string error), error);
+            Assert.Equal(EventCodec.MaxEvents, batch!.Events.Count);
+        }
+
+        [Fact]
         public void EmptyBytesAreRejectedWithoutThrowing()
         {
             Assert.False(EventCodec.TryDecode(new byte[0], out _, out _));

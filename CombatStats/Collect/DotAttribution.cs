@@ -42,12 +42,6 @@ namespace CombatStats.Collect
             return false;
         }
 
-        /// <summary>The target is gone (it died, or it left the client's part of the world).</summary>
-        public void Forget(long targetId)
-        {
-            _marks.Remove(targetId);
-        }
-
         /// <summary>Drops what has expired. Called on a timer, not per hit.</summary>
         public void Prune(double now)
         {

@@ -28,6 +28,15 @@ namespace CombatStats.Net
             return uid != 0L && Peers.Add(uid);
         }
 
+        /// <summary>
+        /// The peer has the mod but does not share, so it is no better than a peer without one:
+        /// the local estimate has to stand in for what it sees.
+        /// </summary>
+        public static bool Remove(long uid)
+        {
+            return Peers.Remove(uid);
+        }
+
         /// <summary>The session ended.</summary>
         public static void Clear()
         {

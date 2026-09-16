@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CombatStats.Collect;
 using CombatStats.Model;
 using CombatStats.Stats;
 using TMPro;
@@ -170,7 +171,7 @@ namespace CombatStats.Ui
             WindowSnapshot snapshot = Snapshot();
             List<CombatantRow> shown = Choose(snapshot, settings.CompactRows.Value);
             float leader = shown.Count > 0 ? shown[0].Total : 0f;
-            long local = LocalId();
+            long local = DamageCollector.LocalId();
 
             float y = 0f;
             if (_caption != null)
@@ -227,7 +228,7 @@ namespace CombatStats.Ui
         private List<CombatantRow> Choose(WindowSnapshot snapshot, int limit)
         {
             var chosen = new List<CombatantRow>();
-            long local = LocalId();
+            long local = DamageCollector.LocalId();
             bool hasLocal = false;
 
             for (int index = 0; index < snapshot.Rows.Count && chosen.Count < limit; index++)
@@ -251,12 +252,6 @@ namespace CombatStats.Ui
             }
 
             return chosen;
-        }
-
-        private static long LocalId()
-        {
-            Player local = Player.m_localPlayer;
-            return local != null ? local.GetZDOID().UserID : 0L;
         }
 
         private static string Seconds(int seconds)

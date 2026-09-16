@@ -53,6 +53,13 @@ namespace CombatStats.Collect
                 return true;
             }
 
+            // Only something that belongs to a player has a row. Without this a raid would fill
+            // the meter with the names of whatever is attacking it.
+            if (!character.IsTamed())
+            {
+                return false;
+            }
+
             id = CreatureKey(character.m_name);
             name = Localize(character.m_name);
             return true;
@@ -72,15 +79,30 @@ namespace CombatStats.Collect
         }
 
         /// <summary>
-        /// The key of a creature that belongs to no player: negative, so it can never be mistaken
-        /// for a session id, and the same on every client because it only depends on the name.
+        /// Where the keys of creatures start. A session id is
+        /// <c>(long)"host:domain".GetHashCode() + Random.Range(1, int.MaxValue)</c>
+        /// (<c>Utils.GenerateUID</c>), so it can be negative and reaches about -2^31: creature
+        /// keys have to live well below that to stay out of its way.
+        /// </summary>
+        private const long CreatureFloor = -(1L << 40);
+
+        /// <summary>
+        /// The key of a creature that belongs to a player but is not a player: the same on every
+        /// client, because it only depends on the name, and far out of the range a session id can
+        /// reach.
         /// </summary>
         public static long CreatureKey(string name)
         {
             unchecked
             {
-                return -(long)(uint)(name ?? string.Empty).GetStableHashCode() - 1L;
+                return CreatureFloor - (uint)(name ?? string.Empty).GetStableHashCode();
             }
+        }
+
+        /// <summary>True for a key handed out by <see cref="CreatureKey"/>.</summary>
+        public static bool IsCreature(long id)
+        {
+            return id <= CreatureFloor;
         }
 
         /// <summary>The player's own name for a creature, or the raw token when the game has none.</summary>

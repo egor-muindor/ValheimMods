@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
 
 namespace CombatStats.Patches
@@ -7,29 +8,53 @@ namespace CombatStats.Patches
     /// A patch must never take the game down with it: the first failure of each patch is logged
     /// and the rest are swallowed, so a game update that changes something under us costs the
     /// meter its numbers and nothing else.
+    ///
+    /// The bodies are passed as arguments rather than captured, so the lambdas the callers write
+    /// are cached by the compiler instead of allocating on every hit.
     /// </summary>
     internal static class PatchGuard
     {
-        private static readonly System.Collections.Generic.HashSet<string> Reported =
-            new System.Collections.Generic.HashSet<string>();
+        private static readonly HashSet<string> Reported = new HashSet<string>();
 
-        public static void Run(string patch, Action body)
+        public static void Run<T>(string patch, T argument, Action<T> body)
         {
-            if (!Plugin.Enabled)
+            if (!Plugin.Enabled || Plugin.Headless)
             {
                 return;
             }
 
             try
             {
-                body();
+                body(argument);
             }
             catch (Exception exception)
             {
-                if (Reported.Add(patch))
-                {
-                    Plugin.Log.LogError($"{patch} failed; those numbers will be missing from the meter: {exception}");
-                }
+                Report(patch, exception);
+            }
+        }
+
+        public static void Run<T1, T2>(string patch, T1 first, T2 second, Action<T1, T2> body)
+        {
+            if (!Plugin.Enabled || Plugin.Headless)
+            {
+                return;
+            }
+
+            try
+            {
+                body(first, second);
+            }
+            catch (Exception exception)
+            {
+                Report(patch, exception);
+            }
+        }
+
+        private static void Report(string patch, Exception exception)
+        {
+            if (Reported.Add(patch))
+            {
+                Plugin.Log.LogError($"{patch} failed; those numbers will be missing from the meter: {exception}");
             }
         }
     }
@@ -48,7 +73,9 @@ namespace CombatStats.Patches
             __state = __instance != null
                       && !__instance.IsDead()
                       && !__instance.IsTeleporting()
-                      && !__instance.InCutscene();
+                      && !__instance.InCutscene()
+                      && !__instance.IsDebugFlying()
+                      && !CinematicsManager.IsPlaying();
         }
 
         private static void Postfix(Character __instance, HitData hit, bool __state)
@@ -58,20 +85,38 @@ namespace CombatStats.Patches
                 return;
             }
 
-            PatchGuard.Run(nameof(Character.ApplyDamage), () => Plugin.Collector.OnApplied(__instance, hit));
+            PatchGuard.Run(nameof(Character.ApplyDamage), __instance, hit,
+                static (character, blow) => Plugin.Collector.OnApplied(character, blow));
         }
     }
 
     /// <summary>
     /// A blow arriving at the target's owner. Read only for who set the target alight: fire,
     /// poison and spirit are stripped out here and tick later without an attacker on them.
+    ///
+    /// The note is taken afterwards, and only when the game really did strip them out. Everything
+    /// that makes the game discard the blow - a dodge, a corpse, PvP being off between two
+    /// players - leaves those three where they were, and a discarded blow must not claim the burn
+    /// a campfire gives the target later.
     /// </summary>
     [HarmonyPatch(typeof(Character), nameof(Character.RPC_Damage))]
     internal static class Character_RPC_Damage_Patch
     {
-        private static void Prefix(Character __instance, HitData hit)
+        private static void Prefix(HitData hit, out bool __state)
         {
-            PatchGuard.Run(nameof(Character.RPC_Damage), () => Plugin.Collector.OnBlow(__instance, hit));
+            __state = hit != null
+                      && (hit.m_damage.m_fire > 0f || hit.m_damage.m_poison > 0f || hit.m_damage.m_spirit > 0f);
+        }
+
+        private static void Postfix(Character __instance, HitData hit, bool __state)
+        {
+            if (!__state)
+            {
+                return;
+            }
+
+            PatchGuard.Run(nameof(Character.RPC_Damage), __instance, hit,
+                static (character, blow) => Plugin.Collector.OnBlow(character, blow));
         }
     }
 
@@ -84,7 +129,8 @@ namespace CombatStats.Patches
     {
         private static void Prefix(Character __instance, HitData hit)
         {
-            PatchGuard.Run(nameof(Character.Damage), () => Plugin.Collector.OnSent(__instance, hit));
+            PatchGuard.Run(nameof(Character.Damage), __instance, hit,
+                static (character, blow) => Plugin.Collector.OnSent(character, blow));
         }
     }
 
@@ -99,12 +145,12 @@ namespace CombatStats.Patches
 
         private static void Postfix(Character __instance, float __state)
         {
-            PatchGuard.Run(nameof(Character.Heal), () =>
+            PatchGuard.Run(nameof(Character.Heal), __instance, __state, static (character, before) =>
             {
-                float healed = __instance.GetHealth() - __state;
+                float healed = character.GetHealth() - before;
                 if (healed > 0f)
                 {
-                    Plugin.Collector.OnHeal(__instance, healed);
+                    Plugin.Collector.OnHeal(character, healed);
                 }
             });
         }
@@ -116,7 +162,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(WearNTear.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(WearNTear.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 
@@ -126,7 +172,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(Destructible.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(Destructible.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 
@@ -136,7 +182,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(TreeBase.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(TreeBase.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 
@@ -146,7 +192,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(TreeLog.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(TreeLog.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 
@@ -156,7 +202,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(MineRock.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(MineRock.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 
@@ -166,7 +212,7 @@ namespace CombatStats.Patches
     {
         private static void Prefix(HitData hit)
         {
-            PatchGuard.Run(nameof(MineRock5.Damage), () => Plugin.Collector.OnObject(hit));
+            PatchGuard.Run(nameof(MineRock5.Damage), hit, static blow => Plugin.Collector.OnObject(blow));
         }
     }
 }

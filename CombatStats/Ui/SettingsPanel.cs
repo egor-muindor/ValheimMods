@@ -74,6 +74,15 @@ namespace CombatStats.Ui
             Instance = this;
         }
 
+        private void Update()
+        {
+            if (_open && _panel == null)
+            {
+                // The canvas went with the world.
+                Close();
+            }
+        }
+
         private void OnDestroy()
         {
             if (Instance == this)

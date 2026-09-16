@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CombatStats.Collect;
 using CombatStats.Model;
 using CombatStats.Stats;
 using TMPro;
@@ -61,6 +62,8 @@ namespace CombatStats.Ui
         private bool _failed;
 
         private bool _open;
+
+        private bool _seededExpanded;
 
         /// <summary>True while the window has the screen, which is what stops the player moving.</summary>
         public static bool IsOpen { get; private set; }
@@ -138,6 +141,13 @@ namespace CombatStats.Ui
             if (Shortcut.IsPressed(Plugin.Settings.DetailKey.Value))
             {
                 Toggle();
+            }
+
+            if (_open && _panel == null)
+            {
+                // The canvas went with the world; the window is not open any more, whatever the
+                // flags say, and leaving them set would keep the player from moving.
+                Close();
             }
 
             if (_open && Time.time >= _nextRefresh)
@@ -250,10 +260,12 @@ namespace CombatStats.Ui
 
             float width = _viewport.rect.width;
             float leader = snapshot.Rows.Count > 0 ? snapshot.Rows[0].Total : 0f;
-            long local = LocalId();
+            long local = DamageCollector.LocalId();
 
-            if (_expanded.Count == 0 && local != 0L)
+            if (!_seededExpanded && local != 0L)
             {
+                // Once, so the player's own row starts open and can then be closed for good.
+                _seededExpanded = true;
                 _expanded.Add(local);
             }
 
@@ -312,12 +324,6 @@ namespace CombatStats.Ui
             _content.sizeDelta = new Vector2(0f, height);
             _scrolled = Mathf.Clamp(_scrolled, 0f, Mathf.Max(0f, height - _viewport.rect.height));
             _content.anchoredPosition = new Vector2(0f, _scrolled);
-        }
-
-        private static long LocalId()
-        {
-            Player local = Player.m_localPlayer;
-            return local != null ? local.GetZDOID().UserID : 0L;
         }
 
         private void OnRowClicked(long id)

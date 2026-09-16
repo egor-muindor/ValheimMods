@@ -25,8 +25,9 @@ Both are configurable, and either can be set to `None` to turn it off.
 Out of the box, damage dealt to creatures, by players.
 
 The rest is off by default and each has its own switch, in the settings panel or in the config
-file: damage taken, healing, damage to trees, ore and buildings, and what pets and summons deal
-(charged to the player they follow).
+file: damage taken, healing, damage to trees, ore and buildings, and what tamed creatures and
+summons deal (charged to the player they follow, or to a row of their own). Only something that
+belongs to a player counts there: wild creatures never get a row.
 
 Some details worth knowing:
 
@@ -36,6 +37,8 @@ Some details worth knowing:
   early or walks into water never produces the rest of the damage - which is what really happened.
 - The average is damage per hit, not per second: a quiet stretch inside a window does not dilute
   it. A blow carrying two damage kinds is one hit.
+- Damage to trees, ore and buildings is measured as it is swung, before the target's own
+  resistances, so those rows are marked with a `~` like any other estimate.
 
 ## Together with other players
 
@@ -95,6 +98,10 @@ both sides, and a player without the mod can still join.
 Only `Enabled`, `ShareDamage` and `ShareRadius` travel - a server may decide whether its players
 exchange combat data at all. The windows, the keys and the colours stay each player's own, and
 the client's config file is never written to.
+
+A dedicated server takes no part in the meter itself: with no screen and no player of its own it
+records nothing and answers no greeting, so its clients keep estimating their blows on whatever
+the server happens to own.
 
 ## Installing
 

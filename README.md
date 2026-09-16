@@ -69,8 +69,9 @@ the repository root:
 The packages are listed under the [Muindor](https://thunderstore.io/c/valheim/p/Muindor/)
 team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks),
 [QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport),
-[TidyChests](https://thunderstore.io/c/valheim/p/Muindor/TidyChests) and
-[OreFinder](https://thunderstore.io/c/valheim/p/Muindor/OreFinder).
+[TidyChests](https://thunderstore.io/c/valheim/p/Muindor/TidyChests),
+[OreFinder](https://thunderstore.io/c/valheim/p/Muindor/OreFinder) and
+[CombatStats](https://thunderstore.io/c/valheim/p/Muindor/CombatStats).
 `<Mod>/thunderstore.toml` holds the listing metadata (categories, community,
 dependencies); the zip comes from the Release build. To publish a new version:
 

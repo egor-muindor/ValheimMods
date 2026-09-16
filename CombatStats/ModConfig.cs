@@ -156,8 +156,14 @@ namespace CombatStats
 
         public ConfigEntry<string> Colors { get; }
 
-        /// <summary>Seconds the ring of buckets covers.</summary>
+        /// <summary>
+        /// Seconds the ring of buckets covers. The ring is built once, at startup, so a window
+        /// longer than the ring that is running is capped to it rather than promised.
+        /// </summary>
         public int HistorySeconds => Math.Max(60, HistoryMinutes.Value * 60);
+
+        /// <summary>The length of the ring actually in use, whatever the setting says now.</summary>
+        public int RunningHistorySeconds => Plugin.HistorySeconds > 0 ? Plugin.HistorySeconds : HistorySeconds;
 
         /// <summary>Re-reads the config file from disk.</summary>
         public void Reload()
@@ -186,7 +192,7 @@ namespace CombatStats
                     continue;
                 }
 
-                int capped = Math.Min(seconds, HistorySeconds);
+                int capped = Math.Min(seconds, RunningHistorySeconds);
                 if (!windows.Contains(capped))
                 {
                     windows.Add(capped);
@@ -195,8 +201,8 @@ namespace CombatStats
 
             if (windows.Count == 0)
             {
-                windows.Add(Math.Min(30, HistorySeconds));
-                windows.Add(HistorySeconds);
+                windows.Add(Math.Min(30, RunningHistorySeconds));
+                windows.Add(RunningHistorySeconds);
             }
 
             windows.Sort();

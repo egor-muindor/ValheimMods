@@ -77,6 +77,9 @@ namespace CombatStats.Net
 
         private const byte EstimatedFlag = 1;
 
+        /// <summary>Bytes an event takes before any of its damage values.</summary>
+        private const int EventHeaderSize = 12;
+
         public static byte[] Encode(long sender, float x, float y, float z, IReadOnlyList<WireEvent> events)
         {
             if (events == null)
@@ -164,6 +167,14 @@ namespace CombatStats.Net
                         return false;
                     }
 
+                    // Nothing is allocated for a count the rest of the packet could not hold.
+                    long remaining = stream.Length - stream.Position;
+                    if ((long)count * EventHeaderSize > remaining)
+                    {
+                        error = $"{count} events do not fit in the {remaining} bytes that follow";
+                        return false;
+                    }
+
                     var events = new List<WireEvent>(count);
                     for (int index = 0; index < count; index++)
                     {
@@ -171,6 +182,14 @@ namespace CombatStats.Net
                         byte channel = reader.ReadByte();
                         byte flags = reader.ReadByte();
                         ushort mask = reader.ReadUInt16();
+
+                        if (channel > (byte)CombatChannel.ObjectDamage)
+                        {
+                            // A meter this version does not have. Reading on would hand the
+                            // collector a channel it cannot index.
+                            error = $"unknown meter {channel} in the packet";
+                            return false;
+                        }
 
                         var byKind = new float[DamageKinds.Count];
                         for (int kind = 0; kind < DamageKinds.Count; kind++)
