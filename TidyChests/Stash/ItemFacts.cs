@@ -14,7 +14,9 @@ namespace TidyChests.Stash
             bool equipped,
             bool hotbar,
             bool modSlot,
-            bool questItem)
+            bool questItem,
+            int gridX = -1,
+            int gridY = -1)
         {
             PrefabName = prefabName ?? "";
             SharedName = sharedName ?? "";
@@ -24,6 +26,8 @@ namespace TidyChests.Stash
             Hotbar = hotbar;
             ModSlot = modSlot;
             QuestItem = questItem;
+            GridX = gridX;
+            GridY = gridY;
         }
 
         /// <summary>Prefab name, for example <c>Wood</c>. Empty when the item has no drop prefab.</summary>
@@ -47,6 +51,12 @@ namespace TidyChests.Stash
         public bool ModSlot { get; }
 
         public bool QuestItem { get; }
+
+        /// <summary>Column of the inventory slot the item sits in; -1 when unknown.</summary>
+        public int GridX { get; }
+
+        /// <summary>Row of the inventory slot the item sits in, 0 being the hotbar; -1 when unknown.</summary>
+        public int GridY { get; }
 
         /// <summary>Short human-readable name for logs.</summary>
         public string DisplayName => PrefabName.Length > 0 ? PrefabName : SharedName;

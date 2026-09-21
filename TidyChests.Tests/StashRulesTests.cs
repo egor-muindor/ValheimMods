@@ -15,9 +15,9 @@ namespace TidyChests.Tests
 
         private const string DefaultTypes = "Material, Consumable, Ammo, AmmoNonEquipable, Trophy, Misc, Fish";
 
-        private static StashRules Rules(string types = DefaultTypes, string blacklist = "", bool includeHotbar = false, List<string>? warnings = null)
+        private static StashRules Rules(string types = DefaultTypes, string blacklist = "", bool includeHotbar = false, List<string>? warnings = null, string lockedItems = "", string lockedSlots = "")
         {
-            var settings = new StashRuleSettings { ItemTypes = types, Blacklist = blacklist, IncludeHotbar = includeHotbar };
+            var settings = new StashRuleSettings { ItemTypes = types, Blacklist = blacklist, IncludeHotbar = includeHotbar, LockedItems = lockedItems, LockedSlots = lockedSlots };
             return StashRules.Parse(settings, KnownTypes, warnings == null ? null : warnings.Add);
         }
 
@@ -29,9 +29,43 @@ namespace TidyChests.Tests
             bool equipped = false,
             bool hotbar = false,
             bool modSlot = false,
-            bool quest = false)
+            bool quest = false,
+            int x = -1,
+            int y = -1)
         {
-            return new ItemFacts(prefab, shared, type, maxStack, equipped, hotbar, modSlot, quest);
+            return new ItemFacts(prefab, shared, type, maxStack, equipped, hotbar, modSlot, quest, x, y);
+        }
+
+        [Fact]
+        public void LockedItemStaysWhereverItSits()
+        {
+            StashRules rules = Rules(lockedItems: "$item_wood");
+            Assert.Equal(StashVerdict.LockedItem, rules.Judge(Item(x: 2, y: 3)));
+            Assert.Equal(StashVerdict.LockedItem, rules.Judge(Item()));
+            Assert.Equal(StashVerdict.Stash, rules.Judge(Item(prefab: "Coal", shared: "$item_coal", x: 2, y: 3)));
+        }
+
+        [Fact]
+        public void LockedSlotKeepsWhateverLiesInIt()
+        {
+            StashRules rules = Rules(lockedSlots: "2:3");
+            Assert.Equal(StashVerdict.LockedSlot, rules.Judge(Item(x: 2, y: 3)));
+            Assert.Equal(StashVerdict.LockedSlot, rules.Judge(Item(prefab: "Coal", shared: "$item_coal", x: 2, y: 3)));
+            Assert.Equal(StashVerdict.Stash, rules.Judge(Item(x: 3, y: 2)));
+            Assert.Equal(StashVerdict.Stash, rules.Judge(Item()));
+        }
+
+        [Fact]
+        public void SlotLockWinsOverItemLockInTheVerdict()
+        {
+            StashRules rules = Rules(lockedItems: "$item_wood", lockedSlots: "2:3");
+            Assert.Equal(StashVerdict.LockedSlot, rules.Judge(Item(x: 2, y: 3)));
+        }
+
+        [Fact]
+        public void DescribeCountsTheLocks()
+        {
+            Assert.Contains("1 locked items, 2 locked slots", Rules(lockedItems: "$item_wood", lockedSlots: "0:1, 1:1").Describe());
         }
 
         [Fact]
@@ -134,9 +168,9 @@ namespace TidyChests.Tests
         [Fact]
         public void DescribeListsTypesAndBlacklist()
         {
-            Assert.Equal("types: Consumable, Material; blacklist: Coal, Wood", Rules(types: "Material, Consumable", blacklist: "Wood, Coal").Describe());
-            Assert.Equal("types: Material; blacklist: item_coal", Rules(types: "Material", blacklist: "$item_coal").Describe());
-            Assert.Equal("types: none; blacklist: empty", Rules(types: "").Describe());
+            Assert.Equal("types: Consumable, Material; blacklist: Coal, Wood; 0 locked items, 0 locked slots", Rules(types: "Material, Consumable", blacklist: "Wood, Coal").Describe());
+            Assert.Equal("types: Material; blacklist: item_coal; 0 locked items, 0 locked slots", Rules(types: "Material", blacklist: "$item_coal").Describe());
+            Assert.Equal("types: none; blacklist: empty; 0 locked items, 0 locked slots", Rules(types: "").Describe());
         }
     }
 }

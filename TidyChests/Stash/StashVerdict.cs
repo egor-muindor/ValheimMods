@@ -11,5 +11,7 @@ namespace TidyChests.Stash
         Hotbar,
         TypeExcluded,
         Blacklisted,
+        LockedItem,
+        LockedSlot,
     }
 }

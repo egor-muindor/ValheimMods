@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0-beta.1 - 2026-09-21
+
+Beta, on GitHub only. Asked for in #1.
+
+- Locks: items and slots the Stash button must leave alone, set from the inventory. Point at an item and press **Shift+L** to lock or unlock it: a locked item is never stashed, wherever it lies and whatever else lies around it. Point at a slot and press **Shift+K** to lock the slot itself: whatever is put there stays. Both keys are configurable.
+- Hold **Shift** (configurable) with the inventory open to see the locks: a grey padlock in the corner of a locked item, a red one on a locked slot. Pointing at a slot while holding it shows a tooltip with the state of both locks and the keys.
+- The locks are saved in `[Locks] LockedItems` and `[Locks] LockedSlots` as they are pressed, so they survive a restart and can be edited by hand. A slot is `column:row` counted from 0, the hotbar being row 0.
+- `tidychests status` and the debug log report the locks; a kept item is logged as `LockedItem` or `LockedSlot`.
+
 ## 1.2.2 - 2026-09-21
 
 - On Linux the cursor stayed pinned to the centre of the screen while the chest list was open: vanilla re-locked the mouse every frame and the mod undid it after the warp had already happened, which Windows hides by deferring the warp and Linux does not. Vanilla's mouse capture is now skipped while the list is open, so the cursor is released once and stays free. Reported and fixed by @Chulii.

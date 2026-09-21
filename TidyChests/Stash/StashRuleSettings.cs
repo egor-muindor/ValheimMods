@@ -10,5 +10,11 @@ namespace TidyChests.Stash
 
         /// <summary>Comma-separated prefab or item names that are never stashed.</summary>
         public string Blacklist { get; set; } = "";
+
+        /// <summary>Comma-separated item names locked in the inventory with the lock key.</summary>
+        public string LockedItems { get; set; } = "";
+
+        /// <summary>Comma-separated <c>x:y</c> inventory slots locked with the lock key.</summary>
+        public string LockedSlots { get; set; } = "";
     }
 }
