@@ -16,11 +16,14 @@ namespace TidyChests.Stash
 
         private readonly HashSet<string> _blacklist;
 
-        private StashRules(bool includeHotbar, HashSet<string> types, HashSet<string> blacklist)
+        private readonly StashLocks _locks;
+
+        private StashRules(bool includeHotbar, HashSet<string> types, HashSet<string> blacklist, StashLocks locks)
         {
             _includeHotbar = includeHotbar;
             _types = types;
             _blacklist = blacklist;
+            _locks = locks;
         }
 
         /// <summary>Item types that may be stashed, sorted, as configured (unknown names dropped).</summary>
@@ -55,7 +58,7 @@ namespace TidyChests.Stash
                 blacklist.Add(Normalize(entry));
             }
 
-            return new StashRules(settings.IncludeHotbar, types, blacklist);
+            return new StashRules(settings.IncludeHotbar, types, blacklist, StashLocks.Parse(settings.LockedItems, settings.LockedSlots));
         }
 
         /// <summary>The first reason that keeps the item in the inventory, or <see cref="StashVerdict.Stash"/>.</summary>
@@ -96,6 +99,16 @@ namespace TidyChests.Stash
                 return StashVerdict.Blacklisted;
             }
 
+            if (_locks.IsSlotLocked(facts.GridX, facts.GridY))
+            {
+                return StashVerdict.LockedSlot;
+            }
+
+            if (_locks.IsItemLocked(facts.SharedName))
+            {
+                return StashVerdict.LockedItem;
+            }
+
             return StashVerdict.Stash;
         }
 
@@ -104,7 +117,7 @@ namespace TidyChests.Stash
         {
             string types = _types.Count == 0 ? "none" : string.Join(", ", ItemTypes);
             string blacklist = _blacklist.Count == 0 ? "empty" : string.Join(", ", Blacklist);
-            return $"types: {types}; blacklist: {blacklist}";
+            return $"types: {types}; blacklist: {blacklist}; {_locks.Describe()}";
         }
 
         private bool IsBlacklisted(string name)

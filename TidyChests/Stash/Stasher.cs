@@ -279,7 +279,9 @@ namespace TidyChests.Stash
                 equipped: item.m_equipped || player.IsItemEquiped(item),
                 hotbar: item.m_gridPos.y == 0,
                 modSlot: inModSlot != null && inModSlot(item),
-                questItem: shared.m_questItem);
+                questItem: shared.m_questItem,
+                gridX: item.m_gridPos.x,
+                gridY: item.m_gridPos.y);
         }
 
         private static string Report(Player player, ModConfig settings, string message, string summary)

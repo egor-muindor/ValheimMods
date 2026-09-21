@@ -49,6 +49,17 @@ namespace TidyChests
             ShowMessage = config.Bind("Stash", "ShowMessage", true,
                 "Show a message with the result after stashing.");
 
+            RevealKey = config.Bind("Locks", "RevealKey", KeyCode.LeftShift,
+                "Hold this key with the inventory open to see the locks: a grey padlock on a locked item, a red one on a locked slot. Pointing at a slot while holding it shows the lock keys.");
+            LockItemKey = config.Bind("Locks", "LockItemKey", new KeyboardShortcut(KeyCode.L, KeyCode.LeftShift),
+                "With the inventory open, point at an item and press this to lock or unlock it: a locked item is never stashed, wherever it lies. Modifiers are allowed.");
+            LockSlotKey = config.Bind("Locks", "LockSlotKey", new KeyboardShortcut(KeyCode.K, KeyCode.LeftShift),
+                "With the inventory open, point at a slot and press this to lock or unlock it: whatever lies in a locked slot is never stashed. Modifiers are allowed.");
+            LockedItems = config.Bind("Locks", "LockedItems", "",
+                "Items locked with the lock key, comma-separated, saved here as you press it. The names are the game's own item names: $item_wood, $item_coal");
+            LockedSlots = config.Bind("Locks", "LockedSlots", "",
+                "Inventory slots locked with the lock key, comma-separated as column:row counted from 0, the top row (the hotbar) being row 0: 0:1, 7:3. Saved here as you press the key.");
+
             FindKey = config.Bind("Find", "FindKey", new KeyboardShortcut(KeyCode.T),
                 "With the inventory open, point at an item (in the inventory, or an ingredient or recipe in the crafting panel) and press this key: the inventory closes and every chest in range that holds the item is highlighted. Modifiers are allowed, e.g. \"T + LeftControl\".");
             HighlightDuration = config.Bind("Find", "HighlightDuration", 8f,
@@ -110,6 +121,16 @@ namespace TidyChests
 
         public ConfigEntry<bool> ShowMessage { get; }
 
+        public ConfigEntry<KeyCode> RevealKey { get; }
+
+        public ConfigEntry<KeyboardShortcut> LockItemKey { get; }
+
+        public ConfigEntry<KeyboardShortcut> LockSlotKey { get; }
+
+        public ConfigEntry<string> LockedItems { get; }
+
+        public ConfigEntry<string> LockedSlots { get; }
+
         public ConfigEntry<KeyboardShortcut> FindKey { get; }
 
         public ConfigEntry<float> HighlightDuration { get; }
@@ -156,9 +177,24 @@ namespace TidyChests
                 IncludeHotbar = IncludeHotbar.Value,
                 ItemTypes = ItemTypes.Value,
                 Blacklist = Blacklist.Value,
+                LockedItems = LockedItems.Value,
+                LockedSlots = LockedSlots.Value,
             };
 
             return StashRules.Parse(settings, ItemTypeNames, warning => Plugin.Log.LogWarning(warning));
+        }
+
+        /// <summary>The current locks. Call <see cref="SaveLocks"/> after changing them.</summary>
+        public StashLocks BuildLocks()
+        {
+            return StashLocks.Parse(LockedItems.Value, LockedSlots.Value);
+        }
+
+        /// <summary>Writes the locks back into the config file.</summary>
+        public void SaveLocks(StashLocks locks)
+        {
+            LockedItems.Value = locks.FormatItems();
+            LockedSlots.Value = locks.FormatSlots();
         }
 
         /// <summary>Snapshot of the highlight options for one search.</summary>
@@ -173,7 +209,7 @@ namespace TidyChests
             CultureInfo culture = CultureInfo.InvariantCulture;
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, " +
-                   $"find key {FindKey.Value}, highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
+                   $"find key {FindKey.Value}, lock keys {LockItemKey.Value} / {LockSlotKey.Value} (shown while {RevealKey.Value} is held), highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
                    $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
                    $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, " +

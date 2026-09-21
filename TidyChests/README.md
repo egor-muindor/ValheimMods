@@ -27,7 +27,15 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **What stays**: equipped items; tools, weapons, armour and other equipment;
   quest items; the hotbar (optional); quick, equipment, food, ammo and misc
   slots of Extra Slots, every slot of EquipmentAndQuickSlots, the quiver rows of
-  Better Archery; anything in the blacklist; item types not in the allowed list.
+  Better Archery; anything in the blacklist; locked items and slots; item types
+  not in the allowed list.
+- **Locks**: point at an item and press `Shift+L` to lock it, and the Stash
+  button leaves that item alone wherever it lies. Point at a slot and press
+  `Shift+K` to lock the slot itself, so whatever is put there stays. Hold
+  `Shift` with the inventory open to see the locks, a grey padlock on a locked
+  item and a red one on a locked slot, and a tooltip on the slot under the
+  pointer with the keys. Pressing again unlocks. The keys and the locks
+  themselves are in the config, so they survive a restart and can be edited.
 - **Find key** (`T` by default): with the inventory open, point at an item and
   press the key. Every chest in range that holds the item gets a pulsing light,
   an emissive tint and a screen marker with the count and the distance, for
@@ -113,6 +121,16 @@ This never makes the mod required on either side:
 | `ItemTypes` | `Material, Consumable, Ammo, AmmoNonEquipable, Trophy, Misc, Fish` | Item types that may be stashed. Remove `Ammo` to keep arrows, add `Torch` to stash torches, and so on. Valid names are listed in the config file. |
 | `Blacklist` | empty | Items that are never stashed, comma-separated prefab names or item names: `Wood, $item_coal, Resin`. |
 | `ShowMessage` | `true` | Show a message with the result after stashing. |
+
+### Locks
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `RevealKey` | `LeftShift` | Hold this key with the inventory open to see the locks and, on the slot under the pointer, a tooltip with the lock keys. `None` never shows them. |
+| `LockItemKey` | `L + LeftShift` | With the inventory open, point at an item and press this to lock or unlock it. A locked item is never stashed, wherever it lies. Modifiers are allowed. |
+| `LockSlotKey` | `K + LeftShift` | With the inventory open, point at a slot and press this to lock or unlock it. Whatever lies in a locked slot is never stashed. Modifiers are allowed. |
+| `LockedItems` | empty | The locked items, comma-separated game item names (`$item_wood, $item_coal`). Written as you press the key; editable by hand. |
+| `LockedSlots` | empty | The locked slots, comma-separated `column:row` counted from 0, the hotbar being row 0 (`0:1, 7:3`). Written as you press the key; editable by hand. |
 
 ### Find
 

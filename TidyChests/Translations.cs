@@ -26,6 +26,22 @@ namespace TidyChests
 
         public const string Hover = "tidychests_hover";
 
+        public const string LockTopic = "tidychests_lock_topic";
+
+        public const string LockHint = "tidychests_lock_hint";
+
+        public const string LockStateOn = "tidychests_lock_on";
+
+        public const string LockStateOff = "tidychests_lock_off";
+
+        public const string ItemLocked = "tidychests_item_locked";
+
+        public const string ItemUnlocked = "tidychests_item_unlocked";
+
+        public const string SlotLocked = "tidychests_slot_locked";
+
+        public const string SlotUnlocked = "tidychests_slot_unlocked";
+
         public const string BrowserTitle = "tidychests_browser_title";
 
         public const string BrowserSearch = "tidychests_browser_search";
@@ -63,6 +79,14 @@ namespace TidyChests
                 [Found] = "{0}: found in {1} chests",
                 [NotFound] = "{0}: not in any chest within {1} m",
                 [Hover] = "Point at an item in the inventory or the crafting panel and press {0} to find it in nearby chests",
+                [LockTopic] = "Stash locks",
+                [LockHint] = "Item: {0} [{1}]\nSlot: {2} [{3}]",
+                [LockStateOn] = "locked",
+                [LockStateOff] = "not locked",
+                [ItemLocked] = "{0}: locked, the Stash button leaves it",
+                [ItemUnlocked] = "{0}: unlocked",
+                [SlotLocked] = "Slot locked: whatever lies here stays",
+                [SlotUnlocked] = "Slot unlocked",
                 [BrowserTitle] = "Chests nearby",
                 [BrowserSearch] = "Search by name",
                 [BrowserChests] = "chests: {0} · {1} m",
@@ -87,6 +111,14 @@ namespace TidyChests
                 [Found] = "{0}: есть в сундуках ({1})",
                 [NotFound] = "{0}: нет ни в одном сундуке в радиусе {1} м",
                 [Hover] = "Наведите курсор на предмет в инвентаре или в крафте и нажмите {0}, чтобы найти его в сундуках",
+                [LockTopic] = "Замки",
+                [LockHint] = "Предмет: {0} [{1}]\nЯчейка: {2} [{3}]",
+                [LockStateOn] = "под замком",
+                [LockStateOff] = "без замка",
+                [ItemLocked] = "{0}: заперт, кнопка «Убрать» его не тронет",
+                [ItemUnlocked] = "{0}: отперт",
+                [SlotLocked] = "Ячейка заперта: всё, что в ней лежит, остаётся",
+                [SlotUnlocked] = "Ячейка отперта",
                 [BrowserTitle] = "Сундуки рядом",
                 [BrowserSearch] = "Поиск по названию",
                 [BrowserChests] = "сундуков: {0} · {1} м",
