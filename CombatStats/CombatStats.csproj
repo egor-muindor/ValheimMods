@@ -5,7 +5,7 @@
     <AssemblyName>CombatStats</AssemblyName>
     <RootNamespace>CombatStats</RootNamespace>
     <Product>Combat Stats</Product>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>A combat meter: who dealt how much damage and of which damage type, over the last 30 seconds, 5, 10 or 30 minutes. A compact window that shows itself when a fight starts, and a detail window with the breakdown.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -34,6 +34,7 @@
   -->
   <ItemGroup>
     <Compile Include="$(RepoRoot)Shared/ServerConfig/*.cs" LinkBase="ServerConfig" />
+    <Compile Include="$(RepoRoot)Shared/Windows/*.cs" LinkBase="Windows" />
   </ItemGroup>
 
   <!--

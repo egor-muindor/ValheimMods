@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2 - 2026-09-21
+
+- On Linux the cursor stayed pinned to the centre of the screen while the chest list was open: vanilla re-locked the mouse every frame and the mod undid it after the warp had already happened, which Windows hides by deferring the warp and Linux does not. Vanilla's mouse capture is now skipped while the list is open, so the cursor is released once and stays free. Reported and fixed by @Chulii.
+
 ## 1.2.1 - 2026-09-16
 
 - The chest list has a header: click **Name** or **Count** to sort by that column, click the active one again to flip it. The list starts with the largest stacks at the top, and the choice is saved in `[Browser] Sort`.

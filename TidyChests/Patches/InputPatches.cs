@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Muindor.Windows;
 using TidyChests.Ui;
 using UnityEngine;
 
@@ -63,26 +64,25 @@ namespace TidyChests.Patches
 
     /// <summary>
     /// Keeps the mouse pointer free while the chest list is open. A postfix cannot do this:
-    /// vanilla's capture branch runs whenever no vanilla screen is open, and the chest list
-    /// deliberately closes the inventory, so vanilla would lock the cursor (which warps it to
-    /// the centre) every frame and this patch would have to undo it after. On Windows the
-    /// Unity backend defers the warp so the undo wins; on Linux the warp hits the hardware
-    /// pointer immediately and the cursor ends up visibly pinned to the centre of the screen.
-    /// Skipping vanilla instead keeps the lock state stable at None while the list is open.
+    /// vanilla's capture branch runs whenever no vanilla screen is open and locks the cursor,
+    /// which warps it to the centre; on Linux the warp reaches the hardware pointer at once, so
+    /// undoing it after the fact pins the cursor to the centre of the screen. The rule lives in
+    /// <see cref="CursorRelease"/>: vanilla is skipped while a window is open, and the lock state
+    /// is written only when it differs, so the release happens once and not every frame.
     /// </summary>
     [HarmonyPatch(typeof(GameCamera), nameof(GameCamera.UpdateMouseCapture))]
     internal static class GameCamera_UpdateMouseCapture_Patch
     {
         private static bool Prefix()
         {
-            if (!ChestBrowser.IsPanelOpen)
+            bool cursorFree = Cursor.lockState == CursorLockMode.None;
+            switch (CursorRelease.Decide(ChestBrowser.IsPanelOpen, cursorFree))
             {
-                return true;
-            }
-
-            if (Cursor.lockState != CursorLockMode.None)
-            {
-                ZCursor.LockState = CursorLockMode.None;
+                case CursorRelease.Step.RunVanilla:
+                    return true;
+                case CursorRelease.Step.Release:
+                    ZCursor.LockState = CursorLockMode.None;
+                    break;
             }
 
             ZCursor.Show();

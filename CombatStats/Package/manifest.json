@@ -1,6 +1,6 @@
 {
   "name": "CombatStats",
-  "version_number": "1.0.2",
+  "version_number": "1.0.3",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
   "description": "A combat meter: who dealt how much damage and of which kind, over the last 30 s, 5, 10 or 30 min. Compact window under the minimap, detail window with the breakdown. Client-side; a server can optionally enforce its config. Valheim 1.0.",
   "dependencies": [
