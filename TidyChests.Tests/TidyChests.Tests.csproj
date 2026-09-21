@@ -26,6 +26,7 @@
     <Compile Include="../TidyChests/Index/BrowserSort.cs" Link="Index/BrowserSort.cs" />
     <Compile Include="../TidyChests/Index/FavoriteList.cs" Link="Index/FavoriteList.cs" />
     <Compile Include="../TidyChests/Knowledge/KnowledgePlan.cs" Link="Knowledge/KnowledgePlan.cs" />
+    <Compile Include="../Shared/Windows/CursorRelease.cs" Link="Windows/CursorRelease.cs" />
   </ItemGroup>
 
   <ItemGroup>

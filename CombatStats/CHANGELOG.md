@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - 2026-09-21
+
+- On Linux the cursor stayed pinned to the centre of the screen while the detail window or the settings were open, for the reason found in TidyChests by @Chulii: vanilla re-locked the mouse every frame and the mod undid it after the warp had already happened. Vanilla's mouse capture is now skipped while a window is open, so the cursor is released once and stays free.
+
 ## 1.0.2
 
 Everything here came out of a review of the first release; nothing changes what the meter shows

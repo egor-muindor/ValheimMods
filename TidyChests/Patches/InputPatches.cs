@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Muindor.Windows;
 using TidyChests.Ui;
 using UnityEngine;
 
@@ -61,19 +62,31 @@ namespace TidyChests.Patches
         }
     }
 
-    /// <summary>Keeps the mouse pointer on screen while the chest list is open.</summary>
+    /// <summary>
+    /// Keeps the mouse pointer free while the chest list is open. A postfix cannot do this:
+    /// vanilla's capture branch runs whenever no vanilla screen is open and locks the cursor,
+    /// which warps it to the centre; on Linux the warp reaches the hardware pointer at once, so
+    /// undoing it after the fact pins the cursor to the centre of the screen. The rule lives in
+    /// <see cref="CursorRelease"/>: vanilla is skipped while a window is open, and the lock state
+    /// is written only when it differs, so the release happens once and not every frame.
+    /// </summary>
     [HarmonyPatch(typeof(GameCamera), nameof(GameCamera.UpdateMouseCapture))]
     internal static class GameCamera_UpdateMouseCapture_Patch
     {
-        private static void Postfix()
+        private static bool Prefix()
         {
-            if (!ChestBrowser.IsPanelOpen)
+            bool cursorFree = Cursor.lockState == CursorLockMode.None;
+            switch (CursorRelease.Decide(ChestBrowser.IsPanelOpen, cursorFree))
             {
-                return;
+                case CursorRelease.Step.RunVanilla:
+                    return true;
+                case CursorRelease.Step.Release:
+                    ZCursor.LockState = CursorLockMode.None;
+                    break;
             }
 
-            ZCursor.LockState = CursorLockMode.None;
             ZCursor.Show();
+            return false;
         }
     }
 
