@@ -47,7 +47,8 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **Chest list** (`Ctrl+O` by default): every item in the chests within the scan
   radius, one row per kind, with the total, how many chests hold it and how far
   the nearest one is. Type to filter by name; click a row to close the list and
-  light up every chest holding that item. Escape or the same key closes it. While
+  light up every chest holding that item, or press Enter to pick the first row.
+  Escape or the same key closes it. While
   it is open the character stands still and the wheel scrolls the list rather
   than zooming the camera. The header sorts by name or by count, and the diamond
   on the left of a row pins the item to the top of the list - where it stays,
@@ -230,7 +231,7 @@ ownership of a chest; only the Stash button writes.
 | Stash button | `InventoryGui.Show` postfix clones the "take all" button into the player panel |
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
 | Console command | `Terminal.InitTerminal` postfix |
-| Chest list input | `Player.TakeInput` and `PlayerController.TakeInput` postfixes stop interacting, walking and the mouse look, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `ZInput.GetMouseScrollWheel` postfix hands the wheel to the list instead of the camera zoom, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
+| Chest list input | `Player.TakeInput` and `PlayerController.TakeInput` postfixes stop interacting, walking and the mouse look, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `ZInput.GetMouseScrollWheel` postfix hands the wheel to the list instead of the camera zoom, `ZInput.GetButtonDown` prefix keeps the map key in the search box and Enter away from the chat, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
 
 Items are learned through the game's own `Player.AddKnownItem`, a couple per
 frame, so trophies, the unlock messages and the recipe list stay vanilla's

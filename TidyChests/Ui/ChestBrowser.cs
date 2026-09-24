@@ -320,7 +320,10 @@ namespace TidyChests.Ui
             _search.selectionAnchorPosition = _search.text.Length;
         }
 
-        /// <summary>Selects the first visible row when Enter is pressed.</summary>
+        /// <summary>
+        /// Selects the first visible row a chest still holds when Enter is pressed. A pinned row
+        /// that ran out is skipped: it can sit on top of the list with nothing to find.
+        /// </summary>
         private bool HandleEnter()
         {
             if (!ZInput.GetKeyDown(KeyCode.Return, logWarning: false)
@@ -330,9 +333,13 @@ namespace TidyChests.Ui
             }
 
             _enterHandledFrame = Time.frameCount;
-            if (_visible.Count > 0)
+            for (int i = 0; i < _visible.Count && i < _rows.Count; i++)
             {
-                OnRowClicked(_rows[0]);
+                if (_visible[i].Count > 0)
+                {
+                    OnRowClicked(_rows[i]);
+                    break;
+                }
             }
 
             return true;
