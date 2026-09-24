@@ -91,16 +91,19 @@ namespace TidyChests.Patches
     }
 
     /// <summary>
-    /// The map action remains active while the chest list's copied input field receives text.
-    /// Its hotkey is a valid query character, so hide only that action while the field is focused:
-    /// the query keeps the character and the map cannot close the panel underneath it.
+    /// The map key belongs to a focused search field. Enter belongs to the browser while it is
+    /// open and for the rest of the frame in which it closes, so chat cannot claim the same key.
     /// </summary>
     [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetButtonDown), typeof(string))]
     internal static class ZInput_GetButtonDown_Patch
     {
+        private const string ChatAction = "Chat";
+
         private static bool Prefix(string name, ref bool __result)
         {
-            if (!BrowserInput.ShouldBlockAction(name, ChestBrowser.IsSearchFocused))
+            bool blocksAction = BrowserInput.ShouldBlockAction(name, ChestBrowser.IsSearchFocused)
+                                || (name == ChatAction && ChestBrowser.OwnsChatAction);
+            if (!blocksAction)
             {
                 return true;
             }

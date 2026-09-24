@@ -72,6 +72,9 @@ namespace TidyChests.Ui
 
         private static ChestBrowser? _instance;
 
+        /// <summary>Frame in which the browser last handled Enter.</summary>
+        private static int _enterHandledFrame = -1;
+
         private readonly List<ItemTotal> _totals = new List<ItemTotal>();
 
         private readonly List<ItemTotal> _visible = new List<ItemTotal>();
@@ -129,6 +132,9 @@ namespace TidyChests.Ui
 
         /// <summary>True while the player is typing in the search box.</summary>
         public static bool IsSearchFocused => _instance != null && _instance._search != null && _instance._search.isFocused;
+
+        /// <summary>True while the browser owns Enter, including the frame in which it closes.</summary>
+        public static bool OwnsChatAction => IsPanelOpen || _enterHandledFrame == Time.frameCount;
 
         /// <summary>
         /// Hands the panel the mouse wheel the input patch took away from the camera zoom.
@@ -274,6 +280,11 @@ namespace TidyChests.Ui
                         _nextRefresh = Time.time + RefreshInterval;
                         Refresh();
                     }
+
+                    if (HandleEnter())
+                    {
+                        return;
+                    }
                 }
 
                 KeyboardShortcut key = Plugin.Settings.BrowserKey.Value;
@@ -307,6 +318,24 @@ namespace TidyChests.Ui
             _search.ActivateInputField();
             _search.caretPosition = _search.text.Length;
             _search.selectionAnchorPosition = _search.text.Length;
+        }
+
+        /// <summary>Selects the first visible row when Enter is pressed.</summary>
+        private bool HandleEnter()
+        {
+            if (!ZInput.GetKeyDown(KeyCode.Return, logWarning: false)
+                && !ZInput.GetKeyDown(KeyCode.KeypadEnter, logWarning: false))
+            {
+                return false;
+            }
+
+            _enterHandledFrame = Time.frameCount;
+            if (_visible.Count > 0)
+            {
+                OnRowClicked(_rows[0]);
+            }
+
+            return true;
         }
 
         /// <summary>
