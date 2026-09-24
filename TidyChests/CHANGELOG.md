@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The map hotkey no longer opens the map and clears a focused chest-list search. Its key character is now kept in the query.
+
 ## 1.3.0 - 2026-09-21
 
 Asked for in #1. Tested as 1.3.0-beta.1.

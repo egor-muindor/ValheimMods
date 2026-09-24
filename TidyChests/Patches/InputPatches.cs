@@ -91,6 +91,26 @@ namespace TidyChests.Patches
     }
 
     /// <summary>
+    /// The map action remains active while the chest list's copied input field receives text.
+    /// Its hotkey is a valid query character, so hide only that action while the field is focused:
+    /// the query keeps the character and the map cannot close the panel underneath it.
+    /// </summary>
+    [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetButtonDown), typeof(string))]
+    internal static class ZInput_GetButtonDown_Patch
+    {
+        private static bool Prefix(string name, ref bool __result)
+        {
+            if (!BrowserInput.ShouldBlockAction(name, ChestBrowser.IsSearchFocused))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Escape closes the chest list instead of opening the game menu behind it. Handled here
     /// rather than in the panel's own Update because the order of the two Update calls is not
     /// fixed: whichever runs first, the menu only ever sees the key when the list is closed.
