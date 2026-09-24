@@ -3,6 +3,7 @@
 ## Unreleased
 
 - The map hotkey no longer opens the map and clears a focused chest-list search. Its key character is now kept in the query.
+- Pressing **Enter** in a chest-list search now closes the list and highlights the chests that hold the first matching item instead of opening chat.
 
 ## 1.3.0 - 2026-09-21
 
