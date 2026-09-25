@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0-beta.1 - 2026-09-25
+
+Beta, on GitHub only. Asked for in #3.
+
+- A **Sort** button on the chest panel sorts the open chest, only when pressed. Stacks of the same item are merged, and the items are laid out by `[Sort] SortOrder` (`Id` by default, or `Name`, or `Type`) and `[Sort] SortLayout`: every item starting a new column (`Columns`, the default), a new row (`Rows`), or all packed without gaps (`Sequential`). Presses closer than 0.2 s apart are ignored.
+- Works with MultiUserChest. When another player owns the open chest, the sort goes to that player's game as MultiUserChest's own move requests. A request that no longer fits because they moved something at the same time is refused, so nothing is lost or duplicated. When you own the chest it is rewritten in one go and saved once.
+- `[Sort] ShowSortButton` hides the button, `[Sort] SortButtonOffset` moves it, and `tidychests sort` sorts from the console.
+
 ## 1.3.1 - 2026-09-24
 
 Contributed by @Chulii in #4 and #5.

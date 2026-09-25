@@ -8,8 +8,8 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Muindor"
 name = "TidyChests"
-versionNumber = "1.3.1"
-description = "Quick stack into nearby chests, a hotkey to find where an item is stored, Ctrl+O to search everything in the chests around you, and recipes that unlock from your team mates' materials. Client-side; a server can optionally enforce its config."
+versionNumber = "1.4.0-beta.1"
+description = "Quick stack into nearby chests, a Sort button for the open chest (works with MultiUserChest), a hotkey to find where an item is stored, Ctrl+O to search the chests around you, and recipes unlocked by your team mates' materials. Client-side."
 websiteUrl = "https://github.com/egor-muindor/ValheimMods"
 containsNsfwContent = false
 

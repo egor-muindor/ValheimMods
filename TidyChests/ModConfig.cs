@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using Muindor.ServerConfig;
 using TidyChests.Find;
 using TidyChests.Index;
+using TidyChests.Sort;
 using TidyChests.Stash;
 using UnityEngine;
 
@@ -81,6 +82,18 @@ namespace TidyChests
             ButtonSize = config.Bind("Button", "ButtonSize", new Vector2(120f, 38f),
                 "Width and height of the Stash button in UI pixels.");
 
+            ShowSortButton = config.Bind("Sort", "ShowSortButton", true,
+                "Show the Sort button on the chest panel. It sorts the open chest only, and only when pressed. The console command 'tidychests sort' works without it.");
+            SortOrder = config.Bind("Sort", "SortOrder", ChestSortOrder.Id,
+                "Order of the items in a sorted chest. Id: by the item's prefab name (Coal, Stone, Wood), the same in every language. " +
+                "Name: by the name shown in the current language. Type: weapons, shields, tools, armour, ammo, food, materials, trophies, then the rest, each group by Id. " +
+                "The better quality and the higher world level come first within the same item.");
+            SortLayout = config.Bind("Sort", "SortLayout", ChestSortLayout.Columns,
+                "How a sorted chest is laid out. Columns: every item starts a new column, filled top to bottom. Rows: every item starts a new row, filled left to right. " +
+                "Sequential: everything packed left to right with no gaps. When there are more items than columns (or rows), the rest is packed without gaps.");
+            SortButtonOffset = config.Bind("Sort", "SortButtonOffset", Vector2.zero,
+                "Shift of the Sort button from its own place, next to the chest panel's \"stack all\" button, in UI pixels (x right, y up).");
+
             ScanRadius = Sync.Bind("Scan", "ScanRadius", 50f,
                 new ConfigDescription("Chests within this many metres are read by the chest list and by the knowledge scan. Reading costs nothing on the network: the game already keeps the contents of every loaded chest on your client. Above roughly 90 m the chests are no longer loaded, so nothing more is found.",
                     new AcceptableValueRange<float>(5f, 90f)));
@@ -149,6 +162,14 @@ namespace TidyChests
 
         public ConfigEntry<Vector2> ButtonSize { get; }
 
+        public ConfigEntry<bool> ShowSortButton { get; }
+
+        public ConfigEntry<ChestSortOrder> SortOrder { get; }
+
+        public ConfigEntry<ChestSortLayout> SortLayout { get; }
+
+        public ConfigEntry<Vector2> SortButtonOffset { get; }
+
         public SyncedEntry<float> ScanRadius { get; }
 
         public SyncedEntry<float> ScanInterval { get; }
@@ -211,6 +232,7 @@ namespace TidyChests
                    $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, " +
                    $"find key {FindKey.Value}, lock keys {LockItemKey.Value} / {LockSlotKey.Value} (shown while {RevealKey.Value} is held), highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
+                   $"sort button {(ShowSortButton.Value ? "shown" : "hidden")} ({SortOrder.Value}, {SortLayout.Value}), " +
                    $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
                    $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, " +
                    $"list sorted by {Sort.Value}, {FavoriteList.Parse(Favorites.Value).Count} pinned, {Sync.Describe()}";

@@ -76,41 +76,7 @@ namespace TidyChests.Ui
                 return;
             }
 
-            // The gamepad hotkey of the template must not be copied; it is disabled while cloning.
-            UIGamePad gamepad = template.GetComponent<UIGamePad>();
-            bool gamepadEnabled = gamepad != null && gamepad.enabled;
-            if (gamepad != null)
-            {
-                gamepad.enabled = false;
-            }
-
-            Button button;
-            try
-            {
-                button = UnityEngine.Object.Instantiate(template, panel);
-            }
-            finally
-            {
-                if (gamepad != null)
-                {
-                    gamepad.enabled = gamepadEnabled;
-                }
-            }
-
-            button.name = ButtonName;
-            UIGamePad copiedGamepad = button.GetComponent<UIGamePad>();
-            if (copiedGamepad != null)
-            {
-                if (copiedGamepad.m_hint != null)
-                {
-                    copiedGamepad.m_hint.SetActive(false);
-                }
-
-                UnityEngine.Object.Destroy(copiedGamepad);
-            }
-
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(OnClick);
+            Button button = ButtonClone.Create(template, panel, ButtonName, OnClick, out _label);
 
             var rect = (RectTransform)button.transform;
             Vector2 size = Plugin.Settings.ButtonSize.Value;
@@ -132,14 +98,6 @@ namespace TidyChests.Ui
                 Plugin.Debug("Weight display not found in the inventory panel; the Stash button is anchored to the top-right corner");
             }
 
-            _label = button.GetComponentInChildren<TMP_Text>(true);
-            if (_label != null)
-            {
-                _label.enableAutoSizing = true;
-                _label.fontSizeMax = _label.fontSize;
-                _label.fontSizeMin = Mathf.Min(10f, _label.fontSize);
-            }
-
             _button = button;
             RefreshLabel();
             Plugin.Debug($"Stash button created at {button.transform.localPosition} ({rect.rect.width}x{rect.rect.height})");
@@ -158,13 +116,14 @@ namespace TidyChests.Ui
         }
     }
 
-    /// <summary>Adds the button whenever the inventory opens; the game builds a new GUI per world.</summary>
+    /// <summary>Adds the buttons whenever the inventory opens; the game builds a new GUI per world.</summary>
     [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Show))]
     internal static class InventoryGui_Show_Patch
     {
         private static void Postfix(InventoryGui __instance)
         {
             StashButton.Ensure(__instance);
+            SortButton.Ensure(__instance);
         }
     }
 }

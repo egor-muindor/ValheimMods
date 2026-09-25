@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <!--
-    The stash rules, the planner, the screen marker math, the chest search and the knowledge
+    The stash rules, the planners, the screen marker math, the chest search and the knowledge
     plan have no game or Unity dependency, so their sources are compiled straight into this
     project. That keeps the tests runnable on any machine without the game assemblies or a
     .NET Framework runtime.
@@ -21,6 +21,9 @@
     <Compile Include="../TidyChests/Stash/StashLocks.cs" Link="Stash/StashLocks.cs" />
     <Compile Include="../TidyChests/Stash/StashModels.cs" Link="Stash/StashModels.cs" />
     <Compile Include="../TidyChests/Stash/StashPlanner.cs" Link="Stash/StashPlanner.cs" />
+    <Compile Include="../TidyChests/Sort/SortModels.cs" Link="Sort/SortModels.cs" />
+    <Compile Include="../TidyChests/Sort/SortKeys.cs" Link="Sort/SortKeys.cs" />
+    <Compile Include="../TidyChests/Sort/SortPlanner.cs" Link="Sort/SortPlanner.cs" />
     <Compile Include="../TidyChests/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
     <Compile Include="../TidyChests/Index/IndexModels.cs" Link="Index/IndexModels.cs" />
     <Compile Include="../TidyChests/Index/ItemSearch.cs" Link="Index/ItemSearch.cs" />

@@ -1,4 +1,5 @@
 using HarmonyLib;
+using TidyChests.Sort;
 using TidyChests.Stash;
 
 namespace TidyChests.Patches
@@ -13,7 +14,7 @@ namespace TidyChests.Patches
         {
             new Terminal.ConsoleCommand(
                 Command,
-                $"{Command} [stash|scan|reload|status] - stash items into nearby chests, scan them for items you do not know yet, reload the {MyPluginInfo.PLUGIN_NAME} config or show the active settings",
+                $"{Command} [stash|sort|scan|reload|status] - stash items into nearby chests, sort the open chest, scan them for items you do not know yet, reload the {MyPluginInfo.PLUGIN_NAME} config or show the active settings",
                 Execute);
         }
 
@@ -32,6 +33,10 @@ namespace TidyChests.Patches
                     }
 
                     terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {Stasher.Stash(Player.m_localPlayer)}");
+                    break;
+
+                case "sort":
+                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {ChestSorter.SortOpenChest()}");
                     break;
 
                 case "scan":
@@ -59,7 +64,7 @@ namespace TidyChests.Patches
                     break;
 
                 default:
-                    terminal.AddString($"Usage: {Command} [stash|scan|reload|status]");
+                    terminal.AddString($"Usage: {Command} [stash|sort|scan|reload|status]");
                     break;
             }
         }

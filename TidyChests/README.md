@@ -9,7 +9,10 @@ and press **T**: the inventory closes and every chest in range that holds it
 lights up, with an arrow and the count on screen. **Ctrl+O** lists everything the
 chests around you hold, with a search box. And in co-op, the materials your team
 mates drop in those chests unlock their recipes for you, without hunting down
-every new stack to touch it.
+every new stack to touch it. A **Sort** button on the chest panel tidies the open
+chest, and it works with
+[MultiUserChest](https://thunderstore.io/c/valheim/p/MSchmoecker/MultiUserChest/),
+even while another player has the same chest open.
 
 Client-side: install it on every player's game that should use it. Nothing is
 needed on the server, and players without the mod can play on the same server.
@@ -36,6 +39,19 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   item and a red one on a locked slot, and a tooltip on the slot under the
   pointer with the keys. Pressing again unlocks. The keys and the locks
   themselves are in the config, so they survive a restart and can be edited.
+- **Sort button**: sorts the chest you have open, and only when you press it.
+  Stacks of the same item are merged, then the items are laid out by their ID
+  (or by name, or by type), every item starting a new column by default. Rows or
+  one gapless run are a config switch away. Chests have no locked slots, so
+  everything in the chest takes part. Presses closer than 0.2 s apart are
+  ignored.
+- **Works with MultiUserChest**: when another player opened the chest first and
+  owns it, the Sort button sends MultiUserChest's own move requests to that
+  player's game, which carries them out in order. If they move something in
+  the same moment, the requests that no longer fit are refused, so the chest may
+  end up partly sorted, but nothing is lost or duplicated. Without
+  MultiUserChest, or when you own the chest, it is rewritten in one go and
+  saved once, which costs no more than moving a single item.
 - **Find key** (`T` by default): with the inventory open, point at an item and
   press the key. Every chest in range that holds the item gets a pulsing light,
   an emissive tint and a screen marker with the count and the distance, for
@@ -152,6 +168,17 @@ This never makes the mod required on either side:
 | `ButtonOffset` | `41, -56` | Position of the button relative to the weight display of the inventory panel, in UI pixels (x right, y up). Adjust if another UI mod puts something there. |
 | `ButtonSize` | `120, 38` | Width and height of the button in UI pixels. |
 
+### Sort
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ShowSortButton` | `true` | Show the Sort button on the chest panel. `tidychests sort` in the console works without it. |
+| `SortOrder` | `Id` | `Id`: by the item's prefab name (`Coal`, `Stone`, `Wood`), the same in every language. `Name`: by the name shown in the current language. `Type`: weapons, shields, tools, armour, ammo, food, materials, trophies, then the rest, each group by `Id`. The better quality and the higher world level come first within the same item. |
+| `SortLayout` | `Columns` | `Columns`: every item starts a new column, filled top to bottom. `Rows`: every item starts a new row, filled left to right. `Sequential`: everything packed left to right with no gaps. With more items than columns (or rows), the rest is packed without gaps. |
+| `SortButtonOffset` | `0, 0` | Shift of the button from its own place, next to the chest panel's "stack all" button, in UI pixels (x right, y up). |
+
+The sort settings are each player's own; a server does not decide them.
+
 ### Scan
 
 Used by the chest list and by the learning from chests.
@@ -202,6 +229,7 @@ the order among equally good matches.
 
 ```
 tidychests stash    # stash now, without the button
+tidychests sort     # sort the open chest, without the button
 tidychests scan     # scan the chests in range for items you do not know yet
 tidychests status   # show the active settings and where they come from
 tidychests reload   # re-read the config file
@@ -230,6 +258,7 @@ ownership of a chest; only the Stash button writes.
 | Container list | `Container.Awake` and `Container.OnDestroyed` postfixes keep a list of loaded containers |
 | Stash button | `InventoryGui.Show` postfix clones the "take all" button into the player panel |
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
+| Sort button | the same `InventoryGui.Show` postfix clones the "stack all" button of the chest panel |
 | Console command | `Terminal.InitTerminal` postfix |
 | Chest list input | `Player.TakeInput` and `PlayerController.TakeInput` postfixes stop interacting, walking and the mouse look, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `ZInput.GetMouseScrollWheel` postfix hands the wheel to the list instead of the camera zoom, `ZInput.GetButtonDown` prefix keeps the map key in the search box and Enter away from the chat, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
 
@@ -248,7 +277,10 @@ vanilla run.
 
 - Extra Slots, EquipmentAndQuickSlots 3.x, Better Archery: their slots are
   detected through the mods' own APIs and never stashed.
-- MultiUserChest: supported, see above.
+- MultiUserChest: supported for the Stash and the Sort buttons, see above. A
+  chest owned by another player is sorted through MultiUserChest's
+  `ContainerHandler.MoveItemInChest`; should a future version drop it, the
+  button says the chest is in use instead.
 - Craft From Containers: complementary, not overlapping. It spends the resources
   in nearby chests on a recipe you already know; this mod unlocks the recipe in
   the first place. Nothing here touches the resource cost of a craft.
