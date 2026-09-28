@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using TidyChests.Compat;
 using TidyChests.Containers;
+using TidyChests.Sort;
 using UnityEngine;
 
 namespace TidyChests.Stash
@@ -74,10 +75,11 @@ namespace TidyChests.Stash
                     continue;
                 }
 
+                SortedCells? sorted = settings.PlaceInSortOrder.Value ? new SortedCells(container.GetInventory(), settings) : null;
                 foreach (StashMove move in group.Value)
                 {
                     ItemDrop.ItemData item = candidates[move.Item];
-                    int units = MoveInto(inventory, item, container.GetInventory(), move.Amount);
+                    int units = MoveInto(inventory, item, container.GetInventory(), move.Amount, sorted);
                     Plugin.Debug($"  {item.m_shared.m_name} x{move.Amount} -> {ContainerAccess.NameOf(container)} ({containerSnapshots[group.Key].Distance.ToString("0.#", CultureInfo.InvariantCulture)} m): {units} moved");
                     if (units > 0)
                     {
@@ -168,9 +170,11 @@ namespace TidyChests.Stash
         /// A whole stack goes through <c>Inventory.AddItem</c> + <c>RemoveItem</c>, exactly like
         /// the vanilla "stack all" button. A part of a stack is merged into the matching stacks and
         /// then into empty cells with the positional <c>MoveItemToThis</c> the inventory drag and
-        /// drop uses, so every unit passes through a call that other chest mods intercept.
+        /// drop uses, so every unit passes through a call that other chest mods intercept. With
+        /// <paramref name="sorted"/> every stack takes that second way, and the empty cells are
+        /// the ones it picks.
         /// </summary>
-        private static int MoveInto(Inventory from, ItemDrop.ItemData item, Inventory target, int amount)
+        private static int MoveInto(Inventory from, ItemDrop.ItemData item, Inventory target, int amount, SortedCells? sorted)
         {
             if (!from.ContainsItem(item))
             {
@@ -183,7 +187,7 @@ namespace TidyChests.Stash
                 return 0;
             }
 
-            if (amount == item.m_stack)
+            if (amount == item.m_stack && sorted == null)
             {
                 if (target.AddItem(item))
                 {
@@ -217,6 +221,24 @@ namespace TidyChests.Stash
                 moved += MoveTo(from, item, target, Math.Min(space, amount - moved), stack.m_gridPos);
             }
 
+            if (sorted != null)
+            {
+                while (moved < amount && from.ContainsItem(item))
+                {
+                    GridCell? cell = sorted.Pick(item);
+                    if (cell == null)
+                    {
+                        break;
+                    }
+
+                    // Taken even when refused, so a refusing cell is not picked again.
+                    sorted.Take(item, cell.Value);
+                    moved += MoveTo(from, item, target, Math.Min(item.m_shared.m_maxStackSize, amount - moved), new Vector2i(cell.Value.X, cell.Value.Y));
+                }
+
+                return moved;
+            }
+
             for (int y = 0; y < target.GetHeight() && moved < amount; y++)
             {
                 for (int x = 0; x < target.GetWidth() && moved < amount; x++)
@@ -244,6 +266,47 @@ namespace TidyChests.Stash
 
             // A refused move can still have merged a part; count what left the stack.
             return from.ContainsItem(item) ? Math.Max(0, before - item.m_stack) : before;
+        }
+
+        /// <summary>
+        /// One chest's cells for <see cref="InsertSlot"/>, read once per stash and kept up to date
+        /// with the cells this stash fills. Under MultiUserChest a player who does not own the
+        /// chest sees the new stacks only when the owner answers, so the chest itself cannot say
+        /// which cells were just taken.
+        /// </summary>
+        private sealed class SortedCells
+        {
+            private readonly List<SortStack> _stacks = new List<SortStack>();
+
+            private readonly int _width;
+
+            private readonly int _height;
+
+            private readonly ChestSortOrder _order;
+
+            private readonly ChestSortLayout _layout;
+
+            public SortedCells(Inventory inventory, ModConfig settings)
+            {
+                _width = inventory.GetWidth();
+                _height = inventory.GetHeight();
+                _order = settings.SortOrder.Value;
+                _layout = settings.SortLayout.Value;
+                foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+                {
+                    _stacks.Add(ChestSorter.Describe(item, _stacks.Count, new GridCell(item.m_gridPos.x, item.m_gridPos.y)));
+                }
+            }
+
+            public GridCell? Pick(ItemDrop.ItemData item)
+            {
+                return InsertSlot.Pick(_stacks, ChestSorter.Describe(item, -1, new GridCell(-1, -1)), _width, _height, _order, _layout);
+            }
+
+            public void Take(ItemDrop.ItemData item, GridCell cell)
+            {
+                _stacks.Add(ChestSorter.Describe(item, _stacks.Count, cell));
+            }
         }
 
         private static IEnumerable<KeyValuePair<int, List<StashMove>>> GroupByContainer(IReadOnlyList<StashMove> moves)

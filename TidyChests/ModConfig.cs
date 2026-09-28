@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using Muindor.ServerConfig;
 using TidyChests.Find;
 using TidyChests.Index;
+using TidyChests.Sort;
 using TidyChests.Stash;
 using UnityEngine;
 
@@ -48,6 +49,9 @@ namespace TidyChests
                 "Items that are never stashed (comma-separated). Use prefab names or item names, for example: Wood, $item_coal, Resin");
             ShowMessage = config.Bind("Stash", "ShowMessage", true,
                 "Show a message with the result after stashing.");
+            PlaceInSortOrder = config.Bind("Stash", "PlaceInSortOrder", true,
+                "When the Stash button needs an empty cell in a chest, pick the one where the item fits [Sort] SortOrder and SortLayout best, next to the same item when there is room. " +
+                "Nothing already in the chest is moved; only the Sort button does that. Off: the first empty cell, like the game's own buttons.");
 
             RevealKey = config.Bind("Locks", "RevealKey", KeyCode.LeftShift,
                 "Hold this key with the inventory open to see the locks: a grey padlock on a locked item, a red one on a locked slot. Pointing at a slot while holding it shows the lock keys.");
@@ -80,6 +84,18 @@ namespace TidyChests
                 "Position of the Stash button relative to the weight display of the inventory panel, in UI pixels (x right, y up).");
             ButtonSize = config.Bind("Button", "ButtonSize", new Vector2(120f, 38f),
                 "Width and height of the Stash button in UI pixels.");
+
+            ShowSortButton = config.Bind("Sort", "ShowSortButton", true,
+                "Show the Sort button on the chest panel. It sorts the open chest only, and only when pressed. The console command 'tidychests sort' works without it.");
+            SortOrder = config.Bind("Sort", "SortOrder", ChestSortOrder.Id,
+                "Order of the items in a sorted chest. Id: by the item's prefab name (Coal, Stone, Wood), the same in every language. " +
+                "Name: by the name shown in the current language. Type: weapons, shields, tools, armour, ammo, food, materials, trophies, then the rest, each group by Id. " +
+                "The better quality and the higher world level come first within the same item.");
+            SortLayout = config.Bind("Sort", "SortLayout", ChestSortLayout.Columns,
+                "How a sorted chest is laid out. Columns: every item starts a new column, filled top to bottom. Rows: every item starts a new row, filled left to right. " +
+                "Sequential: everything packed left to right with no gaps. When there are more items than columns (or rows), the rest is packed without gaps.");
+            SortButtonOffset = config.Bind("Sort", "SortButtonOffset", Vector2.zero,
+                "Shift of the Sort button from its own place, next to the chest panel's \"stack all\" button, in UI pixels (x right, y up).");
 
             ScanRadius = Sync.Bind("Scan", "ScanRadius", 50f,
                 new ConfigDescription("Chests within this many metres are read by the chest list and by the knowledge scan. Reading costs nothing on the network: the game already keeps the contents of every loaded chest on your client. Above roughly 90 m the chests are no longer loaded, so nothing more is found.",
@@ -121,6 +137,8 @@ namespace TidyChests
 
         public ConfigEntry<bool> ShowMessage { get; }
 
+        public ConfigEntry<bool> PlaceInSortOrder { get; }
+
         public ConfigEntry<KeyCode> RevealKey { get; }
 
         public ConfigEntry<KeyboardShortcut> LockItemKey { get; }
@@ -148,6 +166,14 @@ namespace TidyChests
         public ConfigEntry<Vector2> ButtonOffset { get; }
 
         public ConfigEntry<Vector2> ButtonSize { get; }
+
+        public ConfigEntry<bool> ShowSortButton { get; }
+
+        public ConfigEntry<ChestSortOrder> SortOrder { get; }
+
+        public ConfigEntry<ChestSortLayout> SortLayout { get; }
+
+        public ConfigEntry<Vector2> SortButtonOffset { get; }
 
         public SyncedEntry<float> ScanRadius { get; }
 
@@ -208,9 +234,10 @@ namespace TidyChests
         {
             CultureInfo culture = CultureInfo.InvariantCulture;
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
-                   $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, " +
+                   $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, new stacks {(PlaceInSortOrder.Value ? "in sort order" : "in the first empty cell")}, " +
                    $"find key {FindKey.Value}, lock keys {LockItemKey.Value} / {LockSlotKey.Value} (shown while {RevealKey.Value} is held), highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
+                   $"sort button {(ShowSortButton.Value ? "shown" : "hidden")} ({SortOrder.Value}, {SortLayout.Value}), " +
                    $"scan {ScanRadius.Value.ToString("0.#", culture)} m every {ScanInterval.Value.ToString("0.#", culture)} s, " +
                    $"learning from chests {(LearnFromChests.Value ? "on" : "off")}, browser key {BrowserKey.Value}, " +
                    $"list sorted by {Sort.Value}, {FavoriteList.Parse(Favorites.Value).Count} pinned, {Sync.Describe()}";

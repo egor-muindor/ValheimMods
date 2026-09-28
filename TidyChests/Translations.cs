@@ -66,6 +66,10 @@ namespace TidyChests
 
         public const string SortCountDown = "tidychests_sort_count_down";
 
+        public const string SortLabel = "tidychests_sort_button";
+
+        public const string SortInUse = "tidychests_sort_in_use";
+
         private const string DefaultLanguage = "English";
 
         private static readonly Dictionary<string, Dictionary<string, string>> Words = new Dictionary<string, Dictionary<string, string>>
@@ -101,6 +105,8 @@ namespace TidyChests
                 [SortCount] = "Count",
                 [SortCountUp] = "Count 1-9",
                 [SortCountDown] = "Count 9-1",
+                [SortLabel] = "Sort",
+                [SortInUse] = "Another player has this chest open: it cannot be sorted now",
             },
             ["Russian"] = new Dictionary<string, string>
             {
@@ -131,6 +137,8 @@ namespace TidyChests
                 [SortCount] = "Количество",
                 [SortCountUp] = "Количество 1-9",
                 [SortCountDown] = "Количество 9-1",
+                [SortLabel] = "Сортировать",
+                [SortInUse] = "Сундук открыт другим игроком: сейчас его не отсортировать",
             },
         };
 
@@ -171,6 +179,7 @@ namespace TidyChests
         {
             Translations.Apply(__instance, language);
             StashButton.RefreshLabel();
+            SortButton.RefreshLabel();
             ChestBrowser.RefreshLabels();
 
             // The index keeps the localized item names; they belong to the old language now.
