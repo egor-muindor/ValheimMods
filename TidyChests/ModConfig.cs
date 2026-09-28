@@ -49,6 +49,9 @@ namespace TidyChests
                 "Items that are never stashed (comma-separated). Use prefab names or item names, for example: Wood, $item_coal, Resin");
             ShowMessage = config.Bind("Stash", "ShowMessage", true,
                 "Show a message with the result after stashing.");
+            PlaceInSortOrder = config.Bind("Stash", "PlaceInSortOrder", true,
+                "When the Stash button needs an empty cell in a chest, pick the one where the item fits [Sort] SortOrder and SortLayout best, next to the same item when there is room. " +
+                "Nothing already in the chest is moved; only the Sort button does that. Off: the first empty cell, like the game's own buttons.");
 
             RevealKey = config.Bind("Locks", "RevealKey", KeyCode.LeftShift,
                 "Hold this key with the inventory open to see the locks: a grey padlock on a locked item, a red one on a locked slot. Pointing at a slot while holding it shows the lock keys.");
@@ -133,6 +136,8 @@ namespace TidyChests
         public SyncedEntry<string> Blacklist { get; }
 
         public ConfigEntry<bool> ShowMessage { get; }
+
+        public ConfigEntry<bool> PlaceInSortOrder { get; }
 
         public ConfigEntry<KeyCode> RevealKey { get; }
 
@@ -229,7 +234,7 @@ namespace TidyChests
         {
             CultureInfo culture = CultureInfo.InvariantCulture;
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
-                   $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, " +
+                   $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, new stacks {(PlaceInSortOrder.Value ? "in sort order" : "in the first empty cell")}, " +
                    $"find key {FindKey.Value}, lock keys {LockItemKey.Value} / {LockSlotKey.Value} (shown while {RevealKey.Value} is held), highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
                    $"sort button {(ShowSortButton.Value ? "shown" : "hidden")} ({SortOrder.Value}, {SortLayout.Value}), " +

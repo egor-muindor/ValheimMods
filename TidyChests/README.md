@@ -26,7 +26,10 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   name. Existing stacks are topped up first, then empty slots are used, and what
   is left continues to the next chest. Chests, reinforced and black metal chests,
   carts and ship cargo all count. A chest that holds none of your items
-  is never touched, so your sorting stays yours.
+  is never touched, so your sorting stays yours. A new stack goes to the empty
+  cell where it fits the chest's sort order (`[Sort] SortOrder` and
+  `SortLayout`), next to the same item when there is room, but nothing already
+  in the chest is moved: only the Sort button does that.
 - **What stays**: equipped items; tools, weapons, armour and other equipment;
   quest items; the hotbar (optional); quick, equipment, food, ammo and misc
   slots of Extra Slots, every slot of EquipmentAndQuickSlots, the quiver rows of
@@ -138,6 +141,7 @@ This never makes the mod required on either side:
 | `ItemTypes` | `Material, Consumable, Ammo, AmmoNonEquipable, Trophy, Misc, Fish` | Item types that may be stashed. Remove `Ammo` to keep arrows, add `Torch` to stash torches, and so on. Valid names are listed in the config file. |
 | `Blacklist` | empty | Items that are never stashed, comma-separated prefab names or item names: `Wood, $item_coal, Resin`. |
 | `ShowMessage` | `true` | Show a message with the result after stashing. |
+| `PlaceInSortOrder` | `true` | Put each new stack in the empty cell where it fits `[Sort] SortOrder` and `SortLayout` best, next to the same item when there is room. Nothing already in the chest is moved. `false`: the first empty cell, like the game's own buttons. |
 
 ### Locks
 

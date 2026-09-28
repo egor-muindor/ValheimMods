@@ -24,6 +24,7 @@
     <Compile Include="../TidyChests/Sort/SortModels.cs" Link="Sort/SortModels.cs" />
     <Compile Include="../TidyChests/Sort/SortKeys.cs" Link="Sort/SortKeys.cs" />
     <Compile Include="../TidyChests/Sort/SortPlanner.cs" Link="Sort/SortPlanner.cs" />
+    <Compile Include="../TidyChests/Sort/InsertSlot.cs" Link="Sort/InsertSlot.cs" />
     <Compile Include="../TidyChests/Hud/ScreenMarkerMath.cs" Link="Hud/ScreenMarkerMath.cs" />
     <Compile Include="../TidyChests/Index/IndexModels.cs" Link="Index/IndexModels.cs" />
     <Compile Include="../TidyChests/Index/ItemSearch.cs" Link="Index/ItemSearch.cs" />

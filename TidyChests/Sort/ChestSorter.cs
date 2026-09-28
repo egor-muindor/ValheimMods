@@ -94,14 +94,20 @@ namespace TidyChests.Sort
             for (int i = 0; i < items.Count; i++)
             {
                 ItemDrop.ItemData item = items[i];
-                ItemDrop.ItemData.SharedData shared = item.m_shared;
-                string id = item.m_dropPrefab != null ? item.m_dropPrefab.name : shared.m_name;
-                stacks.Add(new SortStack(i, new GridCell(item.m_gridPos.x, item.m_gridPos.y), id, shared.m_name,
-                    Localization.instance.Localize(shared.m_name), SortKeys.TypeRank(shared.m_itemType.ToString()),
-                    item.m_quality, shared.m_maxQuality, item.m_worldLevel, item.m_stack, shared.m_maxStackSize));
+                stacks.Add(Describe(item, i, new GridCell(item.m_gridPos.x, item.m_gridPos.y)));
             }
 
             return stacks;
+        }
+
+        /// <summary>The planner's view of <paramref name="item"/> lying at <paramref name="cell"/>.</summary>
+        internal static SortStack Describe(ItemDrop.ItemData item, int index, GridCell cell)
+        {
+            ItemDrop.ItemData.SharedData shared = item.m_shared;
+            string id = item.m_dropPrefab != null ? item.m_dropPrefab.name : shared.m_name;
+            return new SortStack(index, cell, id, shared.m_name, Localization.instance.Localize(shared.m_name),
+                SortKeys.TypeRank(shared.m_itemType.ToString()), item.m_quality, shared.m_maxQuality, item.m_worldLevel,
+                item.m_stack, shared.m_maxStackSize);
         }
 
         /// <summary>Writes the sorted state straight into the owned chest, then saves it once.</summary>

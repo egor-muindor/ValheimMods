@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - 2026-09-28
+
+The Sort button from 1.4.0-beta.1, tested in game, plus:
+
+- The Stash button puts a new stack in the empty cell where it fits the chest's sort order (`[Sort] SortOrder` and `SortLayout`): under the same item in its column, in an empty column between the items around it, and so on. Nothing already in the chest is moved; only the Sort button does that. `[Stash] PlaceInSortOrder = false` brings back the first empty cell.
+
 ## 1.4.0-beta.1 - 2026-09-25
 
 Beta, on GitHub only. Asked for in #3.
