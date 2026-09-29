@@ -77,13 +77,26 @@ namespace TidyChests.Ui
             }
 
             Button button = ButtonClone.Create(template, panel, ButtonName, OnClick, out _label);
+            Place(panel, button, Plugin.Settings.ButtonOffset.Value);
 
+            _button = button;
+            RefreshLabel();
+            var rect = (RectTransform)button.transform;
+            Plugin.Debug($"Stash button created at {button.transform.localPosition} ({rect.rect.width}x{rect.rect.height})");
+        }
+
+        /// <summary>
+        /// Sizes <paramref name="button"/> like the Stash button and puts it <paramref name="offset"/>
+        /// away from the weight display of the inventory panel (from its top-right corner when
+        /// another UI mod has removed the weight display).
+        /// </summary>
+        public static void Place(RectTransform panel, Button button, Vector2 offset)
+        {
             var rect = (RectTransform)button.transform;
             Vector2 size = Plugin.Settings.ButtonSize.Value;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(20f, size.x));
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(16f, size.y));
 
-            Vector2 offset = Plugin.Settings.ButtonOffset.Value;
             Transform weight = panel.Find("Weight");
             if (weight != null)
             {
@@ -95,12 +108,8 @@ namespace TidyChests.Ui
                 rect.anchorMax = new Vector2(1f, 1f);
                 rect.pivot = new Vector2(1f, 1f);
                 rect.anchoredPosition = new Vector2(-16f, -16f) + offset;
-                Plugin.Debug("Weight display not found in the inventory panel; the Stash button is anchored to the top-right corner");
+                Plugin.Debug($"Weight display not found in the inventory panel; {button.name} is anchored to the top-right corner");
             }
-
-            _button = button;
-            RefreshLabel();
-            Plugin.Debug($"Stash button created at {button.transform.localPosition} ({rect.rect.width}x{rect.rect.height})");
         }
 
         private static void OnClick()
@@ -123,6 +132,7 @@ namespace TidyChests.Ui
         private static void Postfix(InventoryGui __instance)
         {
             StashButton.Ensure(__instance);
+            RestockButton.Ensure(__instance);
             SortButton.Ensure(__instance);
         }
     }

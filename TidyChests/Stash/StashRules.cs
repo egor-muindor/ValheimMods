@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TidyChests.Restock;
 
 namespace TidyChests.Stash
 {
     /// <summary>
-    /// Decides which inventory items may leave the inventory. Pure: no game types, so it is
-    /// unit-tested. Built once per stash from the config values.
+    /// Decides which inventory items may leave the inventory: not the protected ones, not the
+    /// locked ones, not what lies in a slot the Restock button keeps filled. Pure: no game
+    /// types, so it is unit-tested. Built once per stash from the config values.
     /// </summary>
     public sealed class StashRules
     {
@@ -18,12 +20,15 @@ namespace TidyChests.Stash
 
         private readonly StashLocks _locks;
 
-        private StashRules(bool includeHotbar, HashSet<string> types, HashSet<string> blacklist, StashLocks locks)
+        private readonly RestockMarks _restock;
+
+        private StashRules(bool includeHotbar, HashSet<string> types, HashSet<string> blacklist, StashLocks locks, RestockMarks restock)
         {
             _includeHotbar = includeHotbar;
             _types = types;
             _blacklist = blacklist;
             _locks = locks;
+            _restock = restock;
         }
 
         /// <summary>Item types that may be stashed, sorted, as configured (unknown names dropped).</summary>
@@ -58,7 +63,7 @@ namespace TidyChests.Stash
                 blacklist.Add(Normalize(entry));
             }
 
-            return new StashRules(settings.IncludeHotbar, types, blacklist, StashLocks.Parse(settings.LockedItems, settings.LockedSlots));
+            return new StashRules(settings.IncludeHotbar, types, blacklist, StashLocks.Parse(settings.LockedItems, settings.LockedSlots), RestockMarks.Parse(settings.RestockSlots));
         }
 
         /// <summary>The first reason that keeps the item in the inventory, or <see cref="StashVerdict.Stash"/>.</summary>
@@ -109,6 +114,11 @@ namespace TidyChests.Stash
                 return StashVerdict.LockedItem;
             }
 
+            if (_restock.PercentAt(facts.GridX, facts.GridY) > 0)
+            {
+                return StashVerdict.RestockSlot;
+            }
+
             return StashVerdict.Stash;
         }
 
@@ -117,7 +127,7 @@ namespace TidyChests.Stash
         {
             string types = _types.Count == 0 ? "none" : string.Join(", ", ItemTypes);
             string blacklist = _blacklist.Count == 0 ? "empty" : string.Join(", ", Blacklist);
-            return $"types: {types}; blacklist: {blacklist}; {_locks.Describe()}";
+            return $"types: {types}; blacklist: {blacklist}; {_locks.Describe()}, {_restock.Describe()}";
         }
 
         private bool IsBlacklisted(string name)

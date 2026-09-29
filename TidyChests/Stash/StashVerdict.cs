@@ -13,5 +13,6 @@ namespace TidyChests.Stash
         Blacklisted,
         LockedItem,
         LockedSlot,
+        RestockSlot,
     }
 }

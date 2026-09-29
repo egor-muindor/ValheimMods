@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using Muindor.ServerConfig;
 using TidyChests.Find;
 using TidyChests.Index;
+using TidyChests.Restock;
 using TidyChests.Sort;
 using TidyChests.Stash;
 using UnityEngine;
@@ -63,6 +64,32 @@ namespace TidyChests
                 "Items locked with the lock key, comma-separated, saved here as you press it. The names are the game's own item names: $item_wood, $item_coal");
             LockedSlots = config.Bind("Locks", "LockedSlots", "",
                 "Inventory slots locked with the lock key, comma-separated as column:row counted from 0, the top row (the hotbar) being row 0: 0:1, 7:3. Saved here as you press the key.");
+
+            ShowRestockButton = config.Bind("Restock", "ShowRestockButton", true,
+                "Show the Restock button in the inventory, under the Stash button. It fills the marked slots and the slot mods' slots from the chests within [Stash] Radius. The console command 'tidychests restock' works without it.");
+            RestockButtonOffset = config.Bind("Restock", "RestockButtonOffset", new Vector2(0f, -42f),
+                "Position of the Restock button relative to the Stash button, in UI pixels (x right, y up). It has the Stash button's size.");
+            RestockSlotKey = config.Bind("Restock", "RestockSlotKey", new KeyboardShortcut(KeyCode.R, KeyCode.LeftShift),
+                "With the inventory open, point at a slot and press this to mark it for the Restock button: the first press keeps a full stack there, the second HalfPercent of a stack, the third removes the mark. " +
+                "Hold [Locks] RevealKey to see the marks: a green arrow for a full stack, a red one for less. Modifiers are allowed.");
+            RestockSlots = config.Bind("Restock", "RestockSlots", "",
+                "Slots marked with the restock key, comma-separated as column:row=percent, then the item last seen there so an emptied slot is refilled with it: 0:1=100:$item_arrow_wood, 3:2=50:$item_cookedmeat. " +
+                "Rows are counted from 0, the top row (the hotbar) being row 0. Saved here as you press the key. What lies in a marked slot is never stashed.");
+            HalfPercent = config.Bind("Restock", "HalfPercent", 50,
+                new ConfigDescription("The second press of the restock key keeps this many percent of a stack in the slot.",
+                    new AcceptableValueRange<int>(1, 99)));
+            ModSlotFood = config.Bind("Restock", "ModSlotFood", 50,
+                new ConfigDescription("Food lying in a slot mod's slot (Extra Slots quick and food slots, EquipmentAndQuickSlots quick slots) is kept at this many percent of a stack. 0 leaves it alone.",
+                    new AcceptableValueRange<int>(0, 100)));
+            ModSlotMeads = config.Bind("Restock", "ModSlotMeads", 0,
+                new ConfigDescription("Meads and other consumables that do not feed, lying in a slot mod's slot, are kept at this many percent of a stack. 0 leaves them alone.",
+                    new AcceptableValueRange<int>(0, 100)));
+            ModSlotAmmo = config.Bind("Restock", "ModSlotAmmo", 100,
+                new ConfigDescription("Arrows, bolts and other ammo lying in a slot mod's slot (Extra Slots ammo and quick slots, the Better Archery quiver) are kept at this many percent of a stack. 0 leaves them alone.",
+                    new AcceptableValueRange<int>(0, 100)));
+            ModSlotOther = config.Bind("Restock", "ModSlotOther", 0,
+                new ConfigDescription("Any other stackable item lying in a slot mod's slot is kept at this many percent of a stack. 0 leaves it alone.",
+                    new AcceptableValueRange<int>(0, 100)));
 
             FindKey = config.Bind("Find", "FindKey", new KeyboardShortcut(KeyCode.T),
                 "With the inventory open, point at an item (in the inventory, or an ingredient or recipe in the crafting panel) and press this key: the inventory closes and every chest in range that holds the item is highlighted. Modifiers are allowed, e.g. \"T + LeftControl\".");
@@ -149,6 +176,24 @@ namespace TidyChests
 
         public ConfigEntry<string> LockedSlots { get; }
 
+        public ConfigEntry<bool> ShowRestockButton { get; }
+
+        public ConfigEntry<Vector2> RestockButtonOffset { get; }
+
+        public ConfigEntry<KeyboardShortcut> RestockSlotKey { get; }
+
+        public ConfigEntry<string> RestockSlots { get; }
+
+        public ConfigEntry<int> HalfPercent { get; }
+
+        public ConfigEntry<int> ModSlotFood { get; }
+
+        public ConfigEntry<int> ModSlotMeads { get; }
+
+        public ConfigEntry<int> ModSlotAmmo { get; }
+
+        public ConfigEntry<int> ModSlotOther { get; }
+
         public ConfigEntry<KeyboardShortcut> FindKey { get; }
 
         public ConfigEntry<float> HighlightDuration { get; }
@@ -205,6 +250,7 @@ namespace TidyChests
                 Blacklist = Blacklist.Value,
                 LockedItems = LockedItems.Value,
                 LockedSlots = LockedSlots.Value,
+                RestockSlots = RestockSlots.Value,
             };
 
             return StashRules.Parse(settings, ItemTypeNames, warning => Plugin.Log.LogWarning(warning));
@@ -223,6 +269,28 @@ namespace TidyChests
             LockedSlots.Value = locks.FormatSlots();
         }
 
+        /// <summary>The current restock marks. Call <see cref="SaveRestockMarks"/> after changing them.</summary>
+        public RestockMarks BuildRestockMarks()
+        {
+            return RestockMarks.Parse(RestockSlots.Value);
+        }
+
+        /// <summary>Writes the restock marks back into the config file, when they changed.</summary>
+        public void SaveRestockMarks(RestockMarks marks)
+        {
+            string line = marks.Format();
+            if (line != RestockSlots.Value)
+            {
+                RestockSlots.Value = line;
+            }
+        }
+
+        /// <summary>How full the items in slot mods' slots are kept.</summary>
+        public RestockLevels BuildRestockLevels()
+        {
+            return new RestockLevels(ModSlotFood.Value, ModSlotMeads.Value, ModSlotAmmo.Value, ModSlotOther.Value);
+        }
+
         /// <summary>Snapshot of the highlight options for one search.</summary>
         public HighlightOptions ToHighlightOptions()
         {
@@ -235,6 +303,7 @@ namespace TidyChests
             CultureInfo culture = CultureInfo.InvariantCulture;
             return $"{(Enabled.Value ? "enabled" : "disabled")}, radius {Radius.Value.ToString("0.#", culture)} m, " +
                    $"hotbar {(IncludeHotbar.Value ? "included" : "excluded")}, {BuildRules().Describe()}, new stacks {(PlaceInSortOrder.Value ? "in sort order" : "in the first empty cell")}, " +
+                   $"restock button {(ShowRestockButton.Value ? "shown" : "hidden")}, restock key {RestockSlotKey.Value} (half {HalfPercent.Value}%), {BuildRestockLevels().Describe()}, " +
                    $"find key {FindKey.Value}, lock keys {LockItemKey.Value} / {LockSlotKey.Value} (shown while {RevealKey.Value} is held), highlight {HighlightDuration.Value.ToString("0.#", culture)} s, " +
                    $"button {(ShowButton.Value ? "shown" : "hidden")}, " +
                    $"sort button {(ShowSortButton.Value ? "shown" : "hidden")} ({SortOrder.Value}, {SortLayout.Value}), " +

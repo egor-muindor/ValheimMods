@@ -70,6 +70,24 @@ namespace TidyChests
 
         public const string SortInUse = "tidychests_sort_in_use";
 
+        public const string RestockLabel = "tidychests_restock_button";
+
+        public const string Restocked = "tidychests_restocked";
+
+        public const string RestockStocked = "tidychests_restock_stocked";
+
+        public const string RestockNotFound = "tidychests_restock_not_found";
+
+        public const string RestockNoSlots = "tidychests_restock_no_slots";
+
+        public const string RestockSlot = "tidychests_restock_slot";
+
+        public const string RestockStateFull = "tidychests_restock_full";
+
+        public const string RestockStatePart = "tidychests_restock_part";
+
+        public const string RestockStateOff = "tidychests_restock_off";
+
         private const string DefaultLanguage = "English";
 
         private static readonly Dictionary<string, Dictionary<string, string>> Words = new Dictionary<string, Dictionary<string, string>>
@@ -83,8 +101,8 @@ namespace TidyChests
                 [Found] = "{0}: found in {1} chests",
                 [NotFound] = "{0}: not in any chest within {1} m",
                 [Hover] = "Point at an item in the inventory or the crafting panel and press {0} to find it in nearby chests",
-                [LockTopic] = "Stash locks",
-                [LockHint] = "Item: {0} [{1}]\nSlot: {2} [{3}]",
+                [LockTopic] = "Locks and restock",
+                [LockHint] = "Item: {0} [{1}]\nSlot: {2} [{3}]\nRestock: {4} [{5}]",
                 [LockStateOn] = "locked",
                 [LockStateOff] = "not locked",
                 [ItemLocked] = "{0}: locked, the Stash button leaves it",
@@ -107,6 +125,15 @@ namespace TidyChests
                 [SortCountDown] = "Count 9-1",
                 [SortLabel] = "Sort",
                 [SortInUse] = "Another player has this chest open: it cannot be sorted now",
+                [RestockLabel] = "Restock",
+                [Restocked] = "Restocked {0} items into {1} slots",
+                [RestockStocked] = "Everything is stocked",
+                [RestockNotFound] = "Nothing to restock with: no chest within {0} m holds these items",
+                [RestockNoSlots] = "Nothing to restock: point at a slot and press {0} to mark it",
+                [RestockSlot] = "Restock: {0}",
+                [RestockStateFull] = "full stack",
+                [RestockStatePart] = "{0}% of a stack",
+                [RestockStateOff] = "off",
             },
             ["Russian"] = new Dictionary<string, string>
             {
@@ -117,8 +144,8 @@ namespace TidyChests
                 [Found] = "{0}: есть в сундуках ({1})",
                 [NotFound] = "{0}: нет ни в одном сундуке в радиусе {1} м",
                 [Hover] = "Наведите курсор на предмет в инвентаре или в крафте и нажмите {0}, чтобы найти его в сундуках",
-                [LockTopic] = "Замки",
-                [LockHint] = "Предмет: {0} [{1}]\nЯчейка: {2} [{3}]",
+                [LockTopic] = "Замки и пополнение",
+                [LockHint] = "Предмет: {0} [{1}]\nЯчейка: {2} [{3}]\nПополнение: {4} [{5}]",
                 [LockStateOn] = "под замком",
                 [LockStateOff] = "без замка",
                 [ItemLocked] = "{0}: заперт, кнопка «Убрать» его не тронет",
@@ -139,6 +166,15 @@ namespace TidyChests
                 [SortCountDown] = "Количество 9-1",
                 [SortLabel] = "Сортировать",
                 [SortInUse] = "Сундук открыт другим игроком: сейчас его не отсортировать",
+                [RestockLabel] = "Пополнить",
+                [Restocked] = "Пополнено предметов: {0}, ячеек: {1}",
+                [RestockStocked] = "Всё уже пополнено",
+                [RestockNotFound] = "Нечем пополнить: в сундуках в радиусе {0} м этого нет",
+                [RestockNoSlots] = "Нечего пополнять: наведите курсор на ячейку и нажмите {0}",
+                [RestockSlot] = "Пополнение: {0}",
+                [RestockStateFull] = "полный стак",
+                [RestockStatePart] = "{0}% стака",
+                [RestockStateOff] = "выключено",
             },
         };
 
@@ -179,6 +215,7 @@ namespace TidyChests
         {
             Translations.Apply(__instance, language);
             StashButton.RefreshLabel();
+            RestockButton.RefreshLabel();
             SortButton.RefreshLabel();
             ChestBrowser.RefreshLabels();
 

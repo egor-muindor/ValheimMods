@@ -1,8 +1,8 @@
 {
   "name": "TidyChests",
-  "version_number": "1.4.0",
+  "version_number": "1.5.0-beta.1",
   "website_url": "https://github.com/egor-muindor/ValheimMods",
-  "description": "Quick stack into nearby chests, a Sort button for the open chest (works with MultiUserChest), a hotkey to find where an item is stored, Ctrl+O to search the chests around you, and recipes unlocked by your team mates' materials. Client-side.",
+  "description": "Quick stack into nearby chests and restock marked slots, food and arrows from them, a Sort button for the open chest (works with MultiUserChest), a find hotkey, Ctrl+O to search nearby chests, and recipes unlocked by team mates' materials.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350"
   ]

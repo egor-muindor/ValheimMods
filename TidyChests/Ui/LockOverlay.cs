@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using TidyChests.Restock;
 using TidyChests.Stash;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,14 +9,18 @@ using UnityEngine.UI;
 namespace TidyChests.Ui
 {
     /// <summary>
-    /// The locks in the player's inventory grid: a padlock in the top-left corner of every
-    /// locked item (grey) and every locked slot (red), shown while the reveal key is held,
-    /// a tooltip with the lock keys on the slot under the pointer, and the keys themselves.
-    /// Runs after vanilla has redrawn the grid, so the badges follow the items as they move.
+    /// The locks and restock marks in the player's inventory grid, shown while the reveal key is
+    /// held: a padlock in the top-left corner of every locked item (grey) and every locked slot
+    /// (red), an arrow into a tray in the top-right corner of every slot the Restock button fills
+    /// (green for a full stack, red for less); a tooltip with the keys on the slot under the
+    /// pointer, and the keys themselves. Runs after vanilla has redrawn the grid, so the badges
+    /// follow the items as they move.
     /// </summary>
     internal static class LockOverlay
     {
         private const string BadgeName = "TidyChests Lock";
+
+        private const string RestockBadgeName = "TidyChests Restock";
 
         private const float BadgeSize = 16f;
 
@@ -25,13 +30,25 @@ namespace TidyChests.Ui
 
         private static readonly Color SlotLockColor = new Color(1f, 0.3f, 0.3f, 0.7f);
 
+        private static readonly Color RestockFullColor = new Color(0.35f, 0.9f, 0.35f, 0.9f);
+
+        private static readonly Color RestockPartColor = new Color(1f, 0.3f, 0.3f, 0.9f);
+
         private static readonly Dictionary<InventoryElement, Image> Badges = new Dictionary<InventoryElement, Image>();
+
+        private static readonly Dictionary<InventoryElement, Image> RestockBadges = new Dictionary<InventoryElement, Image>();
 
         private static StashLocks _locks = StashLocks.Parse("", "");
 
         private static string _locksSource = "";
 
+        private static RestockMarks _restock = RestockMarks.Parse("");
+
+        private static string _restockSource = "";
+
         private static Sprite? _sprite;
+
+        private static Sprite? _restockSprite;
 
         /// <summary>Called after <c>InventoryGrid.UpdateGui</c>; <paramref name="player"/> is null for a container's grid.</summary>
         public static void AfterUpdateGui(InventoryGrid grid, Player? player)
@@ -56,17 +73,22 @@ namespace TidyChests.Ui
             }
         }
 
-        /// <summary>Re-reads the config lines when they changed, by hand or through a toggle.</summary>
+        /// <summary>Re-reads the config lines when they changed, by hand, through a toggle or a restock.</summary>
         private static void SyncLocks(ModConfig settings)
         {
             string source = (settings.LockedItems.Value ?? "") + "\n" + (settings.LockedSlots.Value ?? "");
-            if (source == _locksSource)
+            if (source != _locksSource)
             {
-                return;
+                _locksSource = source;
+                _locks = settings.BuildLocks();
             }
 
-            _locksSource = source;
-            _locks = settings.BuildLocks();
+            string restock = settings.RestockSlots.Value ?? "";
+            if (restock != _restockSource)
+            {
+                _restockSource = restock;
+                _restock = settings.BuildRestockMarks();
+            }
         }
 
         private static void UpdateBadges(InventoryGrid grid, bool reveal)
@@ -83,16 +105,25 @@ namespace TidyChests.Ui
                     itemLocked = item != null && _locks.IsItemLocked(item.m_shared.m_name);
                 }
 
-                Image? badge = GetBadge(element, create: slotLocked || itemLocked);
-                if (badge == null)
+                Image? badge = GetBadge(Badges, element, create: slotLocked || itemLocked, BadgeName, left: true);
+                if (badge != null)
                 {
-                    continue;
+                    badge.enabled = slotLocked || itemLocked;
+                    if (badge.enabled)
+                    {
+                        badge.color = slotLocked ? SlotLockColor : ItemLockColor;
+                    }
                 }
 
-                badge.enabled = slotLocked || itemLocked;
-                if (badge.enabled)
+                int percent = reveal ? _restock.PercentAt(position.x, position.y) : 0;
+                Image? restockBadge = GetBadge(RestockBadges, element, create: percent > 0, RestockBadgeName, left: false);
+                if (restockBadge != null)
                 {
-                    badge.color = slotLocked ? SlotLockColor : ItemLockColor;
+                    restockBadge.enabled = percent > 0;
+                    if (restockBadge.enabled)
+                    {
+                        restockBadge.color = percent >= RestockMarks.FullPercent ? RestockFullColor : RestockPartColor;
+                    }
                 }
             }
         }
@@ -114,6 +145,14 @@ namespace TidyChests.Ui
                 settings.SaveLocks(_locks);
                 player.Message(MessageHud.MessageType.TopLeft, Translations.Get(locked ? Translations.SlotLocked : Translations.SlotUnlocked));
             }
+            else if (Shortcut.IsPressed(settings.RestockSlotKey.Value))
+            {
+                string? stackable = item != null && item.m_shared.m_maxStackSize > 1 ? item.m_shared.m_name : null;
+                int percent = _restock.Cycle(position.x, position.y, settings.HalfPercent.Value, stackable);
+                settings.SaveRestockMarks(_restock);
+                _restockSource = settings.RestockSlots.Value ?? "";
+                player.Message(MessageHud.MessageType.TopLeft, Translations.Get(Translations.RestockSlot, RestockState(percent)));
+            }
             else if (item != null && Shortcut.IsPressed(settings.LockItemKey.Value))
             {
                 bool locked = _locks.ToggleItem(item.m_shared.m_name);
@@ -126,7 +165,8 @@ namespace TidyChests.Ui
             {
                 string itemState = Translations.Get(item != null && _locks.IsItemLocked(item.m_shared.m_name) ? Translations.LockStateOn : Translations.LockStateOff);
                 string slotState = Translations.Get(_locks.IsSlotLocked(position.x, position.y) ? Translations.LockStateOn : Translations.LockStateOff);
-                string hint = Translations.Get(Translations.LockHint, itemState, settings.LockItemKey.Value, slotState, settings.LockSlotKey.Value);
+                string restockState = RestockState(_restock.PercentAt(position.x, position.y));
+                string hint = Translations.Get(Translations.LockHint, itemState, settings.LockItemKey.Value, slotState, settings.LockSlotKey.Value, restockState, settings.RestockSlotKey.Value);
                 element.m_tooltip.Set(Translations.Get(Translations.LockTopic), hint, grid.m_tooltipAnchor);
             }
             else if (item == null && UITooltip.m_current == element.m_tooltip)
@@ -136,22 +176,38 @@ namespace TidyChests.Ui
             }
         }
 
+        private static string RestockState(int percent)
+        {
+            if (percent <= 0)
+            {
+                return Translations.Get(Translations.RestockStateOff);
+            }
+
+            return percent >= RestockMarks.FullPercent ? Translations.Get(Translations.RestockStateFull) : Translations.Get(Translations.RestockStatePart, percent);
+        }
+
         private static void HideBadges(InventoryGrid grid)
         {
             foreach (InventoryElement element in grid.m_elements)
             {
-                Image? badge = GetBadge(element, create: false);
-                if (badge != null)
+                foreach (Dictionary<InventoryElement, Image> badges in new[] { Badges, RestockBadges })
                 {
-                    badge.enabled = false;
+                    if (badges.TryGetValue(element, out Image? badge) && badge != null)
+                    {
+                        badge.enabled = false;
+                    }
                 }
             }
         }
 
-        /// <summary>The element's badge, made on first use; null when there is none and <paramref name="create"/> is off.</summary>
-        private static Image? GetBadge(InventoryElement element, bool create)
+        /// <summary>
+        /// The element's badge from <paramref name="badges"/>, made on first use in the top-left
+        /// (<paramref name="left"/>) or top-right corner; null when there is none and
+        /// <paramref name="create"/> is off.
+        /// </summary>
+        private static Image? GetBadge(Dictionary<InventoryElement, Image> badges, InventoryElement element, bool create, string name, bool left)
         {
-            if (Badges.TryGetValue(element, out Image? badge) && badge != null)
+            if (badges.TryGetValue(element, out Image? badge) && badge != null)
             {
                 return badge;
             }
@@ -161,20 +217,21 @@ namespace TidyChests.Ui
                 return null;
             }
 
-            var go = new GameObject(BadgeName, typeof(RectTransform));
+            var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
             rect.SetParent(element.transform, false);
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(BadgeInset, -BadgeInset);
+            var corner = new Vector2(left ? 0f : 1f, 1f);
+            rect.anchorMin = corner;
+            rect.anchorMax = corner;
+            rect.pivot = corner;
+            rect.anchoredPosition = new Vector2(left ? BadgeInset : -BadgeInset, -BadgeInset);
             rect.sizeDelta = new Vector2(BadgeSize, BadgeSize);
 
             badge = go.AddComponent<Image>();
-            badge.sprite = _sprite ??= LockSprite.Create();
+            badge.sprite = left ? (_sprite ??= LockSprite.Create()) : (_restockSprite ??= RestockSprite.Create());
             badge.raycastTarget = false;
             badge.preserveAspect = true;
-            Badges[element] = badge;
+            badges[element] = badge;
             return badge;
         }
     }
@@ -229,6 +286,51 @@ namespace TidyChests.Ui
             }
 
             return false;
+        }
+    }
+
+    /// <summary>An arrow pointing down into an open tray, drawn pixel by pixel: white, so the badge's colour does the tinting.</summary>
+    internal static class RestockSprite
+    {
+        private const int Size = 32;
+
+        public static Sprite Create()
+        {
+            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+
+            var pixels = new Color32[Size * Size];
+            for (int y = 0; y < Size; y++)
+            {
+                for (int x = 0; x < Size; x++)
+                {
+                    pixels[y * Size + x] = IsRestockPixel(x + 0.5f, y + 0.5f) ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0f, 0f, Size, Size), new Vector2(0.5f, 0.5f), 100f);
+        }
+
+        /// <summary>A tray with no top (floor and two walls) and an arrow coming down into it. y grows upwards.</summary>
+        private static bool IsRestockPixel(float x, float y)
+        {
+            const float centreX = 16f;
+            bool floor = x >= 3f && x < 29f && y >= 2f && y < 6f;
+            bool walls = (x >= 3f && x < 7f || x >= 25f && x < 29f) && y >= 2f && y < 16f;
+            if (floor || walls)
+            {
+                return true;
+            }
+
+            float dx = Mathf.Abs(x - centreX);
+            bool shaft = dx < 2.5f && y >= 15f && y < 31f;
+            bool head = y >= 8f && y < 17f && dx < (y - 8f) * 0.8f;
+            return shaft || head;
         }
     }
 

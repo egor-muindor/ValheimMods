@@ -16,5 +16,8 @@ namespace TidyChests.Stash
 
         /// <summary>Comma-separated <c>x:y</c> inventory slots locked with the lock key.</summary>
         public string LockedSlots { get; set; } = "";
+
+        /// <summary>The <c>x:y=percent</c> slots marked for the Restock button; they are never stashed from.</summary>
+        public string RestockSlots { get; set; } = "";
     }
 }

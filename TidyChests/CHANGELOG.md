@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0-beta.1 - 2026-09-29
+
+Beta, on GitHub only.
+
+- A **Restock** button under the Stash button tops up slots from the chests within `[Stash] Radius`, nearest chest first, taking only stacks of the same quality and world level.
+- Point at a slot and press **Shift+R** to mark it: a full stack, then half a stack (`[Restock] HalfPercent`), then no mark. Hold **Shift** to see the marks: a green arrow into a tray for a full stack, a red one for less, in the top-right corner of the slot. The lock tooltip shows the restock state and key too. A marked slot remembers the item it held, so an emptied slot is refilled with the same thing, and the Stash button leaves it alone. The marks are saved in `[Restock] RestockSlots`.
+- The slots of Extra Slots, EquipmentAndQuickSlots and the Better Archery quiver are restocked without marking, by the kind of item in them: food to half a stack (`ModSlotFood = 50`), arrows and bolts to a full one (`ModSlotAmmo = 100`), meads and the rest left alone (`ModSlotMeads`, `ModSlotOther = 0`).
+- Works with MultiUserChest: taking from a chest another player owns is MultiUserChest's own request, like dragging the item out. A single stack that covers the whole shortfall is preferred, because MultiUserChest takes one request per slot at a time.
+- `[Restock] ShowRestockButton` hides the button, `RestockButtonOffset` moves it, and `tidychests restock` restocks from the console.
+
 ## 1.4.0 - 2026-09-28
 
 The Sort button from 1.4.0-beta.1, tested in game, plus:

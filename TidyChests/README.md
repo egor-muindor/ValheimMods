@@ -9,8 +9,10 @@ and press **T**: the inventory closes and every chest in range that holds it
 lights up, with an arrow and the count on screen. **Ctrl+O** lists everything the
 chests around you hold, with a search box. And in co-op, the materials your team
 mates drop in those chests unlock their recipes for you, without hunting down
-every new stack to touch it. A **Sort** button on the chest panel tidies the open
-chest, and it works with
+every new stack to touch it. A **Restock** button does the opposite of Stash:
+it refills the slots you marked, and the food and arrows in your quick slots and
+quiver, from the chests around you. A **Sort** button on the chest panel tidies
+the open chest, and both work with
 [MultiUserChest](https://thunderstore.io/c/valheim/p/MSchmoecker/MultiUserChest/),
 even while another player has the same chest open.
 
@@ -33,8 +35,8 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
 - **What stays**: equipped items; tools, weapons, armour and other equipment;
   quest items; the hotbar (optional); quick, equipment, food, ammo and misc
   slots of Extra Slots, every slot of EquipmentAndQuickSlots, the quiver rows of
-  Better Archery; anything in the blacklist; locked items and slots; item types
-  not in the allowed list.
+  Better Archery; anything in the blacklist; locked items and slots; slots marked
+  for restocking; item types not in the allowed list.
 - **Locks**: point at an item and press `Shift+L` to lock it, and the Stash
   button leaves that item alone wherever it lies. Point at a slot and press
   `Shift+K` to lock the slot itself, so whatever is put there stays. Hold
@@ -42,6 +44,16 @@ Source, issues and releases: [github.com/egor-muindor/ValheimMods](https://githu
   item and a red one on a locked slot, and a tooltip on the slot under the
   pointer with the keys. Pressing again unlocks. The keys and the locks
   themselves are in the config, so they survive a restart and can be edited.
+- **Restock button**, under the Stash button: tops up slots from the chests
+  within the stash radius, nearest chest first. Point at a slot and press
+  `Shift+R` to mark it: the first press keeps a full stack there, the second
+  half a stack, the third removes the mark. Hold `Shift` to see the marks, a
+  green arrow into a tray for a full stack and a red one for half. A marked
+  slot remembers the item it held, so a slot you have emptied is refilled with
+  the same thing, and the Stash button never takes from it. The slots of your
+  slot mod are topped up without marking: food to half a stack, arrows and
+  bolts to a full one, the rest (meads included) left alone, each configurable.
+  Only stacks of the same quality and world level are taken.
 - **Sort button**: sorts the chest you have open, and only when you press it.
   Stacks of the same item are merged, then the items are laid out by their ID
   (or by name, or by type), every item starting a new column by default. Rows or
@@ -153,6 +165,24 @@ This never makes the mod required on either side:
 | `LockedItems` | empty | The locked items, comma-separated game item names (`$item_wood, $item_coal`). Written as you press the key; editable by hand. |
 | `LockedSlots` | empty | The locked slots, comma-separated `column:row` counted from 0, the hotbar being row 0 (`0:1, 7:3`). Written as you press the key; editable by hand. |
 
+### Restock
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ShowRestockButton` | `true` | Show the Restock button in the inventory. `tidychests restock` in the console works without it. |
+| `RestockButtonOffset` | `0, -42` | Position of the Restock button relative to the Stash button, in UI pixels (x right, y up). It has the Stash button's size, `[Button] ButtonSize`. |
+| `RestockSlotKey` | `R + LeftShift` | With the inventory open, point at a slot and press this: a full stack, then `HalfPercent` of a stack, then no mark. Hold `[Locks] RevealKey` to see the marks. Modifiers are allowed. |
+| `RestockSlots` | empty | The marked slots, comma-separated `column:row=percent`, then the item last seen there: `0:1=100:$item_arrow_wood, 3:2=50:$item_cookedmeat`. Written as you press the key and as the slots are restocked; editable by hand, any percent from 1 to 100. |
+| `HalfPercent` | `50` | What the second press of the key keeps in the slot, in percent of a stack. |
+| `ModSlotFood` | `50` | Food in a slot mod's slot (Extra Slots quick and food slots, EquipmentAndQuickSlots quick slots) is kept at this many percent of a stack. `0` leaves it alone. |
+| `ModSlotMeads` | `0` | The same for meads and other consumables that do not feed. |
+| `ModSlotAmmo` | `100` | The same for arrows, bolts and other ammo, in Extra Slots' ammo and quick slots and in the Better Archery quiver. |
+| `ModSlotOther` | `0` | The same for any other stackable item. |
+
+Half of a stack is rounded up: a slot kept at 50% of a stack of 25 is filled to
+13. A marked slot wins over the slot mod setting. The radius is `[Stash] Radius`
+and the result message follows `[Stash] ShowMessage`.
+
 ### Find
 
 | Key | Default | Description |
@@ -233,6 +263,7 @@ the order among equally good matches.
 
 ```
 tidychests stash    # stash now, without the button
+tidychests restock  # restock now, without the button
 tidychests sort     # sort the open chest, without the button
 tidychests scan     # scan the chests in range for items you do not know yet
 tidychests status   # show the active settings and where they come from
@@ -262,7 +293,9 @@ ownership of a chest; only the Stash button writes.
 | Container list | `Container.Awake` and `Container.OnDestroyed` postfixes keep a list of loaded containers |
 | Stash button | `InventoryGui.Show` postfix clones the "take all" button into the player panel |
 | Button label, messages | `Localization.SetupLanguage` postfix adds the mod's words for the loaded language |
+| Restock button | the same `InventoryGui.Show` postfix clones the "take all" button once more, under the Stash button |
 | Sort button | the same `InventoryGui.Show` postfix clones the "stack all" button of the chest panel |
+| Lock and restock marks, their keys | `InventoryGrid.UpdateGui` postfix draws the badges and reads the keys on the hovered slot |
 | Console command | `Terminal.InitTerminal` postfix |
 | Chest list input | `Player.TakeInput` and `PlayerController.TakeInput` postfixes stop interacting, walking and the mouse look, `GameCamera.UpdateMouseCapture` postfix keeps the cursor free, `ZInput.GetMouseScrollWheel` postfix hands the wheel to the list instead of the camera zoom, `ZInput.GetButtonDown` prefix keeps the map key in the search box and Enter away from the chat, `Menu.Update` prefix lets Escape close the list instead of opening the game menu |
 
@@ -280,8 +313,14 @@ vanilla run.
 ## Compatibility
 
 - Extra Slots, EquipmentAndQuickSlots 3.x, Better Archery: their slots are
-  detected through the mods' own APIs and never stashed.
-- MultiUserChest: supported for the Stash and the Sort buttons, see above. A
+  detected through the mods' own APIs, never stashed, and restocked by the kind
+  of item lying in them.
+- MultiUserChest: supported for the Stash, Restock and Sort buttons, see above.
+  Restocking from a chest another player owns goes through MultiUserChest's own
+  request, the same as dragging the item out of it; while one request for a
+  slot waits for the answer, MultiUserChest refuses a second one, so the
+  Restock button takes one stack that covers the whole shortfall when there is
+  one, and a slot fed from several small stacks may need a second press. A
   chest owned by another player is sorted through MultiUserChest's
   `ContainerHandler.MoveItemInChest`; should a future version drop it, the
   button says the chest is in use instead.
