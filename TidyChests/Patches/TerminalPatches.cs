@@ -1,4 +1,5 @@
 using HarmonyLib;
+using TidyChests.Restock;
 using TidyChests.Sort;
 using TidyChests.Stash;
 
@@ -14,7 +15,7 @@ namespace TidyChests.Patches
         {
             new Terminal.ConsoleCommand(
                 Command,
-                $"{Command} [stash|sort|scan|reload|status] - stash items into nearby chests, sort the open chest, scan them for items you do not know yet, reload the {MyPluginInfo.PLUGIN_NAME} config or show the active settings",
+                $"{Command} [stash|restock|sort|scan|reload|status] - stash items into nearby chests, restock the marked slots from them, sort the open chest, scan them for items you do not know yet, reload the {MyPluginInfo.PLUGIN_NAME} config or show the active settings",
                 Execute);
         }
 
@@ -33,6 +34,16 @@ namespace TidyChests.Patches
                     }
 
                     terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {Stasher.Stash(Player.m_localPlayer)}");
+                    break;
+
+                case "restock":
+                    if (Player.m_localPlayer == null)
+                    {
+                        terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: no player in the world");
+                        break;
+                    }
+
+                    terminal.AddString($"{MyPluginInfo.PLUGIN_NAME}: {Restocker.Restock(Player.m_localPlayer)}");
                     break;
 
                 case "sort":
@@ -64,7 +75,7 @@ namespace TidyChests.Patches
                     break;
 
                 default:
-                    terminal.AddString($"Usage: {Command} [stash|sort|scan|reload|status]");
+                    terminal.AddString($"Usage: {Command} [stash|restock|sort|scan|reload|status]");
                     break;
             }
         }

@@ -178,7 +178,8 @@ namespace TidyChests.Stash
             return $"{_items.Count} locked items, {_slots.Count} locked slots";
         }
 
-        private static bool TryParseSlot(string text, out int x, out int y)
+        /// <summary>Reads one <c>x:y</c> slot; false when it is malformed or negative.</summary>
+        public static bool TryParseSlot(string text, out int x, out int y)
         {
             x = y = 0;
             string[] parts = text.Split(':');

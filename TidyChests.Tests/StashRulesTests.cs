@@ -15,9 +15,9 @@ namespace TidyChests.Tests
 
         private const string DefaultTypes = "Material, Consumable, Ammo, AmmoNonEquipable, Trophy, Misc, Fish";
 
-        private static StashRules Rules(string types = DefaultTypes, string blacklist = "", bool includeHotbar = false, List<string>? warnings = null, string lockedItems = "", string lockedSlots = "")
+        private static StashRules Rules(string types = DefaultTypes, string blacklist = "", bool includeHotbar = false, List<string>? warnings = null, string lockedItems = "", string lockedSlots = "", string restockSlots = "")
         {
-            var settings = new StashRuleSettings { ItemTypes = types, Blacklist = blacklist, IncludeHotbar = includeHotbar, LockedItems = lockedItems, LockedSlots = lockedSlots };
+            var settings = new StashRuleSettings { ItemTypes = types, Blacklist = blacklist, IncludeHotbar = includeHotbar, LockedItems = lockedItems, LockedSlots = lockedSlots, RestockSlots = restockSlots };
             return StashRules.Parse(settings, KnownTypes, warnings == null ? null : warnings.Add);
         }
 
@@ -34,6 +34,15 @@ namespace TidyChests.Tests
             int y = -1)
         {
             return new ItemFacts(prefab, shared, type, maxStack, equipped, hotbar, modSlot, quest, x, y);
+        }
+
+        [Fact]
+        public void RestockSlotKeepsWhateverLiesInIt()
+        {
+            StashRules rules = Rules(restockSlots: "2:3=50:$item_wood");
+            Assert.Equal(StashVerdict.RestockSlot, rules.Judge(Item(x: 2, y: 3)));
+            Assert.Equal(StashVerdict.RestockSlot, rules.Judge(Item(prefab: "Coal", shared: "$item_coal", x: 2, y: 3)));
+            Assert.Equal(StashVerdict.Stash, rules.Judge(Item(x: 3, y: 2)));
         }
 
         [Fact]
@@ -168,9 +177,9 @@ namespace TidyChests.Tests
         [Fact]
         public void DescribeListsTypesAndBlacklist()
         {
-            Assert.Equal("types: Consumable, Material; blacklist: Coal, Wood; 0 locked items, 0 locked slots", Rules(types: "Material, Consumable", blacklist: "Wood, Coal").Describe());
-            Assert.Equal("types: Material; blacklist: item_coal; 0 locked items, 0 locked slots", Rules(types: "Material", blacklist: "$item_coal").Describe());
-            Assert.Equal("types: none; blacklist: empty; 0 locked items, 0 locked slots", Rules(types: "").Describe());
+            Assert.Equal("types: Consumable, Material; blacklist: Coal, Wood; 0 locked items, 0 locked slots, 0 restock slots", Rules(types: "Material, Consumable", blacklist: "Wood, Coal").Describe());
+            Assert.Equal("types: Material; blacklist: item_coal; 0 locked items, 0 locked slots, 0 restock slots", Rules(types: "Material", blacklist: "$item_coal").Describe());
+            Assert.Equal("types: none; blacklist: empty; 0 locked items, 0 locked slots, 0 restock slots", Rules(types: "").Describe());
         }
     }
 }
