@@ -1,8 +1,6 @@
 # Changelog
 
-## 1.5.0-beta.1 - 2026-09-29
-
-Beta, on GitHub only.
+## 1.5.0 - 2026-09-29
 
 - A **Restock** button under the Stash button tops up slots from the chests within `[Stash] Radius`, nearest chest first, taking only stacks of the same quality and world level.
 - Point at a slot and press **Shift+R** to mark it: a full stack, then half a stack (`[Restock] HalfPercent`), then no mark. Hold **Shift** to see the marks: a green arrow into a tray for a full stack, a red one for less, in the top-right corner of the slot. The lock tooltip shows the restock state and key too. A marked slot remembers the item it held, so an emptied slot is refilled with the same thing, and the Stash button leaves it alone. The marks are saved in `[Restock] RestockSlots`.

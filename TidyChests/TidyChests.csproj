@@ -5,7 +5,7 @@
     <AssemblyName>TidyChests</AssemblyName>
     <RootNamespace>TidyChests</RootNamespace>
     <Product>Tidy Chests</Product>
-    <Version>1.5.0-beta.1</Version>
+    <Version>1.5.0</Version>
     <Authors>Egor Fadeev</Authors>
     <Description>Quick stack into nearby chests and restock marked slots, food and arrows from them, a Sort button for the open chest (works with MultiUserChest), a find hotkey, Ctrl+O to search nearby chests, and recipes unlocked by team mates' materials.</Description>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
