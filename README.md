@@ -9,6 +9,7 @@ BepInEx mods for Valheim 1.0.
 | [TidyChests](TidyChests/README.md) | Terraria-style quick stack: a Stash button moves materials into nearby chests that already hold them; a hotkey highlights the chests holding the item under the cursor. |
 | [OreFinder](OreFinder/README.md) | Points you to ore veins, dungeon entrances, monster spawners, ancient roots and rare pickables: screen arrow with name and distance, light beam and map pin, once per find; hotkey toggle, each group on its own switch. |
 | [CombatStats](CombatStats/README.md) | A combat meter: who dealt how much damage and of which kind, over the last 30 seconds, 5, 10 or 30 minutes. A compact window under the minimap that comes and goes with the fight, and a detail window with the breakdown. |
+| [WorkshopRepair](WorkshopRepair/README.md) | One click on the repair button mends all your gear, and a station also repairs what belongs to the other stations within 30 m. |
 
 ## Optional server configuration
 
@@ -70,8 +71,9 @@ The packages are listed under the [Muindor](https://thunderstore.io/c/valheim/p/
 team: [DeathTweaks](https://thunderstore.io/c/valheim/p/Muindor/DeathTweaks),
 [QuickTeleport](https://thunderstore.io/c/valheim/p/Muindor/QuickTeleport),
 [TidyChests](https://thunderstore.io/c/valheim/p/Muindor/TidyChests),
-[OreFinder](https://thunderstore.io/c/valheim/p/Muindor/OreFinder) and
-[CombatStats](https://thunderstore.io/c/valheim/p/Muindor/CombatStats).
+[OreFinder](https://thunderstore.io/c/valheim/p/Muindor/OreFinder),
+[CombatStats](https://thunderstore.io/c/valheim/p/Muindor/CombatStats) and
+[WorkshopRepair](https://thunderstore.io/c/valheim/p/Muindor/WorkshopRepair).
 `<Mod>/thunderstore.toml` holds the listing metadata (categories, community,
 dependencies); the zip comes from the Release build. To publish a new version:
 
