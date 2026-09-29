@@ -1,0 +1,9 @@
+{
+  "name": "WorkshopRepair",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/egor-muindor/ValheimMods",
+  "description": "One click on the repair button mends all your gear, and a station also repairs what belongs to other stations within 30 m: fix bronze at the workbench if a forge is nearby. Client-side; a server can optionally enforce its config. Valheim 1.0.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2350"
+  ]
+}
